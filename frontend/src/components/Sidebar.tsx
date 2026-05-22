@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { 
   LayoutDashboard, ShoppingCart, Package, ReceiptText, 
-  Wallet, Tags, Settings as SettingsIcon, LogOut, X 
+  Wallet, Tags, Settings as SettingsIcon, LogOut, X,
+  CreditCard, Warehouse,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -17,13 +18,14 @@ export function Sidebar({ onClose }: SidebarProps) {
   const navItems = [
     { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/pos', icon: <ShoppingCart size={20} />, label: 'POS Terminal' },
-    { to: '/products', icon: <Package size={20} />, label: 'Products' },
-    { to: '/warehouse', icon: <Package size={20} />, label: 'Warehouse' },
-    { to: '/receipts', icon: <ReceiptText size={20} />, label: 'Receipts' },
-    { to: '/cashflow', icon: <Wallet size={20} />, label: 'Cash Flow' },
+    { to: '/products',  icon: <Package size={20} />,       label: 'Produk' },
+    { to: '/warehouse',  icon: <Warehouse size={20} />,     label: 'Gudang' },
+    { to: '/receipts',   icon: <ReceiptText size={20} />,   label: 'Struk' },
+    { to: '/cashflow',   icon: <Wallet size={20} />,        label: 'Kas' },
     ...(user?.role === 'admin' ? [
-      { to: '/discounts', icon: <Tags size={20} />, label: 'Discounts' },
-      { to: '/settings', icon: <SettingsIcon size={20} />, label: 'Settings' }
+      { to: '/discounts', icon: <Tags size={20} />,         label: 'Diskon' },
+      { to: '/billing',   icon: <CreditCard size={20} />,  label: 'Langganan' },
+      { to: '/settings',  icon: <SettingsIcon size={20} />, label: 'Pengaturan' },
     ] : []),
   ];
 

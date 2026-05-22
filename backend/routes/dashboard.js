@@ -36,19 +36,10 @@ router.get('/', authenticate, async (req, res) => {
       },
     });
 
-    // 3. Low Stock Count
-    const lowStockCount = await prisma.warehouse.count({
-      where: {
-        product: { tenantId: req.user.tenantId },
-        quantity: { lte: prisma.warehouse.fields.reorderLevel }, // Simplified, Prisma doesn't directly support comparing two fields in where for some databases, but we can do it via raw query if needed. 
-        // For now, let's fetch and filter since we expect small catalogs per user.
-      },
-    });
-    
-    // Better way to do low stock check:
+    // 3. Low Stock Count (JS-side filter since MySQL can't compare two columns in Prisma where)
     const warehouses = await prisma.warehouse.findMany({
       where: { product: { tenantId: req.user.tenantId } },
-      select: { quantity: true, reorderLevel: true }
+      select: { quantity: true, reorderLevel: true },
     });
     const actualLowStockCount = warehouses.filter(w => w.quantity <= w.reorderLevel).length;
 

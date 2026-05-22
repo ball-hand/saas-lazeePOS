@@ -5,13 +5,12 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Seeding SaaS POS database...\n');
+  console.log('🌱 Seeding LazeePOS database...\n');
 
-  /* ───────────────────────────────────────────────────────
-     1. SUBSCRIPTION PLANS
-  ─────────────────────────────────────────────────────── */
+  /* ──────────────────────────────────────────
+     1. PLANS
+  ────────────────────────────────────────── */
   console.log('📦 Seeding plans...');
-
   const plans = [
     {
       name: 'Starter',
@@ -20,7 +19,7 @@ async function main() {
       maxUsers: 3,
       maxBranches: 1,
       monthlyPrice: 0,
-      features: { pos: true, reports: true, inventory: true, multiUser: false },
+      features: JSON.stringify({ pos: true, reports: true, inventory: true, multiUser: false }),
     },
     {
       name: 'Pro',
@@ -29,7 +28,7 @@ async function main() {
       maxUsers: 10,
       maxBranches: 3,
       monthlyPrice: 149000,
-      features: { pos: true, reports: true, inventory: true, multiUser: true, multiBranch: true, api: false },
+      features: JSON.stringify({ pos: true, reports: true, inventory: true, multiUser: true, multiBranch: true, api: false }),
     },
     {
       name: 'Enterprise',
@@ -38,7 +37,7 @@ async function main() {
       maxUsers: 99999,
       maxBranches: 99999,
       monthlyPrice: 490000,
-      features: { pos: true, reports: true, inventory: true, multiUser: true, multiBranch: true, api: true, prioritySupport: true },
+      features: JSON.stringify({ pos: true, reports: true, inventory: true, multiUser: true, multiBranch: true, api: true, prioritySupport: true }),
     },
   ];
 
@@ -49,66 +48,68 @@ async function main() {
       create: planData,
     });
   }
+  console.log('   ✅ Plans seeded: Starter, Pro, Enterprise');
 
-  const starterPlan = await prisma.plan.findUnique({ where: { name: 'Pro' } });
+  const proPlan = await prisma.plan.findUnique({ where: { name: 'Pro' } });
 
-  /* ───────────────────────────────────────────────────────
-     2. PLATFORM SUPERADMIN
-     tenantId = null  →  platform-wide access
-  ─────────────────────────────────────────────────────── */
+  /* ──────────────────────────────────────────
+     2. SUPERADMIN
+  ────────────────────────────────────────── */
   console.log('\n🔐 Seeding superadmin...');
-  await prisma.user.deleteMany({ where: { role: 'superadmin' } });
   await prisma.user.upsert({
-    where: { email: 'superadmin@lazeepos.com' },
+    where: { email: 'admin@lazeepos.com' },
     update: {},
     create: {
-      email: 'superadmin@lazeepos.com',
-      passwordHash: await bcrypt.hash('superadmin123', 10),
+      email: 'admin@lazeepos.com',
+      passwordHash: await bcrypt.hash('Admin123!', 10),
       name: 'Platform Super Admin',
       role: 'superadmin',
       tenantId: null,
     },
-    select: { id: true, email: true },
   });
-  console.log('   ✅ superadmin@lazeepos.com / superadmin123');
+  console.log('   ✅ admin@lazeepos.com / Admin123!');
   console.log('   ⚠️  Ubah password ini segera di produksi!\n');
 
-  /* ───────────────────────────────────────────────────────
-     3. DEMO TENANT  ("Demo POS Store")
-  ─────────────────────────────────────────────────────── */
+  /* ──────────────────────────────────────────
+     3. DEMO TENANT
+  ────────────────────────────────────────── */
   console.log('🏪 Seeding demo tenant...');
 
   const now = new Date();
-  const trialEnds = new Date(now);
-  trialEnds.setDate(trialEnds.getDate() + 14);
   const periodEnd = new Date(now);
   periodEnd.setMonth(periodEnd.getMonth() + 1);
 
+  // Clean up existing demo data
+  const existingDemo = await prisma.tenant.findUnique({ where: { subdomain: 'demo' } });
+  if (existingDemo) {
+    await prisma.discountRule.deleteMany({ where: { tenantId: existingDemo.id } });
+    const productIds = (await prisma.product.findMany({ where: { tenantId: existingDemo.id }, select: { id: true } })).map(p => p.id);
+    if (productIds.length) {
+      await prisma.warehouse.deleteMany({ where: { productId: { in: productIds } } });
+      await prisma.product.deleteMany({ where: { tenantId: existingDemo.id } });
+    }
+    await prisma.user.deleteMany({ where: { tenantId: existingDemo.id } });
+  }
+
   const demoTenant = await prisma.tenant.upsert({
-    where: { id: 1 },
-    update: {},
+    where: { subdomain: 'demo' },
+    update: { status: 'active' },
     create: {
-      id: 1,
-      name: 'Demo POS Store',
+      name: 'Demo Store — LazeePOS',
       subdomain: 'demo',
       themeMode: 'dark',
       primaryColor: '#8B5CF6',
       status: 'active',
+      planId: proPlan.id,
     },
   });
 
-  // Subscription for demo tenant
   await prisma.subscription.upsert({
     where: { tenantId: demoTenant.id },
-    update: {
-      planId: starterPlan.id,
-      billingCycle: 'monthly',
-      status: 'active',
-      currentPeriodEnd: periodEnd,
-    },
+    update: { planId: proPlan.id, status: 'active', currentPeriodEnd: periodEnd },
     create: {
       tenantId: demoTenant.id,
-      planId: starterPlan.id,
+      planId: proPlan.id,
       billingCycle: 'monthly',
       status: 'active',
       currentPeriodStart: now,
@@ -116,53 +117,65 @@ async function main() {
     },
   });
 
-  // Clear existing users for demo tenant
-  await prisma.user.deleteMany({ where: { tenantId: demoTenant.id } });
-
-  const adminPw = await bcrypt.hash('admin123', 10);
-  const cashierPw = await bcrypt.hash('cashier123', 10);
-
+  /* Demo users */
   await prisma.user.create({
     data: {
-      email: 'admin@pos.com',
-      passwordHash: adminPw,
-      name: 'Store Admin',
+      email: 'demo@lazeepos.com',
+      passwordHash: await bcrypt.hash('Demo123!', 10),
+      name: 'Demo Admin',
       role: 'admin',
       tenantId: demoTenant.id,
     },
   });
   await prisma.user.create({
     data: {
-      email: 'cashier@pos.com',
-      passwordHash: cashierPw,
-      name: 'Demo Cashier',
+      email: 'kasir@lazeepos.com',
+      passwordHash: await bcrypt.hash('Kasir123!', 10),
+      name: 'Demo Kasir',
       role: 'cashier',
       tenantId: demoTenant.id,
     },
   });
-  console.log('   ✅ admin@pos.com / admin123');
-  console.log('   ✅ cashier@pos.com / cashier123');
+  console.log('   ✅ demo@lazeepos.com / Demo123! (admin)');
+  console.log('   ✅ kasir@lazeepos.com / Kasir123! (cashier)');
 
-  // Fresh product / warehouse seed ─ replace old data
-  await prisma.product.deleteMany({ where: { tenantId: demoTenant.id } });
-  const products = [
-    { tenantId: demoTenant.id, name: 'Espresso', sku: 'BEV-001', category: 'Beverages', price: 35000, costPrice: 8000 },
-    { tenantId: demoTenant.id, name: 'Latte', sku: 'BEV-002', category: 'Beverages', price: 45000, costPrice: 12000 },
-    { tenantId: demoTenant.id, name: 'Croissant', sku: 'FOOD-001', category: 'Food', price: 30000, costPrice: 9000 },
-    { tenantId: demoTenant.id, name: 'Blueberry Muffin', sku: 'FOOD-002', category: 'Food', price: 27500, costPrice: 8500 },
+  /* Demo products */
+  const productsSeed = [
+    { name: 'Espresso', sku: 'BEV-001', category: 'Minuman', price: 35000, costPrice: 8000, stock: 100 },
+    { name: 'Cappuccino', sku: 'BEV-002', category: 'Minuman', price: 45000, costPrice: 12000, stock: 80 },
+    { name: 'Latte', sku: 'BEV-003', category: 'Minuman', price: 48000, costPrice: 13000, stock: 75 },
+    { name: 'Matcha Latte', sku: 'BEV-004', category: 'Minuman', price: 52000, costPrice: 15000, stock: 60 },
+    { name: 'Americano', sku: 'BEV-005', category: 'Minuman', price: 35000, costPrice: 8000, stock: 90 },
+    { name: 'Croissant', sku: 'FOOD-001', category: 'Makanan', price: 30000, costPrice: 9000, stock: 40 },
+    { name: 'Blueberry Muffin', sku: 'FOOD-002', category: 'Makanan', price: 27500, costPrice: 8500, stock: 8 },
+    { name: 'Avocado Toast', sku: 'FOOD-003', category: 'Makanan', price: 55000, costPrice: 18000, stock: 25 },
+    { name: 'Granola Bowl', sku: 'FOOD-004', category: 'Makanan', price: 45000, costPrice: 14000, stock: 3 },
+    { name: 'Air Mineral 600ml', sku: 'BOT-001', category: 'Botolan', price: 8000, costPrice: 3000, stock: 150 },
   ];
 
-  for (const p of products) {
-    const product = await prisma.product.create({
+  for (const p of productsSeed) {
+    await prisma.product.create({
       data: {
-        ...p,
-        warehouse: { create: { quantity: 50, reorderLevel: 10, location: 'Main Storage' } },
+        tenantId: demoTenant.id,
+        name: p.name,
+        sku: p.sku,
+        category: p.category,
+        price: p.price,
+        costPrice: p.costPrice,
+        isActive: true,
+        warehouse: {
+          create: {
+            quantity: p.stock,
+            reorderLevel: 10,
+            location: 'Gudang Utama',
+          },
+        },
       },
     });
   }
+  console.log(`   ✅ ${productsSeed.length} products seeded`);
 
-  // Seed discount rules
-  await prisma.discountRule.deleteMany({ where: { tenantId: demoTenant.id } });
+  /* Demo discount rules */
   await prisma.discountRule.createMany({
     data: [
       {
@@ -171,25 +184,44 @@ async function main() {
         discountType: 'percentage',
         discountValue: 10,
         appliesTo: 'all',
+        isActive: true,
       },
       {
         tenantId: demoTenant.id,
-        name: 'Beverage Sale',
+        name: 'Diskon Minuman Rp 5.000',
         discountType: 'fixed_amount',
-        discountValue: 1500,
+        discountValue: 5000,
         appliesTo: 'category',
-        appliesToCategory: 'Beverages',
+        appliesToCategory: 'Minuman',
         minQuantity: 2,
+        isActive: true,
+      },
+      {
+        tenantId: demoTenant.id,
+        name: 'Buy 2 Get 1 Muffin',
+        discountType: 'bogo',
+        discountValue: 27500,
+        appliesTo: 'product',
+        appliesToId: null, // Will be set if needed
+        minQuantity: 2,
+        isActive: false,
       },
     ],
   });
+  console.log('   ✅ 3 discount rules seeded');
 
-  console.log('✅ Seeding complete!\n');
+  console.log('\n✅ Seeding complete!\n');
+  console.log('─────────────────────────────────────────');
+  console.log('🔑 Login Credentials:');
+  console.log('   Super Admin  : admin@lazeepos.com / Admin123!');
+  console.log('   Demo Admin   : demo@lazeepos.com / Demo123!  (via demo.lazeepos.com)');
+  console.log('   Demo Kasir   : kasir@lazeepos.com / Kasir123! (via demo.lazeepos.com)');
+  console.log('─────────────────────────────────────────\n');
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error('❌ Seed failed:', e);
     process.exit(1);
   })
   .finally(async () => {

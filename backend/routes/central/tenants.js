@@ -21,12 +21,12 @@ router.get('/', ...protect, async (req, res) => {
     const where = {};
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { subdomain: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search } },
+        { subdomain: { contains: search } },
       ];
     }
     if (status) where.status = status;
-    if (plan) where.plan = { name: { contains: plan, mode: 'insensitive' } };
+    if (plan) where.plan = { name: { contains: plan } };
 
     const [tenants, total] = await Promise.all([
       prisma.tenant.findMany({

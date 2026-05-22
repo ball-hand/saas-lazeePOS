@@ -64,6 +64,10 @@ services:
       - DB_NAME=${DB_NAME:-pos_db}
       - DB_PORT=${DB_PORT:-3306}
       - DATABASE_URL=${DATABASE_URL:-mysql://root:@mysql:3306/pos_db}
+      - MIDTRANS_ENV=${MIDTRANS_ENV:-sandbox}
+      - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY:-}
+      - MIDTRANS_CLIENT_KEY=${MIDTRANS_CLIENT_KEY:-}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
     depends_on:
       mysql:
         condition: service_healthy

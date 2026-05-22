@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   Building2, CreditCard, DollarSign, Users, Package,
   ArrowUpRight, TrendingUp, ChevronRight, Search, RefreshCw,
-  ShieldAlert, CheckCircle2, XCircle,
+  ShieldAlert, CheckCircle2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';

@@ -18,6 +18,7 @@ import centralAuthRoutes    from './routes/central/auth.js';
 import centralTenantRoutes  from './routes/central/tenants.js';
 import centralPlanRoutes    from './routes/central/plans.js';
 import centralPlatformRoutes from './routes/central/platform.js';
+import paymentRoutes          from './routes/payment.js';
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ app.use('/api/receipts',   receiptRoutes);
 app.use('/api/cashflow',   cashflowRoutes);
 app.use('/api/dashboard',  dashboardRoutes);
 app.use('/api/settings',   settingsRoutes);
+app.use('/api/payment',    paymentRoutes);
 
 /* ─────────────────────────────────────────────────────────
    Global error handler

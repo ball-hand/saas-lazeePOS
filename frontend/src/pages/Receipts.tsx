@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Eye, Calendar, ReceiptText } from 'lucide-react';
+import { Search, Eye, Calendar } from 'lucide-react';
 
 export function Receipts() {
   const [receipts] = useState([

@@ -17,6 +17,7 @@ import { Receipts } from './pages/Receipts';
 import { CashFlow } from './pages/CashFlow';
 import { Discounts } from './pages/Discounts';
 import { Settings } from './pages/Settings';
+import { Billing } from './pages/Billing';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="/warehouse"  element={<Warehouse />} />
             <Route path="/receipts"   element={<Receipts />} />
             <Route path="/cashflow"   element={<CashFlow />} />
+            <Route path="/billing"    element={<Billing />} />
           </Route>
 
           {/* ── TENANT ADMIN ROUTES ────────────────────── */}

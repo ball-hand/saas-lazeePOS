@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -17,7 +17,7 @@ datasource db {
 model Plan {
   id          Int    @id @default(autoincrement())
   name        String @unique // "Starter" | "Pro" | "Enterprise"
-  description String? @db.Text
+  description String? 
 
   // Limits
   maxProducts Int  @default(100)
@@ -25,15 +25,16 @@ model Plan {
   maxBranches Int  @default(1)
 
   // Billing
-  monthlyPrice Decimal @db.Decimal(12, 2)
-  features     Json?   // { "pos": true, "api": false, … }
+  monthlyPrice Float 
+  features     String?   // { "pos": true, "api": false, … }
 
   isActive  Boolean   @default(true)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  tenants       Tenant[]
-  subscriptions Subscription[]
+  tenants              Tenant[]
+  subscriptions        Subscription[]
+  paymentTransactions  PaymentTransaction[]
 
   @@index([name])
   @@index([isActive])
@@ -78,7 +79,7 @@ model Tenant {
   id             Int      @id @default(autoincrement())
   name           String
   subdomain      String   @unique  // e.g. "kopisenja" → kopisenja.lazeepos.com
-  logoUrl        String?  @db.Text
+  logoUrl        String?  
 
   themeMode      String   @default("dark")   // "light" | "dark"
   primaryColor   String   @default("#8B5CF6")
@@ -97,11 +98,12 @@ model Tenant {
   updatedAt      DateTime @updatedAt
 
   // Relations — all tenant-scoped
-  users         User[]
-  products      Product[]
-  cashFlow      CashFlow[]
-  discountRules DiscountRule[]
-  receipts      Receipt[]
+  users              User[]
+  products           Product[]
+  cashFlow           CashFlow[]
+  discountRules      DiscountRule[]
+  receipts           Receipt[]
+  paymentTransactions PaymentTransaction[]
 
   @@index([subdomain])
   @@index([status])
@@ -139,11 +141,11 @@ model Product {
 
   sku           String?
   name          String
-  description   String?  @db.Text
-  price         Decimal  @db.Decimal(12, 2)
-  costPrice     Decimal? @db.Decimal(12, 2)
+  description   String?  
+  price         Float  
+  costPrice     Float? 
   category      String?
-  imageUrl      String?  @db.Text
+  imageUrl      String?  
   isActive      Boolean  @default(true)
 
   createdAt     DateTime @default(now())
@@ -179,8 +181,8 @@ model CashFlow {
   tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   type            String   // "sale" | "expense" | "income"
-  amount          Decimal  @db.Decimal(12, 2)
-  description     String?  @db.Text
+  amount          Float  
+  description     String?  
   referenceId     String?  // receiptNumber for sales
   transactionDate DateTime @default(now())
 
@@ -196,12 +198,12 @@ model DiscountRule {
 
   name              String
   discountType      String   // "percentage" | "fixed_amount" | "bogo"
-  discountValue     Decimal  @db.Decimal(12, 2)
+  discountValue     Float  
   appliesTo         String   @default("all")         // "all" | "category" | "product"
   appliesToId       Int?                                      // productId when appliesTo = "product"
   appliesToCategory String?
   minQuantity       Int      @default(1)
-  minOrderAmount    Decimal? @db.Decimal(12, 2)
+  minOrderAmount    Float? 
   startsAt          DateTime?
   endsAt            DateTime?
   isActive          Boolean  @default(true)
@@ -219,15 +221,15 @@ model Receipt {
   tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   customerName    String?
-  subtotalAmount  Decimal  @db.Decimal(12, 2)
-  discountAmount  Decimal  @db.Decimal(12, 2) @default(0)
-  taxAmount       Decimal  @db.Decimal(12, 2) @default(0)
-  totalAmount     Decimal  @db.Decimal(12, 2)
-  paidAmount      Decimal  @db.Decimal(12, 2)
-  changeGiven     Decimal  @db.Decimal(12, 2) @default(0)
+  subtotalAmount  Float  
+  discountAmount  Float  @default(0)
+  taxAmount       Float  @default(0)
+  totalAmount     Float  
+  paidAmount      Float  
+  changeGiven     Float  @default(0)
   paymentMethod   String   @default("cash") // "cash" | "card" | "transfer"
   receiptNumber   String   @unique
-  notes           String?  @db.Text
+  notes           String?  
   createdAt       DateTime @default(now())
 
   items           ReceiptItem[]
@@ -236,6 +238,45 @@ model Receipt {
   @@index([receiptNumber])
   @@index([createdAt])
   @@map("receipts")
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   PAYMENT TRANSACTIONS  — Midtrans billing records
+───────────────────────────────────────────────────────────────── */
+
+/// Tracks every Midtrans charge attempt (subscription upgrades).
+model PaymentTransaction {
+  id                Int      @id @default(autoincrement())
+
+  tenantId          Int
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  orderId           String   @unique  // midtrans order_id
+  snapToken         String?    // Midtrans Snap token
+  snapRedirectUrl   String?  
+
+  planId            Int?
+  plan              Plan?    @relation(fields: [planId], references: [id])
+  billingCycle      String   @default("monthly")  // "monthly" | "yearly"
+
+  amount            Float  
+  currency          String   @default("IDR")
+
+  // Status mirrors Midtrans: pending | settlement | expire | cancel | deny | failure
+  status            String   @default("pending")
+
+  paymentType       String?  // credit_card | bank_transfer | gopay | shopeepay | qris …
+  midtransOrderId   String?  // Midtrans transaction_id
+  fraudStatus       String?  // accept | challenge | deny
+  paidAt            DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([orderId])
+  @@index([status])
+  @@map("payment_transactions")
 }
 
 model ReceiptItem {
@@ -248,9 +289,9 @@ model ReceiptItem {
   productName     String
   sku             String?
   quantity        Int
-  unitPrice       Decimal  @db.Decimal(12, 2)
-  discountApplied Decimal  @db.Decimal(12, 2) @default(0)
-  totalPrice      Decimal  @db.Decimal(12, 2)
+  unitPrice       Float  
+  discountApplied Float  @default(0)
+  totalPrice      Float  
 
   @@index([receiptId])
   @@index([productId])

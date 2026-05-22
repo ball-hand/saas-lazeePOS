@@ -78,7 +78,7 @@ router.post('/', authenticate, async (req, res) => {
             create: receiptItems,
           },
         },
-        include: { items: true, user: true },
+        include: { items: true },
       });
 
       // Deduct stock for each item

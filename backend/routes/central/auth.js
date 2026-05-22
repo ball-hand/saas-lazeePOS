@@ -26,7 +26,7 @@ router.post('/login', async (req, res) => {
 
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, name: true, role: true, isActive: true, tenantId: true },
+      select: { id: true, email: true, name: true, role: true, isActive: true, tenantId: true, passwordHash: true },
     });
 
     if (!user || user.role !== 'superadmin' || !user.isActive) {
@@ -82,7 +82,7 @@ router.get('/dashboard', verifyToken, requireRole('superadmin'), async (req, res
       prisma.tenant.count({ where: { createdAt: { gte: firstDay } } }),
       prisma.tenant.count({ where: { status: 'trial' } }),
       prisma.tenant.count({ where: { status: 'suspended' } }),
-      prisma.warehouse.count({ where: { quantity: { lte: prisma.warehouse.fields.reorderLevel } } }),
+      prisma.warehouse.findMany({ select: { quantity: true, reorderLevel: true } }).then(ws => ws.filter(w => w.quantity <= w.reorderLevel).length),
     ]);
 
     // Top tenants this month by revenue
