@@ -1,0 +1,258 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   PLATFORM MODELS  — managed by the SuperAdmin / Central Portal
+───────────────────────────────────────────────────────────────── */
+
+/// A subscription tier / plan as sold by the SaaS platform.
+model Plan {
+  id          Int    @id @default(autoincrement())
+  name        String @unique // "Starter" | "Pro" | "Enterprise"
+  description String? @db.Text
+
+  // Limits
+  maxProducts Int  @default(100)
+  maxUsers    Int  @default(3)
+  maxBranches Int  @default(1)
+
+  // Billing
+  monthlyPrice Decimal @db.Decimal(12, 2)
+  features     Json?   // { "pos": true, "api": false, … }
+
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  tenants       Tenant[]
+  subscriptions Subscription[]
+
+  @@index([name])
+  @@index([isActive])
+  @@map("plans")
+}
+
+/// One subscription per tenant (enforced by @@unique on tenantId).
+model Subscription {
+  id                  Int               @id @default(autoincrement())
+  tenantId            Int
+  tenant              Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  planId              Int
+  plan                Plan              @relation(fields: [planId], references: [id])
+
+  billingCycle        String            @default("monthly") // "monthly" | "yearly"
+  status              String            @default("trial")   // "trial" | "active" | "suspended" | "cancelled"
+  currentPeriodStart  DateTime
+  currentPeriodEnd    DateTime
+  trialEndsAt         DateTime?
+
+  paymentProvider     String? // "stripe" | "midtrans" | "xendit" | …
+  paymentMethod       String? // "credit_card" | "bank_transfer" | "qris" | …
+  lastPaymentAt       DateTime?
+  nextBillingAt       DateTime?
+
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@unique([tenantId])
+  @@index([status])
+  @@index([nextBillingAt])
+  @@index([tenantId, status])
+  @@map("subscriptions")
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   TENANT MODELS  — scoped to a tenant via tenantId
+───────────────────────────────────────────────────────────────── */
+
+model Tenant {
+  id             Int      @id @default(autoincrement())
+  name           String
+  subdomain      String   @unique  // e.g. "kopisenja" → kopisenja.lazeepos.com
+  logoUrl        String?  @db.Text
+
+  themeMode      String   @default("dark")   // "light" | "dark"
+  primaryColor   String   @default("#8B5CF6")
+
+  // SaaS fields
+  planId         Int?
+  plan           Plan?    @relation(fields: [planId], references: [id])
+  subscription   Subscription?
+
+  status         String   @default("active")  // "active" | "suspended" | "trial_expired"
+  trialEndsAt    DateTime?
+  suspendedAt    DateTime?
+  suspendedReason String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations — all tenant-scoped
+  users         User[]
+  products      Product[]
+  cashFlow      CashFlow[]
+  discountRules DiscountRule[]
+  receipts      Receipt[]
+
+  @@index([subdomain])
+  @@index([status])
+  @@index([planId])
+  @@map("tenants")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+
+  /// null = superadmin (platform-wide access).
+  /// set = tenant staff (admin / cashier).
+  tenantId      Int?
+  tenant        Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  email         String   @unique
+  passwordHash  String
+  name          String?
+  role          String   @default("cashier")  // "superadmin" | "admin" | "cashier"
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([role])
+  @@map("users")
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  tenantId      Int
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  sku           String?
+  name          String
+  description   String?  @db.Text
+  price         Decimal  @db.Decimal(12, 2)
+  costPrice     Decimal? @db.Decimal(12, 2)
+  category      String?
+  imageUrl      String?  @db.Text
+  isActive      Boolean  @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  warehouse     Warehouse?
+  receiptItems  ReceiptItem[]
+
+  @@unique([tenantId, sku])
+  @@index([tenantId])
+  @@index([category])
+  @@map("products")
+}
+
+model Warehouse {
+  id            Int      @id @default(autoincrement())
+  productId     Int      @unique
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  quantity      Int      @default(0)
+  reorderLevel  Int      @default(5)
+  location      String?
+  lastRestocked DateTime?
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  @@index([productId])
+  @@map("warehouse")
+}
+
+model CashFlow {
+  id              Int      @id @default(autoincrement())
+  tenantId        Int
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  type            String   // "sale" | "expense" | "income"
+  amount          Decimal  @db.Decimal(12, 2)
+  description     String?  @db.Text
+  referenceId     String?  // receiptNumber for sales
+  transactionDate DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([transactionDate])
+  @@map("cash_flow")
+}
+
+model DiscountRule {
+  id                Int      @id @default(autoincrement())
+  tenantId          Int
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name              String
+  discountType      String   // "percentage" | "fixed_amount" | "bogo"
+  discountValue     Decimal  @db.Decimal(12, 2)
+  appliesTo         String   @default("all")         // "all" | "category" | "product"
+  appliesToId       Int?                                      // productId when appliesTo = "product"
+  appliesToCategory String?
+  minQuantity       Int      @default(1)
+  minOrderAmount    Decimal? @db.Decimal(12, 2)
+  startsAt          DateTime?
+  endsAt            DateTime?
+  isActive          Boolean  @default(true)
+
+  createdAt         DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("discount_rules")
+}
+
+model Receipt {
+  id              Int      @id @default(autoincrement())
+  tenantId        Int
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  customerName    String?
+  subtotalAmount  Decimal  @db.Decimal(12, 2)
+  discountAmount  Decimal  @db.Decimal(12, 2) @default(0)
+  taxAmount       Decimal  @db.Decimal(12, 2) @default(0)
+  totalAmount     Decimal  @db.Decimal(12, 2)
+  paidAmount      Decimal  @db.Decimal(12, 2)
+  changeGiven     Decimal  @db.Decimal(12, 2) @default(0)
+  paymentMethod   String   @default("cash") // "cash" | "card" | "transfer"
+  receiptNumber   String   @unique
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  items           ReceiptItem[]
+
+  @@index([tenantId])
+  @@index([receiptNumber])
+  @@index([createdAt])
+  @@map("receipts")
+}
+
+model ReceiptItem {
+  id              Int      @id @default(autoincrement())
+  receiptId       Int
+  receipt         Receipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+
+  productId       Int?
+  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName     String
+  sku             String?
+  quantity        Int
+  unitPrice       Decimal  @db.Decimal(12, 2)
+  discountApplied Decimal  @db.Decimal(12, 2) @default(0)
+  totalPrice      Decimal  @db.Decimal(12, 2)
+
+  @@index([receiptId])
+  @@index([productId])
+  @@map("receipt_items")
+}
