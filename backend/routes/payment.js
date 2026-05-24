@@ -30,7 +30,8 @@ const coreApi = new midtransClient.CoreApi({
 ───────────────────────────────────────────────────── */
 function makeOrderId(tenantId, planId) {
   const ts = Date.now();
-  return `LAZEE-SUB-${tenantId}-${planId}-${ts}`;
+  const rnd = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `LZ-${ts}-${rnd}`;
 }
 
 /* ═══════════════════════════════════════════════════
