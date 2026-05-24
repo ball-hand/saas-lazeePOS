@@ -164,6 +164,7 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
       select: {
         id: true, orderId: true, amount: true, status: true,
         paymentType: true, billingCycle: true, paidAt: true, createdAt: true,
+        activeFrom: true, activeUntil: true,
         plan: { select: { name: true } },
       },
     });
@@ -469,6 +470,13 @@ async function _activateSubscription(tenantId, planId, billingCycle, orderId) {
         isActive: true 
       },
     }),
+    // Save the period dates to the transaction history
+    ...(orderId ? [
+      prisma.paymentTransaction.update({
+        where: { orderId },
+        data: { activeFrom: baseDate, activeUntil: periodEnd }
+      })
+    ] : [])
   ]);
 
   console.log(`[Billing] Tenant ${tenantId} upgraded to plan ${planId} (${billingCycle}), ends ${periodEnd.toISOString()}`);

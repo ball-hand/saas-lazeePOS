@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { ReactElement } from 'react';
 import {
   CreditCard, CheckCircle2, Zap, Shield, Building2,
-  Calendar, RefreshCw, Loader2, Crown, AlertCircle, ExternalLink, HelpCircle, UserCheck, PackageOpen, GitCommit
+  Calendar, RefreshCw, Loader2, Crown, AlertCircle, ExternalLink, HelpCircle, UserCheck, PackageOpen, GitCommit, X
 } from 'lucide-react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
@@ -32,6 +32,7 @@ export function Billing() {
   const [isLoading, setIsLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isUpgrading, setIsUpgrading] = useState<number | null>(null);
+  const [selectedTx, setSelectedTx] = useState<any>(null);
 
   /* Load Midtrans Snap JS */
   useEffect(() => {
@@ -490,7 +491,11 @@ export function Billing() {
                 {data.recentTransactions.map((tx: any) => {
                   const badge = STATUS_BADGE[tx.status] || STATUS_BADGE['pending'];
                   return (
-                    <tr key={tx.id} className="hover:bg-[var(--bg-main)] transition-colors">
+                    <tr 
+                      key={tx.id} 
+                      className="hover:bg-[var(--bg-main)] transition-colors cursor-pointer"
+                      onClick={() => setSelectedTx(tx)}
+                    >
                       <td className="py-3 font-mono text-xs text-[var(--text-secondary)]">{tx.orderId}</td>
                       <td className="py-3 font-semibold text-[var(--text-primary)]">{tx.plan?.name || '—'}</td>
                       <td className="py-3 font-bold text-[var(--text-primary)]">{fmt(tx.amount)}</td>
@@ -508,6 +513,64 @@ export function Billing() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Detail Modal */}
+      {selectedTx && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setSelectedTx(null)}>
+          <div 
+            className="bg-[var(--bg-surface-elevated)] w-full max-w-md rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-5 border-b border-[var(--border)]">
+              <h3 className="font-bold text-lg text-[var(--text-primary)]">Detail Transaksi</h3>
+              <button onClick={() => setSelectedTx(null)} className="p-1 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--bg-main)] transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4 text-sm text-[var(--text-primary)]">
+              <div className="flex justify-between pb-2 border-b border-[var(--border)]">
+                <span className="text-[var(--text-secondary)]">Status</span>
+                <span className={`px-2 py-0.5 rounded text-xs font-bold ${STATUS_BADGE[selectedTx.status]?.cls || ''}`}>
+                  {STATUS_BADGE[selectedTx.status]?.label || selectedTx.status}
+                </span>
+              </div>
+              <div className="flex justify-between pb-2 border-b border-[var(--border)]">
+                <span className="text-[var(--text-secondary)]">Order ID</span>
+                <span className="font-mono font-semibold">{selectedTx.orderId}</span>
+              </div>
+              <div className="flex justify-between pb-2 border-b border-[var(--border)]">
+                <span className="text-[var(--text-secondary)]">Tanggal Transaksi</span>
+                <span>{new Date(selectedTx.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+              </div>
+              <div className="flex justify-between pb-2 border-b border-[var(--border)]">
+                <span className="text-[var(--text-secondary)]">Metode Pembayaran</span>
+                <span className="font-semibold uppercase">{selectedTx.paymentType?.replace(/_/g, ' ') || '—'}</span>
+              </div>
+              <div className="flex justify-between pb-2 border-b border-[var(--border)]">
+                <span className="text-[var(--text-secondary)]">Paket</span>
+                <span className="font-bold text-[var(--accent-primary)]">
+                  {selectedTx.plan?.name || '—'} ({selectedTx.billingCycle === 'yearly' ? 'Tahunan' : 'Bulanan'})
+                </span>
+              </div>
+              <div className="flex justify-between pb-2 border-b border-[var(--border)]">
+                <span className="text-[var(--text-secondary)]">Total Pembayaran</span>
+                <span className="font-black text-lg">{fmt(selectedTx.amount)}</span>
+              </div>
+              
+              {selectedTx.status === 'settlement' && selectedTx.activeFrom && selectedTx.activeUntil && (
+                <div className="mt-4 p-4 rounded-xl bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20">
+                  <div className="text-xs text-[var(--accent-primary)] font-bold uppercase mb-1">Masa Aktif Paket</div>
+                  <div className="text-[var(--text-primary)] font-semibold flex items-center justify-between text-sm">
+                    <span>{new Date(selectedTx.activeFrom).toLocaleDateString('id-ID', { dateStyle: 'medium' })}</span>
+                    <span className="text-[var(--text-secondary)] text-xs">s/d</span>
+                    <span>{new Date(selectedTx.activeUntil).toLocaleDateString('id-ID', { dateStyle: 'medium' })}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

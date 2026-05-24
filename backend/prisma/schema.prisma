@@ -320,6 +320,8 @@ model PaymentTransaction {
   status          String    @default("pending")
   paymentType     String?
   paidAt          DateTime?
+  activeFrom      DateTime?
+  activeUntil     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
