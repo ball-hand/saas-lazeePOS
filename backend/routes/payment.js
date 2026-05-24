@@ -129,7 +129,7 @@ router.post('/create-transaction', verifyToken, requireTenant, async (req, res) 
     if (!planId) return res.status(400).json({ message: 'planId wajib diisi.' });
 
     const plan = await prisma.plan.findUnique({
-      where: { id: parseInt(planId), isActive: true },
+      where: { id: planId, isActive: true },
     });
     if (!plan) return res.status(404).json({ message: 'Paket tidak ditemukan.' });
 

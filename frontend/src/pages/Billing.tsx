@@ -414,11 +414,22 @@ export function Billing() {
                 </a>
               ) : isCurrent ? (
                 <button
-                  disabled
-                  className="w-full py-3 rounded-xl font-black text-sm text-white opacity-60 cursor-not-allowed flex items-center justify-center gap-1.5"
-                  style={{ background: 'var(--accent-gradient)' }}
+                  onClick={() => isFree ? null : handleUpgrade(plan.id)}
+                  disabled={isUpgrading !== null || isFree}
+                  className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all ${
+                    isFree 
+                      ? 'text-white opacity-60 cursor-not-allowed shadow-none' 
+                      : 'text-[var(--accent-primary)] border border-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)]'
+                  }`}
+                  style={isFree ? { background: 'var(--accent-gradient)' } : {}}
                 >
-                  ✓ Paket Saat Ini
+                  {isUpgrading === plan.id ? (
+                    <><Loader2 size={15} className="animate-spin" /> Memproses...</>
+                  ) : isFree ? (
+                    '✓ Paket Saat Ini'
+                  ) : (
+                    <><RefreshCw size={15} /> Perpanjang Langganan</>
+                  )}
                 </button>
               ) : (
                 <button
