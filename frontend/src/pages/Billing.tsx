@@ -304,7 +304,7 @@ export function Billing() {
       {/* Plan cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {plans.map(plan => {
-          const isCurrent = plan.id === currentPlanId;
+          const isCurrent = plan.id === currentPlanId && data?.subscription?.billingCycle === billingCycle;
           const monthlyPrice = parseFloat(plan.monthlyPrice);
           const displayPrice = billingCycle === 'yearly'
             ? Math.round(monthlyPrice * 12 * 0.85)

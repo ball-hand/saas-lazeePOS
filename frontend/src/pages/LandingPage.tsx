@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Store, TrendingUp, ShieldCheck, Zap, ArrowRight, CheckCircle2, Star,
   Play, ChevronDown, Award, HelpCircle, DollarSign, RefreshCw, BarChart3,
-  Smartphone, Printer, Settings, Layers, Sparkles
+  Smartphone, Printer, Settings, Layers, Sparkles, X
 } from 'lucide-react';
 
 const fmt = (val: number) =>
@@ -12,6 +12,41 @@ const fmt = (val: number) =>
 export function LandingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [storeId, setStoreId] = useState('');
+
+  const handleTenantLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!storeId.trim()) return;
+    
+    const input = storeId.trim().toLowerCase();
+    const hostname = window.location.hostname;
+    const port = window.location.port ? `:${window.location.port}` : '';
+    
+    let targetUrl = '';
+    if (hostname === 'localhost') {
+      targetUrl = `${window.location.protocol}//${input}.localhost${port}/login`;
+    } else if (hostname.endsWith('lazeepos.local')) {
+      targetUrl = `${window.location.protocol}//${input}.lazeepos.local${port}/login`;
+    } else {
+      const parts = hostname.split('.');
+      if (parts.length > 2) parts.shift();
+      const parentDomain = parts.join('.');
+      targetUrl = `${window.location.protocol}//${input}.${parentDomain}${port}/login`;
+    }
+    
+    window.location.href = targetUrl;
+  };
+
+  let domainSuffix = '.localhost';
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname !== 'localhost') {
+       const parts = hostname.split('.');
+       if (parts.length > 2) parts.shift();
+       domainSuffix = '.' + parts.join('.');
+    }
+  }
 
   const pricingPlans = [
     {
@@ -111,9 +146,12 @@ export function LandingPage() {
             <a href="#faq" className="hover:text-[var(--text-primary)] transition-colors">FAQ</a>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+            <button 
+              onClick={() => setShowLoginModal(true)} 
+              className="text-sm font-bold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
               Masuk
-            </Link>
+            </button>
             <Link to="/register" className="px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5" style={{ background: 'var(--accent-gradient)' }}>
               Coba Gratis
             </Link>
@@ -566,6 +604,58 @@ export function LandingPage() {
           </p>
         </div>
       </footer>
+
+      {/* =========================================
+          TENANT LOGIN MODAL
+      ========================================= */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowLoginModal(false)} />
+          <div className="relative w-full max-w-md bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[2rem] p-8 shadow-2xl animate-fade-in">
+            <button 
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-6 right-6 text-[var(--text-secondary)] hover:text-[var(--danger)] transition-colors"
+            >
+              <X size={24} />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] flex items-center justify-center mb-6">
+              <Store size={24} />
+            </div>
+
+            <h3 className="text-2xl font-extrabold text-[var(--text-primary)] mb-2">Masuk ke Toko</h3>
+            <p className="text-[var(--text-secondary)] text-sm font-medium mb-8 leading-relaxed">
+              Masukkan ID atau nama toko Anda (Subdomain) untuk diarahkan secara aman ke dasbor kasir Anda.
+            </p>
+
+            <form onSubmit={handleTenantLogin} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-[var(--text-secondary)] mb-2 uppercase tracking-wider">Subdomain Toko</label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    required
+                    value={storeId}
+                    onChange={(e) => setStoreId(e.target.value)}
+                    placeholder="contoh: demo"
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] px-4 py-3.5 rounded-xl font-medium focus:outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
+                  />
+                  <div className="absolute right-4 text-[var(--text-secondary)] font-bold text-xs pointer-events-none opacity-50 bg-[var(--bg-surface-elevated)] px-2 py-1 rounded-md border border-[var(--border)]">
+                    {domainSuffix}
+                  </div>
+                </div>
+              </div>
+              <button 
+                type="submit"
+                className="w-full py-4 rounded-xl text-sm font-bold text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2 mt-4"
+                style={{ background: 'var(--accent-gradient)' }}
+              >
+                Lanjutkan <ArrowRight size={18} />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

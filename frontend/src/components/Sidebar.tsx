@@ -15,28 +15,51 @@ export function Sidebar({ onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const { storeName, logoUrl } = useTheme();
 
-  const tenantNavItems = [
-    { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { to: '/pos', icon: <ShoppingCart size={20} />, label: 'POS Terminal' },
-    { to: '/products',  icon: <Package size={20} />,       label: 'Produk' },
-    { to: '/warehouse',  icon: <Warehouse size={20} />,     label: 'Gudang' },
-    { to: '/receipts',   icon: <ReceiptText size={20} />,   label: 'Struk' },
-    { to: '/cashflow',   icon: <Wallet size={20} />,        label: 'Kas' },
-    ...(user?.role === 'admin' ? [
-      { to: '/discounts', icon: <Tags size={20} />,         label: 'Diskon' },
-      { to: '/billing',   icon: <CreditCard size={20} />,  label: 'Langganan' },
-      { to: '/settings',  icon: <SettingsIcon size={20} />, label: 'Pengaturan' },
-    ] : []),
+  const tenantNavGroups = [
+    {
+      title: "Menu Utama",
+      items: [
+        { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+        { to: '/pos', icon: <ShoppingCart size={20} />, label: 'POS Terminal' },
+      ]
+    },
+    {
+      title: "Manajemen Inventori",
+      items: [
+        { to: '/products',  icon: <Package size={20} />,       label: 'Katalog Produk' },
+        { to: '/warehouse',  icon: <Warehouse size={20} />,     label: 'Stok Gudang' },
+      ]
+    },
+    {
+      title: "Keuangan & Laporan",
+      items: [
+        { to: '/receipts',   icon: <ReceiptText size={20} />,   label: 'Riwayat Struk' },
+        { to: '/cashflow',   icon: <Wallet size={20} />,        label: 'Arus Kas' },
+      ]
+    },
+    ...(user?.role === 'admin' ? [{
+      title: "Administrasi",
+      items: [
+        { to: '/discounts', icon: <Tags size={20} />,         label: 'Aturan Diskon' },
+        { to: '/billing',   icon: <CreditCard size={20} />,  label: 'Langganan' },
+        { to: '/settings',  icon: <SettingsIcon size={20} />, label: 'Pengaturan' },
+      ]
+    }] : []),
   ];
 
-  const centralNavItems = [
-    { to: '/central', icon: <LayoutDashboard size={20} />, label: 'Platform Dashboard' },
-    { to: '/central/tenants', icon: <Building2 size={20} />, label: 'Daftar Tenant' },
-    { to: '/central/plans', icon: <CreditCard size={20} />, label: 'Paket Berlangganan' },
-    { to: '/central/platform', icon: <SettingsIcon size={20} />, label: 'Pengaturan Sistem' },
+  const centralNavGroups = [
+    {
+      title: "Platform Admin",
+      items: [
+        { to: '/central', icon: <LayoutDashboard size={20} />, label: 'Platform Dashboard' },
+        { to: '/central/tenants', icon: <Building2 size={20} />, label: 'Daftar Tenant' },
+        { to: '/central/plans', icon: <CreditCard size={20} />, label: 'Paket Berlangganan' },
+        { to: '/central/platform', icon: <SettingsIcon size={20} />, label: 'Pengaturan Sistem' },
+      ]
+    }
   ];
 
-  const navItems = user?.role === 'central' ? centralNavItems : tenantNavItems;
+  const navGroups = user?.role === 'central' ? centralNavGroups : tenantNavGroups;
 
   return (
     <aside className="w-64 h-full flex flex-col bg-[var(--bg-surface-elevated)] border-r border-[var(--border)] shadow-xl md:shadow-none">
@@ -68,23 +91,34 @@ export function Sidebar({ onClose }: SidebarProps) {
       </div>
 
       {/* Navigasi Utama */}
-      <nav className="flex-1 px-4 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar py-2">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={onClose} // Auto-close di mobile saat pindah halaman
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                isActive
-                  ? 'bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] font-semibold shadow-[inset_3px_0_0_0_var(--accent-primary)]'
-                  : 'text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] font-medium'
-              }`
-            }
-          >
-            <span className={`transition-transform duration-200 group-hover:scale-110`}>{item.icon}</span>
-            <span className="text-sm">{item.label}</span>
-          </NavLink>
+      <nav className="flex-1 px-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar py-4">
+        {navGroups.map((group, idx) => (
+          <div key={idx}>
+            {group.title && (
+              <p className="px-3 mb-2 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                {group.title}
+              </p>
+            )}
+            <div className="flex flex-col gap-1.5">
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group ${
+                      isActive
+                        ? 'bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] font-semibold shadow-[inset_3px_0_0_0_var(--accent-primary)]'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] font-medium'
+                    }`
+                  }
+                >
+                  <span className={`transition-transform duration-200 group-hover:scale-110`}>{item.icon}</span>
+                  <span className="text-sm">{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
