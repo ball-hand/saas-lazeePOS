@@ -80,6 +80,53 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
 
     if (!tenant) return res.status(404).json({ message: 'Tenant tidak ditemukan.' });
 
+    // Active sync for the latest pending transaction (fallback for webhook in local dev)
+    let currentTenant = tenant;
+    try {
+      const pendingTx = await prisma.paymentTransaction.findFirst({
+        where: { tenantId: req.user.tenantId, status: 'pending' },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      if (pendingTx) {
+        const midtransStatus = await coreApi.transaction.status(pendingTx.orderId);
+        let newStatus = 'pending';
+        let paidAt = pendingTx.paidAt;
+        
+        if (midtransStatus.transaction_status === 'capture') {
+          newStatus = midtransStatus.fraud_status === 'accept' ? 'settlement' : 'challenge';
+        } else if (midtransStatus.transaction_status === 'settlement') {
+          newStatus = 'settlement';
+          paidAt = new Date();
+        } else if (['cancel', 'deny', 'expire'].includes(midtransStatus.transaction_status)) {
+          newStatus = midtransStatus.transaction_status;
+        }
+
+        if (newStatus !== 'pending') {
+          await prisma.paymentTransaction.update({
+            where: { id: pendingTx.id },
+            data: { 
+              status: newStatus,
+              paymentType: midtransStatus.payment_type || null,
+              paidAt 
+            },
+          });
+          
+          if (newStatus === 'settlement' && pendingTx.planId) {
+            await _activateSubscription(pendingTx.tenantId, pendingTx.planId, pendingTx.billingCycle, pendingTx.orderId);
+            // Refresh tenant data after activation
+            const updatedTenant = await prisma.tenant.findUnique({
+              where: { id: req.user.tenantId },
+              include: { subscription: { include: { plan: true } } }
+            });
+            if (updatedTenant) currentTenant = updatedTenant;
+          }
+        }
+      }
+    } catch (err) {
+      // Ignored if Midtrans throws 404 or fails
+    }
+
     // Last 5 payment transactions
     const transactions = await prisma.paymentTransaction.findMany({
       where: { tenantId: req.user.tenantId },
@@ -98,13 +145,13 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
 
     res.json({
       tenant: {
-        id: tenant.id,
-        name: tenant.name,
-        subdomain: tenant.subdomain,
-        status: tenant.status,
-        trialEndsAt: tenant.trialEndsAt,
+        id: currentTenant.id,
+        name: currentTenant.name,
+        subdomain: currentTenant.subdomain,
+        status: currentTenant.status,
+        trialEndsAt: currentTenant.trialEndsAt,
       },
-      subscription: tenant.subscription,
+      subscription: currentTenant.subscription,
       recentTransactions: transactions,
       activeUsers,
       productCount,
