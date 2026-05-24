@@ -1,12 +1,13 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { authenticate, requireRole } from '../middleware/auth.js';
+import { verifyToken, requireRole, requireTenant } from '../middleware/auth.js';
+import { requireProductLimit } from '../middleware/planLimits.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // GET /api/products — list with search & category filter
-router.get('/', authenticate, async (req, res) => {
+router.get('/', verifyToken, requireTenant, async (req, res) => {
   try {
     const { search, category, active } = req.query;
     const where = { tenantId: req.user.tenantId };
@@ -24,11 +25,18 @@ router.get('/', authenticate, async (req, res) => {
       where.isActive = active === 'true';
     }
 
-    const products = await prisma.product.findMany({
-      where,
-      include: { warehouse: true },
-      orderBy: { createdAt: 'desc' },
-    });
+    const { skip, take, page, limit } = req.pagination || { skip: 0, take: 50 };
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        skip,
+        take,
+        include: { warehouse: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.product.count({ where }),
+    ]);
 
     // Get unique categories
     const categories = await prisma.product.findMany({
@@ -40,6 +48,12 @@ router.get('/', authenticate, async (req, res) => {
     res.json({
       products,
       categories: categories.map((c) => c.category).filter(Boolean),
+      pagination: req.pagination ? {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      } : undefined
     });
   } catch (error) {
     console.error('Products list error:', error);
@@ -48,7 +62,7 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // POST /api/products — create product
-router.post('/', authenticate, requireRole('admin'), async (req, res) => {
+router.post('/', verifyToken, requireTenant, requireProductLimit, requireRole('admin'), async (req, res) => {
   try {
     const { sku, name, description, price, costPrice, category, imageUrl, initialStock, reorderLevel } = req.body;
 
@@ -88,16 +102,16 @@ router.post('/', authenticate, requireRole('admin'), async (req, res) => {
 });
 
 // PUT /api/products/:id — update product
-router.put('/:id', authenticate, requireRole('admin'), async (req, res) => {
+router.put('/:id', verifyToken, requireTenant, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
     const { sku, name, description, price, costPrice, category, imageUrl, isActive } = req.body;
 
-    const existing = await prisma.product.findFirst({ where: { id: parseInt(id), tenantId: req.user.tenantId } });
+    const existing = await prisma.product.findFirst({ where: { id, tenantId: req.user.tenantId } });
     if (!existing) return res.status(404).json({ message: 'Product not found' });
 
     const product = await prisma.product.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: {
         ...(sku !== undefined && { sku: sku || null }),
         ...(name !== undefined && { name }),
@@ -119,16 +133,19 @@ router.put('/:id', authenticate, requireRole('admin'), async (req, res) => {
 });
 
 // DELETE /api/products/:id — soft delete (set isActive = false)
-router.delete('/:id', authenticate, requireRole('admin'), async (req, res) => {
+router.delete('/:id', verifyToken, requireTenant, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
 
-    const existing = await prisma.product.findFirst({ where: { id: parseInt(id), tenantId: req.user.tenantId } });
+    const existing = await prisma.product.findFirst({ where: { id, tenantId: req.user.tenantId } });
     if (!existing) return res.status(404).json({ message: 'Product not found' });
 
     await prisma.product.update({
-      where: { id: parseInt(id) },
-      data: { isActive: false },
+      where: { id },
+      data: {
+        isActive: false,
+        warehouse: { update: { quantity: 0 } },
+      },
     });
 
     res.json({ message: 'Product deactivated' });

@@ -85,3 +85,48 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+/* ------------------------------------------------------------------
+   THERMAL PRINTER PRINT STYLES
+------------------------------------------------------------------- */
+@media print {
+  /* Hide all screen-only UI elements */
+  body *, #root * {
+    visibility: hidden;
+  }
+  
+  /* Show only the printable receipt container and its children */
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  
+  /* Absolute position at top-left of the page with zero margins */
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Force standard monospaced text for thermal paper roll */
+  #printable-receipt span,
+  #printable-receipt p,
+  #printable-receipt h2,
+  #printable-receipt div {
+    color: black !important;
+    font-family: 'Courier New', Courier, monospace !important;
+  }
+
+  /* Set page margin to 0 for seamless roll feed */
+  @page {
+    size: auto;
+    margin: 0;
+  }
+}

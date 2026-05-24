@@ -53,17 +53,17 @@ async function main() {
   const proPlan = await prisma.plan.findUnique({ where: { name: 'Pro' } });
 
   /* ──────────────────────────────────────────
-     2. SUPERADMIN
+     2. CENTRAL OWNER
   ────────────────────────────────────────── */
-  console.log('\n🔐 Seeding superadmin...');
+  console.log('\n🔐 Seeding central owner...');
   await prisma.user.upsert({
     where: { email: 'admin@lazeepos.com' },
     update: {},
     create: {
       email: 'admin@lazeepos.com',
       passwordHash: await bcrypt.hash('Admin123!', 10),
-      name: 'Platform Super Admin',
-      role: 'superadmin',
+      name: 'Platform Central Owner',
+      role: 'central',
       tenantId: null,
     },
   });
@@ -82,7 +82,7 @@ async function main() {
   // Clean up existing demo data
   const existingDemo = await prisma.tenant.findUnique({ where: { subdomain: 'demo' } });
   if (existingDemo) {
-    await prisma.discountRule.deleteMany({ where: { tenantId: existingDemo.id } });
+    await prisma.discount.deleteMany({ where: { tenantId: existingDemo.id } });
     const productIds = (await prisma.product.findMany({ where: { tenantId: existingDemo.id }, select: { id: true } })).map(p => p.id);
     if (productIds.length) {
       await prisma.warehouse.deleteMany({ where: { productId: { in: productIds } } });
@@ -93,13 +93,13 @@ async function main() {
 
   const demoTenant = await prisma.tenant.upsert({
     where: { subdomain: 'demo' },
-    update: { status: 'active' },
+    update: { status: 'ACTIVE' },
     create: {
       name: 'Demo Store — LazeePOS',
       subdomain: 'demo',
       themeMode: 'dark',
       primaryColor: '#8B5CF6',
-      status: 'active',
+      status: 'ACTIVE',
       planId: proPlan.id,
     },
   });
@@ -132,7 +132,7 @@ async function main() {
       email: 'kasir@lazeepos.com',
       passwordHash: await bcrypt.hash('Kasir123!', 10),
       name: 'Demo Kasir',
-      role: 'cashier',
+      role: 'kasir',
       tenantId: demoTenant.id,
     },
   });
@@ -165,6 +165,7 @@ async function main() {
         isActive: true,
         warehouse: {
           create: {
+            tenantId: demoTenant.id,
             quantity: p.stock,
             reorderLevel: 10,
             location: 'Gudang Utama',
@@ -176,7 +177,7 @@ async function main() {
   console.log(`   ✅ ${productsSeed.length} products seeded`);
 
   /* Demo discount rules */
-  await prisma.discountRule.createMany({
+  await prisma.discount.createMany({
     data: [
       {
         tenantId: demoTenant.id,
@@ -184,36 +185,29 @@ async function main() {
         discountType: 'percentage',
         discountValue: 10,
         appliesTo: 'all',
+        minQuantity: 1,
+        startsAt: new Date(),
         isActive: true,
       },
       {
         tenantId: demoTenant.id,
-        name: 'Diskon Minuman Rp 5.000',
+        name: 'Diskon Rp 5.000 (Min Belanja)',
         discountType: 'fixed_amount',
         discountValue: 5000,
-        appliesTo: 'category',
-        appliesToCategory: 'Minuman',
-        minQuantity: 2,
+        appliesTo: 'all',
+        minQuantity: 1,
+        minOrderAmount: 50000,
+        startsAt: new Date(),
         isActive: true,
-      },
-      {
-        tenantId: demoTenant.id,
-        name: 'Buy 2 Get 1 Muffin',
-        discountType: 'bogo',
-        discountValue: 27500,
-        appliesTo: 'product',
-        appliesToId: null, // Will be set if needed
-        minQuantity: 2,
-        isActive: false,
-      },
+      }
     ],
   });
-  console.log('   ✅ 3 discount rules seeded');
+  console.log('   ✅ 2 discount rules seeded');
 
   console.log('\n✅ Seeding complete!\n');
   console.log('─────────────────────────────────────────');
   console.log('🔑 Login Credentials:');
-  console.log('   Super Admin  : admin@lazeepos.com / Admin123!');
+  console.log('   Central Owner: admin@lazeepos.com / Admin123!');
   console.log('   Demo Admin   : demo@lazeepos.com / Demo123!  (via demo.lazeepos.com)');
   console.log('   Demo Kasir   : kasir@lazeepos.com / Kasir123! (via demo.lazeepos.com)');
   console.log('─────────────────────────────────────────\n');

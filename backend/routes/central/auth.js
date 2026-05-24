@@ -15,7 +15,7 @@ function signToken(payload) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   POST /api/central/login  — superadmin login
+   POST /api/central/login  — central login
 ═══════════════════════════════════════════════════════ */
 router.post('/login', async (req, res) => {
   try {
@@ -29,7 +29,7 @@ router.post('/login', async (req, res) => {
       select: { id: true, email: true, name: true, role: true, isActive: true, tenantId: true, passwordHash: true },
     });
 
-    if (!user || user.role !== 'superadmin' || !user.isActive) {
+    if (!user || user.role !== 'central' || !user.isActive) {
       return res.status(401).json({ message: 'Kredensial tidak valid.' });
     }
 
@@ -47,9 +47,9 @@ router.post('/login', async (req, res) => {
 });
 
 /* ═══════════════════════════════════════════════════════
-   GET  /api/central/auth/me  — superadmin profile
+   GET  /api/central/auth/me  — central profile
 ═══════════════════════════════════════════════════════ */
-router.get('/auth/me', verifyToken, requireRole('superadmin'), async (req, res) => {
+router.get('/auth/me', verifyToken, requireRole('central'), async (req, res) => {
   try {
     const uid = req.user.userId || req.user.id;
     const user = await prisma.user.findUnique({
@@ -61,61 +61,6 @@ router.get('/auth/me', verifyToken, requireRole('superadmin'), async (req, res) 
   } catch (err) {
     console.error('Auth/me error:', err);
     res.status(500).json({ message: 'Gagal memuat profil.' });
-  }
-});
-
-/* ═══════════════════════════════════════════════════════
-   GET  /api/central/dashboard  — platform aggregate
-═══════════════════════════════════════════════════════ */
-router.get('/dashboard', verifyToken, requireRole('superadmin'), async (req, res) => {
-  try {
-    const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-
-    const [totalTenants, activeTenants, tenantUsers, superAdmins, mrrSum, monthRev, monthTx, newTenants, trialTenants, suspendedTenants, lowStock] = await Promise.all([
-      prisma.tenant.count(),
-      prisma.tenant.count({ where: { status: 'active' } }),
-      prisma.user.count({ where: { tenantId: { not: null }, isActive: true } }),
-      prisma.user.count({ where: { role: 'superadmin', isActive: true } }),
-      prisma.subscription.aggregate({ where: { status: 'active', billingCycle: 'monthly' }, _sum: { monthlyPrice: true } }),
-      prisma.receipt.aggregate({ where: { createdAt: { gte: firstDay } }, _sum: { totalAmount: true } }),
-      prisma.receipt.count({ where: { createdAt: { gte: firstDay } } }),
-      prisma.tenant.count({ where: { createdAt: { gte: firstDay } } }),
-      prisma.tenant.count({ where: { status: 'trial' } }),
-      prisma.tenant.count({ where: { status: 'suspended' } }),
-      prisma.warehouse.findMany({ select: { quantity: true, reorderLevel: true } }).then(ws => ws.filter(w => w.quantity <= w.reorderLevel).length),
-    ]);
-
-    // Top tenants this month by revenue
-    const topTenants = await prisma.tenant.findMany({
-      take: 5,
-      select: {
-        id: true, name: true, subdomain: true, status: true,
-        _count: { select: { users: true, products: true } },
-        subscription: { select: { plan: { select: { name: true, monthlyPrice: true } } } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const totalProducts = await prisma.product.count();
-
-    res.json({
-      totalTenants,
-      activeTenants,
-      inactiveTenants: totalTenants - activeTenants,
-      totalUserAccounts: tenantUsers + superAdmins,
-      totalProducts,
-      mrr: { value: (mrrSum._sum.monthlyPrice || 0).toString(), currency: 'IDR' },
-      mtdRevenue: { value: (monthRev._sum.totalAmount || 0).toString(), currency: 'IDR' },
-      mtdTransactions: monthTx,
-      newTenantsMonth: newTenants,
-      trialTenants,
-      suspendedTenants,
-      lowStockCount: lowStock,
-      topTenants,
-    });
-  } catch (err) {
-    console.error('Central dashboard error:', err);
-    res.status(500).json({ message: 'Gagal memuat dasbor pusat.' });
   }
 });
 

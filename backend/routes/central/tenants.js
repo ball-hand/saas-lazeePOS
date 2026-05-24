@@ -1,13 +1,13 @@
 // backend/routes/central/tenants.js
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import { verifyToken, requireRole, requireTenant } from '../../middleware/auth.js';
+import { verifyToken, requireRole } from '../../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-/* ALL routes here are restricted to superadmin */
-const protect = [verifyToken, requireRole('superadmin')];
+/* ALL routes here are restricted to central */
+const protect = [verifyToken, requireRole('central')];
 
 /* ───────────────────────────────────────────────────────
    GET  /api/central/tenants
@@ -25,16 +25,18 @@ router.get('/', ...protect, async (req, res) => {
         { subdomain: { contains: search } },
       ];
     }
-    if (status) where.status = status;
+    // Prisma enum case-sensitivity handling
+    if (status) where.status = status.toUpperCase(); 
     if (plan) where.plan = { name: { contains: plan } };
 
     const [tenants, total] = await Promise.all([
       prisma.tenant.findMany({
         where,
         include: {
-          _count: { select: { users: true, products: true, receipts: true } },
+          // PERBAIKAN: receipts diubah menjadi transactions
+          _count: { select: { users: true, products: true, transactions: true } },
           subscription: {
-            select: { status: true, billingCycle: true, nextBillingAt: true, plan: { select: { name: true, monthlyPrice: true } } },
+            select: { status: true, billingCycle: true, currentPeriodEnd: true, plan: { select: { name: true, monthlyPrice: true } } },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -62,14 +64,14 @@ router.get('/', ...protect, async (req, res) => {
 ──────────────────────────────────────────────────────── */
 router.get('/:id', ...protect, async (req, res) => {
   try {
-    const tenantId = parseInt(req.params.id);
-    if (isNaN(tenantId)) return res.status(400).json({ message: 'ID tidak valid.' });
+    const tenantId = req.params.id; // PERBAIKAN: Hapus parseInt karena ID adalah UUID String
+    if (!tenantId) return res.status(400).json({ message: 'ID tidak valid.' });
 
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
       include: {
         _count: {
-          select: { users: true, products: true, receipts: true, cashFlow: true },
+          select: { users: true, products: true, transactions: true, cashflows: true },
         },
         subscription: {
           include: { plan: true },
@@ -119,8 +121,9 @@ router.post('/', ...protect, async (req, res) => {
         planId: planId || null,
         themeMode: themeMode || 'dark',
         primaryColor: primaryColor || '#8B5CF6',
-        status: 'trial',
+        status: 'TRIAL',
         trialEndsAt: trialEnds,
+        isActive: true,
       },
     });
 
@@ -137,8 +140,8 @@ router.post('/', ...protect, async (req, res) => {
 ──────────────────────────────────────────────────────── */
 router.put('/:id', ...protect, async (req, res) => {
   try {
-    const tenantId = parseInt(req.params.id);
-    const { name, logoUrl, themeMode, primaryColor, status, suspendedReason } = req.body;
+    const tenantId = req.params.id; // UUID String
+    const { name, logoUrl, themeMode, primaryColor, status } = req.body;
 
     const existing = await prisma.tenant.findUnique({ where: { id: tenantId } });
     if (!existing) return res.status(404).json({ message: 'Tenant tidak ditemukan.' });
@@ -150,13 +153,12 @@ router.put('/:id', ...protect, async (req, res) => {
     if (primaryColor !== undefined) updateData.primaryColor = primaryColor;
 
     if (status !== undefined) {
-      updateData.status = status;
-      if (status === 'suspended') {
-        updateData.suspendedAt = new Date();
-        updateData.suspendedReason = suspendedReason || 'Suspended by superadmin';
+      updateData.status = status.toUpperCase();
+      // PERBAIKAN: Sesuaikan dengan schema.prisma, gunakan isActive alih-alih kolom fiktif
+      if (updateData.status === 'SUSPENDED') {
+        updateData.isActive = false;
       } else {
-        updateData.suspendedAt = null;
-        updateData.suspendedReason = null;
+        updateData.isActive = true;
       }
     }
 
@@ -174,12 +176,11 @@ router.put('/:id', ...protect, async (req, res) => {
 
 /* ───────────────────────────────────────────────────────
    DELETE  /api/central/tenants/:id
-   Soft-remove a tenant (set status = 'suspended' + reason)
+   Soft-remove a tenant (set status = 'SUSPENDED' + isActive = false)
 ──────────────────────────────────────────────────────── */
 router.delete('/:id', ...protect, async (req, res) => {
   try {
-    const tenantId = parseInt(req.params.id);
-    const { reason } = req.body;
+    const tenantId = req.params.id; // UUID String
 
     const existing = await prisma.tenant.findUnique({ where: { id: tenantId } });
     if (!existing) return res.status(404).json({ message: 'Tenant tidak ditemukan.' });
@@ -187,9 +188,8 @@ router.delete('/:id', ...protect, async (req, res) => {
     await prisma.tenant.update({
       where: { id: tenantId },
       data: {
-        status: 'suspended',
-        suspendedAt: new Date(),
-        suspendedReason: reason || 'Deleted by superadmin',
+        status: 'SUSPENDED',
+        isActive: false,
       },
     });
 

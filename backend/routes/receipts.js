@@ -100,7 +100,6 @@ router.post('/', authenticate, async (req, res) => {
           type: 'sale',
           amount: parseFloat(total.toFixed(2)),
           description: `Sale ${receiptNumber}${customerName ? ' - ' + customerName : ''}`,
-          referenceId: receiptNumber,
         },
       });
 
@@ -155,7 +154,7 @@ router.get('/', authenticate, async (req, res) => {
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const receipt = await prisma.receipt.findFirst({
-      where: { id: parseInt(req.params.id), tenantId: req.user.tenantId },
+      where: { id: req.params.id, tenantId: req.user.tenantId },
       include: { items: true },
     });
 

@@ -13,20 +13,25 @@ export async function tenantIdentificator(req, res, next) {
   const parts = host.split('.');
   let subdomain = null;
 
-  // Production: subdomain.lazeepos.com (3+ parts)
-  // Dev: subdomain.localhost:5000 (2 parts, second contains 'localhost')
-  if (parts.length >= 3) {
-    subdomain = parts[0];
-  } else if (parts.length === 2 && parts[1].includes('localhost')) {
-    subdomain = parts[0];
-  }
+   // Production: subdomain.lazeepos.com (3+ parts)
+   // Dev:    demo.localhost              (2 parts, second is bare TLD)
+   // Dev:    localhost:5000              (2 parts, second is pure digits → port, treat as no-subdomain)
+   if (parts.length >= 3) {
+     subdomain = parts[0];
+   } else if (parts.length === 2) {
+     const second = parts[1];
+     // If second part is purely a port number (e.g. "5000"), treat as no-subdomain
+     if (!/^\d+$/.test(second)) {
+       subdomain = parts[0];   // e.g. "demo" from "demo.localhost"
+     }
+   }
 
-  // No subdomain or root domain → central area (landing / superadmin)
-  if (!subdomain || subdomain === 'www' || subdomain === 'localhost') {
-    req.isCentral = true;
-    req.tenant = null;
-    return next();
-  }
+   // Only mark as central if no tenant subdomain was found AND it's the bare host
+   if (!subdomain || ['www', 'localhost'].includes(subdomain)) {
+     req.isCentral = true;
+     req.tenant = null;
+     return next();
+   }
 
   try {
     const tenant = await prisma.tenant.findUnique({

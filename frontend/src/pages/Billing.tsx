@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { ReactElement } from 'react';
 import {
   CreditCard, CheckCircle2, Zap, Shield, Building2,
-  Calendar, RefreshCw, Loader2, Crown, AlertCircle, ExternalLink,
+  Calendar, RefreshCw, Loader2, Crown, AlertCircle, ExternalLink, HelpCircle, UserCheck, PackageOpen, GitCommit
 } from 'lucide-react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
@@ -101,7 +101,7 @@ export function Billing() {
         window.snap.pay(txData.snapToken, {
           onSuccess: () => {
             toast.success('Pembayaran berhasil! 🎉');
-            setTimeout(fetchData, 2000); // slight delay for webhook to process
+            setTimeout(fetchData, 2000);
           },
           onPending: () => {
             toast('Pembayaran pending. Cek email atau aplikasi bankmu.', { icon: '⏳' });
@@ -114,7 +114,6 @@ export function Billing() {
           },
         });
       } else if (txData.snapRedirectUrl) {
-        // Fallback: redirect if Snap JS not loaded
         window.open(txData.snapRedirectUrl, '_blank');
       }
     } catch (err: any) {
@@ -134,6 +133,11 @@ export function Billing() {
 
   const currentPlanId = data?.subscription?.planId;
   const subStatus = data?.subscription?.status || data?.tenant?.status;
+  const planLimits = data?.subscription?.plan;
+  
+  // Usage variables
+  const productCount = data?.productCount || 0;
+  const activeUsers = data?.activeUsers || 0;
 
   const planIcons: Record<string, ReactElement> = {
     Starter:    <Zap size={22} />,
@@ -148,19 +152,34 @@ export function Billing() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Langganan & Billing</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola paket langganan dan riwayat pembayaran toko Anda.</p>
+          <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola paket langganan dan pantau kuota pemakaian fitur toko Anda.</p>
         </div>
         <button onClick={fetchData} className="p-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] transition-all" title="Refresh">
           <RefreshCw size={18} />
         </button>
       </div>
 
+      {/* Beginner Step-by-Step Guide Onboarding Panel */}
+      <div className="p-5 rounded-2xl bg-[var(--accent-primary-transparent)] border border-[var(--accent-primary)]/20 flex gap-4 items-start shadow-sm">
+        <HelpCircle size={24} className="text-[var(--accent-primary)] flex-shrink-0 mt-0.5" />
+        <div className="space-y-2 text-xs leading-relaxed text-[var(--text-secondary)]">
+          <h3 className="font-black text-sm text-[var(--text-primary)]">💡 Panduan Memulai & Cara Aktivasi Paket</h3>
+          <p>Bagi pemilik toko baru, berikut langkah mudah untuk melakukan langganan paket premium LazeePOS:</p>
+          <ol className="list-decimal list-inside space-y-1 font-medium pl-1 text-[var(--text-primary)]">
+            <li>Pilih siklus pembayaran: <strong className="text-[var(--accent-primary)]">Bulanan</strong> atau <strong className="text-[var(--success)]">Tahunan (Hemat 15%)</strong> pada tombol pilihan di bawah.</li>
+            <li>Klik tombol <strong className="text-[var(--accent-primary)]">Bayar Sekarang</strong> pada paket yang Anda inginkan (Cth: Paket Pro untuk fitur terlengkap).</li>
+            <li>Pop-up aman Midtrans akan otomatis terbuka. Selesaikan pembayaran menggunakan QRIS, GoPay, OVO, atau Transfer Bank.</li>
+            <li>Setelah pembayaran sukses, paket Anda akan otomatis aktif secara real-time dan kuota limit fitur Anda akan langsung bertambah!</li>
+          </ol>
+        </div>
+      </div>
+
       {/* Current subscription card */}
       {data?.subscription && (
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--accent-primary)]/30 rounded-2xl p-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Paket Aktif</p>
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row justify-between gap-6">
+            <div className="flex-1">
+              <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Paket Aktif Saat Ini</p>
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-black text-[var(--text-primary)]">
                   {data.subscription.plan?.name || 'Starter'}
@@ -171,43 +190,86 @@ export function Billing() {
                   </span>
                 )}
               </div>
-              <p className="text-[var(--text-secondary)] text-sm mt-1 font-medium">
+              <p className="text-[var(--text-secondary)] text-sm mt-1 font-semibold">
                 {fmt(data.subscription.plan?.monthlyPrice || 0)} / bulan
               </p>
             </div>
-            <div className="flex flex-col gap-1.5 text-sm text-right">
+            
+            <div className="flex flex-col gap-1.5 text-xs md:text-right text-[var(--text-secondary)] font-medium justify-center">
               {data.subscription.currentPeriodEnd && (
-                <div className="flex items-center gap-2 text-[var(--text-secondary)] justify-end">
-                  <Calendar size={14} />
-                  <span>Berakhir: <strong className="text-[var(--text-primary)]">
+                <div className="flex items-center gap-2 md:justify-end">
+                  <Calendar size={14} className="text-[var(--accent-primary)]" />
+                  <span>Periode Aktif Berakhir: <strong className="text-[var(--text-primary)]">
                     {new Date(data.subscription.currentPeriodEnd).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </strong></span>
                 </div>
               )}
               {data.tenant?.trialEndsAt && subStatus === 'trial' && (
-                <div className="flex items-center gap-2 text-[var(--warning)] justify-end">
+                <div className="flex items-center gap-2 md:justify-end text-[var(--warning)]">
                   <AlertCircle size={14} />
-                  <span>Trial berakhir: <strong>
-                    {new Date(data.tenant.trialEndsAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}
+                  <span>Masa Uji Coba Berakhir: <strong>
+                    {new Date(data.tenant.trialEndsAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </strong></span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Plan limits */}
-          {data.subscription.plan && (
-            <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-[var(--border)]">
-              {[
-                { label: 'Produk', val: data.subscription.plan.maxProducts >= 99999 ? '∞' : data.subscription.plan.maxProducts },
-                { label: 'Pengguna', val: data.subscription.plan.maxUsers >= 99999 ? '∞' : data.subscription.plan.maxUsers },
-                { label: 'Cabang', val: data.subscription.plan.maxBranches >= 99999 ? '∞' : data.subscription.plan.maxBranches },
-              ].map(item => (
-                <div key={item.label} className="text-center p-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)]">
-                  <p className="text-xl font-black text-[var(--accent-primary)]">{item.val}</p>
-                  <p className="text-xs text-[var(--text-secondary)] font-semibold mt-0.5">{item.label}</p>
+          {/* Plan limit utilization progress meters */}
+          {planLimits && (
+            <div className="mt-6 pt-6 border-t border-[var(--border)] space-y-4">
+              <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider mb-1">📊 Utilisasi Limit Kuota Toko Anda</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                
+                {/* Products utilization */}
+                <div className="space-y-1.5 p-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)]">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[var(--text-secondary)] font-semibold flex items-center gap-1"><PackageOpen size={13} /> Produk</span>
+                    <span className="font-bold text-[var(--text-primary)]">
+                      {productCount} / {planLimits.maxProducts >= 99999 ? '∞' : planLimits.maxProducts}
+                    </span>
+                  </div>
+                  <div className="w-full bg-[var(--border)] h-2 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-[var(--accent-primary)] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${planLimits.maxProducts >= 99999 ? 100 : Math.min((productCount / planLimits.maxProducts) * 100, 100)}%` }}
+                    />
+                  </div>
                 </div>
-              ))}
+
+                {/* Users utilization */}
+                <div className="space-y-1.5 p-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)]">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[var(--text-secondary)] font-semibold flex items-center gap-1"><UserCheck size={13} /> Pengguna/Staf</span>
+                    <span className="font-bold text-[var(--text-primary)]">
+                      {activeUsers} / {planLimits.maxUsers >= 99999 ? '∞' : planLimits.maxUsers}
+                    </span>
+                  </div>
+                  <div className="w-full bg-[var(--border)] h-2 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-[var(--accent-primary)] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${planLimits.maxUsers >= 99999 ? 100 : Math.min((activeUsers / planLimits.maxUsers) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Branches utilization */}
+                <div className="space-y-1.5 p-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)]">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-[var(--text-secondary)] font-semibold flex items-center gap-1"><GitCommit size={13} /> Cabang Toko</span>
+                    <span className="font-bold text-[var(--text-primary)]">
+                      1 / {planLimits.maxBranches >= 99999 ? '∞' : planLimits.maxBranches}
+                    </span>
+                  </div>
+                  <div className="w-full bg-[var(--border)] h-2 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-[var(--accent-primary)] h-full rounded-full transition-all duration-500"
+                      style={{ width: `${planLimits.maxBranches >= 99999 ? 100 : Math.min((1 / planLimits.maxBranches) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+              </div>
             </div>
           )}
         </div>
@@ -215,7 +277,7 @@ export function Billing() {
 
       {/* Billing cycle toggle */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <h2 className="text-xl font-black text-[var(--text-primary)]">Pilih Paket</h2>
+        <h2 className="text-xl font-black text-[var(--text-primary)]">Pilih Paket Langganan</h2>
         <div className="flex items-center gap-2 bg-[var(--bg-surface-elevated)] border border-[var(--border)] p-1 rounded-xl">
           {(['monthly', 'yearly'] as const).map(c => (
             <button
@@ -276,7 +338,7 @@ export function Billing() {
               key={plan.id}
               className={`relative flex flex-col rounded-2xl border p-6 shadow-sm transition-all ${
                 isPro
-                  ? 'border-[var(--accent-primary)]/60 bg-[var(--bg-surface-elevated)] shadow-[0_0_30px_rgba(139,92,246,0.1)]'
+                  ? 'border-[var(--accent-primary)]/65 bg-[var(--bg-surface-elevated)] shadow-[0_0_30px_rgba(139,92,246,0.08)]'
                   : 'border-[var(--border)] bg-[var(--bg-surface-elevated)]'
               }`}
             >
@@ -335,7 +397,7 @@ export function Billing() {
               {/* Features */}
               <ul className="flex flex-col gap-2 mb-6 flex-1">
                 {features.map(f => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                  <li key={f} className="flex items-center gap-2 text-sm text-[var(--text-secondary)] font-medium">
                     <CheckCircle2 size={15} className="text-[var(--success)] flex-shrink-0" />
                     {f}
                   </li>
@@ -353,7 +415,7 @@ export function Billing() {
               ) : isCurrent ? (
                 <button
                   disabled
-                  className="w-full py-3 rounded-xl font-black text-sm text-white opacity-60 cursor-not-allowed"
+                  className="w-full py-3 rounded-xl font-black text-sm text-white opacity-60 cursor-not-allowed flex items-center justify-center gap-1.5"
                   style={{ background: 'var(--accent-gradient)' }}
                 >
                   ✓ Paket Saat Ini
@@ -381,9 +443,9 @@ export function Billing() {
 
       {/* Payment badges */}
       <div className="flex flex-col items-center gap-3">
-        <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-          <Shield size={14} className="text-[var(--success)]" />
-          <span>Pembayaran aman & terenkripsi oleh Midtrans</span>
+        <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] font-medium">
+          <Shield size={14} className="text-[var(--success)] animate-pulse" />
+          <span>Pembayaran aman & terenkripsi otomatis oleh Midtrans</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3">
           {['GoPay', 'OVO', 'DANA', 'QRIS', 'BCA', 'Mandiri', 'BNI', 'BRI', 'Visa', 'Mastercard'].map(m => (
@@ -400,7 +462,7 @@ export function Billing() {
       {/* Transaction history */}
       {data?.recentTransactions?.length > 0 && (
         <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-black text-[var(--text-primary)] mb-5">🧾 Riwayat Pembayaran</h2>
+          <h2 className="text-lg font-black text-[var(--text-primary)] mb-5">🧾 Riwayat Transaksi Pembayaran</h2>
           <div className="overflow-x-auto -mx-6 px-6">
             <table className="w-full text-sm text-left min-w-[540px]">
               <thead>

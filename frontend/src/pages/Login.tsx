@@ -23,7 +23,7 @@ export function Login() {
       const { data } = await api.post('/auth/login', { email, password });
       login(data.token, data.user);
       toast.success(`Selamat datang, ${data.user.name}! 👋`);
-      navigate(data.user.role === 'superadmin' ? '/super-admin' : '/dashboard');
+      navigate(data.user.role === 'central' ? '/central' : '/dashboard');
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Email atau password salah.');
     } finally {

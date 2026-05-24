@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Shield, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export function SuperAdminLogin() {
+export function CentralLogin() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -17,17 +17,22 @@ export function SuperAdminLogin() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/central/login`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/central/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) return toast.error(data.message || 'Login gagal.');
+      const resJson = await res.json();
+      if (!res.ok || resJson.status === 'error') {
+        return toast.error(resJson.message || 'Login gagal.');
+      }
+
+      // Unwrap SaaS envelope
+      const data = resJson.data || resJson;
 
       login(data.token, { ...data.user, tenant: null });
-      toast.success('Selamat datang, Super Admin!');
-      navigate('/super-admin');
+      toast.success('Selamat datang, Central Owner!');
+      navigate('/central');
     } catch {
       toast.error('Tidak bisa terhubung ke server.');
     } finally {
@@ -52,7 +57,7 @@ export function SuperAdminLogin() {
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
               <input
-                type="email" required placeholder="superadmin@lazeepos.com"
+                type="email" required                 placeholder="admin@lazeepos.com"
                 className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#080B12] border border-[#1E2740] text-white focus:border-red-500 focus:ring-1 focus:ring-red-500/50 outline-none transition-all text-sm"
                 value={email} onChange={(e) => setEmail(e.target.value)}
               />
@@ -88,9 +93,9 @@ export function SuperAdminLogin() {
         </div>
 
         <div className="p-3 rounded-xl bg-[#080B12] border border-[#1E2740] text-xs text-gray-400 font-medium space-y-1">
-          <p className="font-bold text-white mb-1">🔑 Demo Super Admin:</p>
-          <p>• Email: <span className="font-mono text-red-400">superadmin@lazeepos.com</span></p>
-          <p>• Sandi: <span className="font-mono text-red-400">superadmin123</span></p>
+          <p className="font-bold text-white mb-1">🔑 Demo Central Owner:</p>
+          <p>• Email: <span className="font-mono text-red-400">admin@lazeepos.com</span></p>
+          <p>• Sandi: <span className="font-mono text-red-400">Admin123!</span></p>
         </div>
       </div>
     </div>

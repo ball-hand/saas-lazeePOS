@@ -141,8 +141,8 @@ router.post('/login', async (req, res) => {
       include: { tenant: true },
     });
 
-    // Exclude superadmin users from tenant login
-    if (!user || user.role === 'superadmin' || !user.tenantId) {
+    // Exclude central users from tenant login
+    if (!user || user.role === 'central' || !user.tenantId) {
       return res.status(401).json({ message: 'Kredensial tidak valid.' });
     }
 

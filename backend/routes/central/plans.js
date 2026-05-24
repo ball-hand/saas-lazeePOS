@@ -6,7 +6,7 @@ import { verifyToken, requireRole } from '../../middleware/auth.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const protect = [verifyToken, requireRole('superadmin')];
+const protect = [verifyToken, requireRole('central')];
 
 /* ───────────────────────────────────────────────────────
    GET /api/central/plans
@@ -32,8 +32,9 @@ router.get('/', ...protect, async (req, res) => {
 ──────────────────────────────────────────────────────── */
 router.get('/:id', ...protect, async (req, res) => {
   try {
+    const planId = req.params.id;
     const plan = await prisma.plan.findUnique({
-      where: { id: parseInt(req.params.id) },
+      where: { id: planId },
       include: {
         _count: { select: { subscriptions: true, tenants: true } },
       },
@@ -52,7 +53,7 @@ router.get('/:id', ...protect, async (req, res) => {
 ──────────────────────────────────────────────────────── */
 router.post('/', ...protect, async (req, res) => {
   try {
-    const { name, description, maxProducts, maxUsers, maxBranches, monthlyPrice, features, isActive } = req.body;
+    const { name, description, maxProducts, maxUsers, maxBranches, monthlyPrice, features, status } = req.body;
 
     if (!name || monthlyPrice === undefined) {
       return res.status(400).json({ message: 'Nama paket dan harga wajib diisi.' });
@@ -67,7 +68,7 @@ router.post('/', ...protect, async (req, res) => {
         maxBranches: maxBranches ?? 1,
         monthlyPrice: parseFloat(monthlyPrice),
         features: features || null,
-        isActive: isActive !== undefined ? isActive : true,
+        status: status || 'ACTIVE',
       },
     });
 
@@ -83,8 +84,8 @@ router.post('/', ...protect, async (req, res) => {
 ──────────────────────────────────────────────────────── */
 router.put('/:id', ...protect, async (req, res) => {
   try {
-    const planId = parseInt(req.params.id);
-    const { name, description, maxProducts, maxUsers, maxBranches, monthlyPrice, features, isActive } = req.body;
+    const planId = req.params.id;
+    const { name, description, maxProducts, maxUsers, maxBranches, monthlyPrice, features, status } = req.body;
 
     const existing = await prisma.plan.findUnique({ where: { id: planId } });
     if (!existing) return res.status(404).json({ message: 'Paket tidak ditemukan.' });
@@ -99,7 +100,7 @@ router.put('/:id', ...protect, async (req, res) => {
         ...(maxBranches !== undefined && { maxBranches: parseInt(maxBranches) }),
         ...(monthlyPrice !== undefined && { monthlyPrice: parseFloat(monthlyPrice) }),
         ...(features !== undefined && { features: features || null }),
-        ...(isActive !== undefined && { isActive }),
+        ...(status !== undefined && { status }),
       },
     });
 
@@ -116,11 +117,11 @@ router.put('/:id', ...protect, async (req, res) => {
 ──────────────────────────────────────────────────────── */
 router.delete('/:id', ...protect, async (req, res) => {
   try {
-    const planId = parseInt(req.params.id);
+    const planId = req.params.id;
     const active = await prisma.plan.findUnique({ where: { id: planId } });
     if (!active) return res.status(404).json({ message: 'Paket tidak ditemukan.' });
 
-    await prisma.plan.update({ where: { id: planId }, data: { isActive: false } });
+    await prisma.plan.update({ where: { id: planId }, data: { status: 'SUSPENDED' } });
     res.json({ message: 'Paket berhasil dinonaktifkan.' });
   } catch (error) {
     console.error('Delete plan error:', error);

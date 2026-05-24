@@ -15,6 +15,20 @@ export function ReceiptModal({ isOpen, onClose, receipt }: ReceiptModalProps) {
 
   const handlePrint = () => window.print();
 
+  // Load custom subtitle & footer from settings config
+  const storedConfig = localStorage.getItem('pos_receipt_config');
+  let receiptSubtitle = 'Sistem Kasir Digital';
+  let receiptFooter = 'Terima kasih atas kunjungan Anda!';
+  if (storedConfig) {
+    try {
+      const parsed = JSON.parse(storedConfig);
+      receiptSubtitle = parsed.receiptSubtitle || 'Sistem Kasir Digital';
+      receiptFooter = parsed.receiptFooter || 'Terima kasih atas kunjungan Anda!';
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Struk Pembayaran">
       {/* Action bar */}
@@ -39,7 +53,7 @@ export function ReceiptModal({ isOpen, onClose, receipt }: ReceiptModalProps) {
           <h2 className="text-xl font-black text-gray-900 uppercase tracking-widest">
             {receipt.tenant?.name || 'LazeePOS'}
           </h2>
-          <p className="text-xs text-gray-400 mt-1">Sistem Kasir Digital</p>
+          <p className="text-xs text-gray-400 mt-1">{receiptSubtitle}</p>
           <div className="border-t border-dashed border-gray-300 my-3" />
           <p className="text-xs text-gray-500 font-semibold">#{receipt.receiptNumber}</p>
           <p className="text-xs text-gray-500">
@@ -111,7 +125,7 @@ export function ReceiptModal({ isOpen, onClose, receipt }: ReceiptModalProps) {
 
         {/* Footer */}
         <div className="text-center mt-5 text-xs text-gray-400 border-t border-dashed border-gray-300 pt-4">
-          <p className="font-bold text-gray-600">Terima kasih atas kunjungan Anda!</p>
+          <p className="font-bold text-gray-600">{receiptFooter}</p>
           <p className="mt-1">Powered by LazeePOS</p>
         </div>
       </div>

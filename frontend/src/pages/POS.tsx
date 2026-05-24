@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ShoppingCart, Search, Plus, Minus, CreditCard,
-  Package, Loader2, Tag, X,
+  Package, Loader2, Tag, X, Settings, HelpCircle, AlertCircle, Play,
 } from 'lucide-react';
 import api from '../api/client';
 import { ReceiptModal } from '../components/ReceiptModal';
@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 const fmt = (val: number) => 'Rp ' + Math.round(val).toLocaleString('id-ID');
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
   sku?: string;
   price: number;
@@ -26,11 +26,47 @@ interface CartItem extends Product {
 
 type PaymentMethod = 'cash' | 'card' | 'transfer';
 
+interface HeldCart {
+  id: string;
+  customerName: string;
+  items: CartItem[];
+  heldAt: string;
+}
+
+interface PeripheralConfig {
+  printerType: 'browser' | 'network';
+  printerIp: string;
+  scannerType: 'keyboard' | 'direct';
+  scannerSuffix: string;
+}
+
+// Synthetic sound effect generator for hardware scanner beep
+const playBeep = () => {
+  try {
+    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime); // High-pitch beep
+    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime); // Moderate volume
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.08); // 80ms duration
+  } catch (error) {
+    console.warn('AudioContext beep blocked/unsupported:', error);
+  }
+};
+
 export function POS() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [barcodeInput, setBarcodeInput] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,24 +75,71 @@ export function POS() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [paidAmount, setPaidAmount] = useState('');
   const [customerName, setCustomerName] = useState('');
-  const [discountMap, setDiscountMap] = useState<Record<number, number>>({});
+  const [discountMap, setDiscountMap] = useState<Record<string, number>>({});
   const [receipt, setReceipt] = useState<any>(null);
   const [showReceipt, setShowReceipt] = useState(false);
 
-  /* ── Fetch products ── */
+  /* ── Hold / Recall Queue State ── */
+  const [heldCarts, setHeldCarts] = useState<HeldCart[]>(() => {
+    try {
+      const stored = localStorage.getItem('pos_held_carts');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
+
+  /* ── Peripheral Setup State ── */
+  const [peripheralConfig, setPeripheralConfig] = useState<PeripheralConfig>(() => {
+    try {
+      const stored = localStorage.getItem('pos_peripheral_config');
+      return stored ? JSON.parse(stored) : {
+        printerType: 'browser',
+        printerIp: '192.168.1.100',
+        scannerType: 'keyboard',
+        scannerSuffix: 'Enter'
+      };
+    } catch {
+      return {
+        printerType: 'browser',
+        printerIp: '192.168.1.100',
+        scannerType: 'keyboard',
+        scannerSuffix: 'Enter'
+      };
+    }
+  });
+  const [showPeripheralModal, setShowPeripheralModal] = useState(false);
+  
+  // Playground state for testing scanner speed
+  const [playgroundInput, setPlaygroundInput] = useState('');
+  const [playgroundLogs, setPlaygroundLogs] = useState<string[]>([]);
+  const lastPlaygroundKeyTime = useRef<number>(0);
+  const playgroundKeystrokes = useRef<number[]>([]);
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await api.get('/products', { params: { active: 'true' } });
-        setProducts(data.products || []);
-        setCategories(data.categories || []);
-      } catch {
-        toast.error('Gagal memuat produk.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    localStorage.setItem('pos_held_carts', JSON.stringify(heldCarts));
+  }, [heldCarts]);
+
+  useEffect(() => {
+    localStorage.setItem('pos_peripheral_config', JSON.stringify(peripheralConfig));
+  }, [peripheralConfig]);
+
+  /* ── Fetch products ── */
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await api.get('/products', { params: { active: 'true' } });
+      setProducts(data.products || []);
+      setCategories(data.categories || []);
+    } catch {
+      toast.error('Gagal memuat produk.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProducts();
   }, []);
 
@@ -71,7 +154,7 @@ export function POS() {
         category: i.category,
       }));
       const { data } = await api.post('/discounts/apply', { items });
-      const map: Record<number, number> = {};
+      const map: Record<string, number> = {};
       for (const d of (data.discounts || [])) map[d.productId] = d.discount;
       setDiscountMap(map);
     } catch {
@@ -94,7 +177,7 @@ export function POS() {
     });
   };
 
-  const updateQty = (id: number, delta: number) => {
+  const updateQty = (id: string, delta: number) => {
     setCart(prev => {
       const item = prev.find(i => i.id === id);
       if (!item) return prev;
@@ -106,13 +189,204 @@ export function POS() {
     });
   };
 
-  const removeFromCart = (id: number) => setCart(prev => prev.filter(i => i.id !== id));
+  const removeFromCart = (id: string) => setCart(prev => prev.filter(i => i.id !== id));
   const clearCart = () => { setCart([]); setDiscountMap({}); };
+
+  /* ── Queue / Hold Helpers ── */
+  const holdCurrentCart = () => {
+    if (!cart.length) {
+      toast.error('Keranjang kosong, tidak ada transaksi untuk ditangguhkan!');
+      return;
+    }
+    const newHeld: HeldCart = {
+      id: Math.random().toString(36).substring(2, 9).toUpperCase(),
+      customerName: customerName.trim() || `Pelanggan #${heldCarts.length + 1}`,
+      items: [...cart],
+      heldAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    };
+    setHeldCarts(prev => [newHeld, ...prev]);
+    clearCart();
+    setCustomerName('');
+    toast.success('Transaksi berhasil ditangguhkan ke antrean! 📥');
+  };
+
+  const recallCart = (held: HeldCart) => {
+    if (cart.length > 0) {
+      // Overwrite or warning? In high-speed retail we hold/swap.
+      // Let's hold the current cart automatically or swap it.
+      // We will hold the current active cart to prevent losing work, and recall the selected one!
+      const activeHeld: HeldCart = {
+        id: Math.random().toString(36).substring(2, 9).toUpperCase(),
+        customerName: customerName.trim() || `Pelanggan #${heldCarts.length + 1}`,
+        items: [...cart],
+        heldAt: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      };
+      setHeldCarts(prev => [activeHeld, ...prev.filter(c => c.id !== held.id)]);
+      toast.success('Transaksi aktif saat ini ditangguhkan ke antrean.');
+    } else {
+      setHeldCarts(prev => prev.filter(c => c.id !== held.id));
+    }
+    setCart(held.items);
+    setCustomerName(held.customerName.startsWith('Pelanggan #') ? '' : held.customerName);
+    toast.success(`Transaksi "${held.customerName}" dipulihkan! 📤`);
+    setIsQueueOpen(false);
+  };
+
+  const deleteHeldCart = (id: string) => {
+    setHeldCarts(prev => prev.filter(c => c.id !== id));
+    toast.success('Transaksi ditangguhkan berhasil dihapus.');
+  };
+
+  /* ── Handle Barcode Scan Logic ── */
+  const handleBarcodeScan = useCallback((sku: string) => {
+    const found = products.find(p => p.sku && p.sku.toLowerCase() === sku.trim().toLowerCase());
+    if (found) {
+      const stock = found.warehouse?.quantity ?? 999;
+      const inCart = cart.find(i => i.id === found.id)?.qty || 0;
+      if (inCart >= stock) {
+        toast.error(`Stok "${found.name}" tidak mencukupi!`);
+        return;
+      }
+      addToCart(found);
+      playBeep();
+      toast.success(`Ter-scan: ${found.name}`);
+    } else {
+      toast.error(`SKU/Barcode "${sku}" tidak ditemukan.`);
+    }
+  }, [products, cart]);
+
+  // Global scanner keyboard listener (rapid input sequence)
+  useEffect(() => {
+    let buffer = '';
+    let lastKeyTime = Date.now();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore key events if user is typing in standard inputs
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') {
+        return;
+      }
+
+      const currentTime = Date.now();
+      // If delay between keys is > 50ms, it is human entry, reset buffer
+      if (currentTime - lastKeyTime > 50) {
+        buffer = '';
+      }
+      lastKeyTime = currentTime;
+
+      if (e.key === 'Enter') {
+        if (buffer.length > 2) {
+          e.preventDefault();
+          handleBarcodeScan(buffer);
+          buffer = '';
+        }
+      } else if (e.key.length === 1) {
+        buffer += e.key;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleBarcodeScan]);
+
+  const handleManualBarcodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!barcodeInput.trim()) return;
+    handleBarcodeScan(barcodeInput);
+    setBarcodeInput('');
+  };
+
+  /* ── Playground Scanner Test ── */
+  const handlePlaygroundKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') return;
+
+    const currentTime = Date.now();
+    if (lastPlaygroundKeyTime.current !== 0) {
+      const diff = currentTime - lastPlaygroundKeyTime.current;
+      playgroundKeystrokes.current.push(diff);
+    }
+    lastPlaygroundKeyTime.current = currentTime;
+
+    if (e.key === 'Enter') {
+      const totalLen = playgroundInput.length;
+      const avgInterval = playgroundKeystrokes.current.length > 0 
+        ? Math.round(playgroundKeystrokes.current.reduce((a, b) => a + b, 0) / playgroundKeystrokes.current.length) 
+        : 0;
+      
+      const isScanner = avgInterval < 35 && totalLen > 3;
+
+      setPlaygroundLogs(prev => [
+        `Scan selesai: "${playgroundInput}" | Panjang: ${totalLen} | Jeda rata-rata: ${avgInterval}ms | Sumber: ${isScanner ? '📠 SCANNER FISIK' : '⌨️ INPUT MANUAL'}`,
+        ...prev
+      ]);
+
+      if (isScanner || totalLen > 2) {
+        playBeep();
+      }
+
+      setPlaygroundInput('');
+      playgroundKeystrokes.current = [];
+      lastPlaygroundKeyTime.current = 0;
+    }
+  };
+
+  // Test Print function
+  const handleTestPrint = () => {
+    toast.success('Mengirim halaman tes cetak ke printer...');
+    // Create iframe or simple print window for test
+    const printWindow = window.open('', '_blank', 'width=300,height=400');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+        <head>
+          <style>
+            body { font-family: 'Courier New', monospace; font-size: 12px; padding: 10px; }
+            .center { text-align: center; }
+            .line { border-bottom: 1px dashed #000; margin: 10px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="center">
+            <h3>TEST PRINT SUCCESS</h3>
+            <p>LAZEEPOS SAAS PLATFORM</p>
+          </div>
+          <div class="line"></div>
+          <p>Printer IP: ${peripheralConfig.printerType === 'network' ? peripheralConfig.printerIp : 'LOCAL SYSTEM'}</p>
+          <p>Status: ONLINE / READY</p>
+          <p>Tanggal: ${new Date().toLocaleString('id-ID')}</p>
+          <div class="line"></div>
+          <div class="center">
+            <p>Terima Kasih</p>
+          </div>
+          <script>window.print(); window.close();</script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
 
   /* ── Totals ── */
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const totalDiscount = cart.reduce((s, i) => s + (discountMap[i.id] || 0), 0);
-  const total = subtotal - totalDiscount;
+  
+  // Read taxRate from settings config
+  const storedConfig = localStorage.getItem('pos_receipt_config');
+  let taxRate = 0;
+  if (storedConfig) {
+    try {
+      const parsed = JSON.parse(storedConfig);
+      taxRate = parsed.taxRate || 0;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  const taxAmount = (subtotal - totalDiscount) * (taxRate / 100);
+  const total = subtotal - totalDiscount + taxAmount;
   const change = parseFloat(paidAmount || '0') - total;
 
   /* ── Filtered products ── */
@@ -141,11 +415,24 @@ export function POS() {
         unitPrice: i.price,
         discountApplied: discountMap[i.id] || 0,
       }));
+      // Get stored custom receipt/tax settings
+      const storedConfig = localStorage.getItem('pos_receipt_config');
+      let currentTaxRate = 0;
+      if (storedConfig) {
+        try {
+          const parsed = JSON.parse(storedConfig);
+          currentTaxRate = parsed.taxRate || 0;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
       const { data } = await api.post('/receipts', {
         items,
         customerName: customerName || null,
         paymentMethod,
         paidAmount: paymentMethod === 'cash' ? paid : total,
+        taxRate: currentTaxRate,
         notes: null,
       });
       toast.success('Transaksi berhasil! 🎉');
@@ -155,6 +442,7 @@ export function POS() {
       clearCart();
       setCustomerName('');
       setPaidAmount('');
+      fetchProducts(); // Refresh products stock level in POS Catalog
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Checkout gagal.');
     } finally {
@@ -168,21 +456,83 @@ export function POS() {
       {/* ── LEFT: Product Catalog ── */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
 
-        {/* Header + Search */}
-        <div className="mb-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        {/* Header + Search + Barcode */}
+        <div className="mb-4 flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">Terminal Kasir</h1>
-            <p className="text-sm text-[var(--text-secondary)] mt-0.5">Pilih produk untuk ditambahkan ke keranjang</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-bold text-[var(--text-primary)]">Terminal Kasir</h1>
+              
+              {/* Printer Status Badge */}
+              <button
+                onClick={() => setShowPeripheralModal(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--success-transparent)] border border-[var(--success)]/20 text-[var(--success)] text-[10px] font-bold hover:bg-[var(--success-transparent)]/80 transition-all shadow-sm"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+                Printer: {peripheralConfig.printerType === 'browser' ? 'READY' : 'ONLINE'}
+              </button>
+
+              {/* Scanner Status Badge */}
+              <button
+                onClick={() => setShowPeripheralModal(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--success-transparent)] border border-[var(--success)]/20 text-[var(--success)] text-[10px] font-bold hover:bg-[var(--success-transparent)]/80 transition-all shadow-sm"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+                Scanner: ACTIVE
+              </button>
+
+              {/* Held Carts / Queue Button */}
+              <button
+                onClick={() => setIsQueueOpen(true)}
+                className="relative flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent-primary)] text-[10px] font-bold transition-all shadow-sm"
+              >
+                <ShoppingCart size={11} className="text-[var(--accent-primary)]" />
+                Antrean
+                {heldCarts.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1 bg-[var(--accent-primary)] text-white text-[9px] font-black w-4.5 h-4.5 flex items-center justify-center rounded-full">
+                    {heldCarts.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Setup Gear Icon */}
+              <button
+                onClick={() => setShowPeripheralModal(true)}
+                className="p-1 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition-all shadow-sm"
+                title="Setup Periferal"
+              >
+                <Settings size={14} />
+              </button>
+            </div>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">Pilih produk untuk ditambahkan ke keranjang</p>
           </div>
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
-            <input
-              type="text"
-              placeholder="Cari nama atau SKU..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all text-sm shadow-sm"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
+          <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+            {/* Search Input */}
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
+              <input
+                type="text"
+                placeholder="Cari nama..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all text-sm shadow-sm"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+            {/* Manual Barcode Input */}
+            <form onSubmit={handleManualBarcodeSubmit} className="relative flex-1 sm:w-60">
+              <input
+                type="text"
+                placeholder="Scan / Input SKU..."
+                className="w-full pl-4 pr-12 py-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all text-sm shadow-sm font-bold"
+                value={barcodeInput}
+                onChange={e => setBarcodeInput(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--accent-primary)] hover:text-white transition-colors"
+              >
+                Enter
+              </button>
+            </form>
           </div>
         </div>
 
@@ -253,7 +603,7 @@ export function POS() {
                         </span>
                       )}
                     </div>
-                    <p className="font-semibold text-[var(--text-primary)] line-clamp-2 text-sm leading-tight">{product.name}</p>
+                    <p className="font-semibold text-sm text-[var(--text-primary)] line-clamp-2 leading-tight">{product.name}</p>
                     {product.category && (
                       <p className="text-[10px] text-[var(--text-secondary)] mt-0.5">{product.category}</p>
                     )}
@@ -377,18 +727,35 @@ export function POS() {
               <span className="text-[var(--success)] font-bold">-{fmt(totalDiscount)}</span>
             </div>
           )}
+          {taxRate > 0 && (
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-[var(--text-secondary)]">Pajak PPN ({taxRate}%)</span>
+              <span className="text-[var(--text-secondary)]">{fmt(taxAmount)}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-4">
             <span className="text-[var(--text-secondary)] font-semibold text-sm">Total Tagihan</span>
             <span className="text-2xl font-black text-[var(--text-primary)]">{fmt(total)}</span>
           </div>
-          <button
-            disabled={cart.length === 0}
-            onClick={() => setShowPaymentModal(true)}
-            className="w-full py-3.5 rounded-xl font-black text-white flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm"
-            style={{ background: 'var(--accent-gradient)' }}
-          >
-            <CreditCard size={18} /> Proses Pembayaran
-          </button>
+          
+          <div className="flex gap-2">
+            <button
+              disabled={cart.length === 0}
+              onClick={holdCurrentCart}
+              className="px-3.5 py-3.5 rounded-xl font-bold bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition-all disabled:opacity-40 disabled:cursor-not-allowed text-xs flex items-center justify-center gap-1.5 shadow-sm"
+              title="Tangguhkan transaksi saat ini ke antrean"
+            >
+              Hold
+            </button>
+            <button
+              disabled={cart.length === 0}
+              onClick={() => setShowPaymentModal(true)}
+              className="flex-1 py-3.5 rounded-xl font-black text-white flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-sm"
+              style={{ background: 'var(--accent-gradient)' }}
+            >
+              <CreditCard size={18} /> Proses Pembayaran
+            </button>
+          </div>
         </div>
       </div>
 
@@ -407,6 +774,210 @@ export function POS() {
           )}
         </div>
       </button>
+
+      {/* ── Held Transactions (Antrean) Drawer/Modal ── */}
+      {isQueueOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsQueueOpen(false)} />
+          <div className="relative w-full max-w-md bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 animate-fade-in flex flex-col max-h-[85vh]">
+            <button
+              onClick={() => setIsQueueOpen(false)}
+              className="absolute top-4 right-4 p-1.5 text-[var(--text-secondary)] hover:text-white hover:bg-[rgba(255,255,255,0.1)] rounded-lg transition-colors"
+            >
+              <X size={18} />
+            </button>
+            <h2 className="text-xl font-black text-[var(--text-primary)] mb-1 flex items-center gap-2">
+              📥 Antrean Transaksi
+            </h2>
+            <p className="text-xs text-[var(--text-secondary)] mb-4">Pulihkan transaksi yang ditangguhkan sebelumnya</p>
+
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+              {heldCarts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-48 text-[var(--text-secondary)] gap-2">
+                  <ShoppingCart size={32} className="opacity-15" />
+                  <p className="text-xs font-semibold">Tidak ada transaksi dalam antrean</p>
+                </div>
+              ) : (
+                heldCarts.map(hc => {
+                  const itemsCount = hc.items.reduce((s, i) => s + i.qty, 0);
+                  const itemsTotal = hc.items.reduce((s, i) => s + (i.price * i.qty), 0);
+                  return (
+                    <div key={hc.id} className="p-4 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] flex justify-between items-center group">
+                      <div>
+                        <p className="font-bold text-sm text-[var(--text-primary)]">{hc.customerName}</p>
+                        <p className="text-[10px] text-[var(--text-secondary)] mt-0.5">{itemsCount} item &bull; {fmt(itemsTotal)}</p>
+                        <p className="text-[9px] text-[var(--text-secondary)]/70 mt-1">Ditangguhkan jam {hc.heldAt}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => recallCart(hc)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all shadow hover:shadow-md"
+                          style={{ background: 'var(--accent-gradient)' }}
+                        >
+                          Pulihkan
+                        </button>
+                        <button
+                          onClick={() => deleteHeldCart(hc.id)}
+                          className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors border border-transparent hover:border-[var(--danger)]/20"
+                          title="Hapus dari antrean"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Peripheral Setup Modal ── */}
+      {showPeripheralModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPeripheralModal(false)} />
+          <div className="relative w-full max-w-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 animate-fade-in flex flex-col max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button
+              onClick={() => setShowPeripheralModal(false)}
+              className="absolute top-4 right-4 p-1.5 text-[var(--text-secondary)] hover:text-white hover:bg-[rgba(255,255,255,0.1)] rounded-lg transition-colors"
+            >
+              <X size={18} />
+            </button>
+            <h2 className="text-xl font-black text-[var(--text-primary)] mb-1 flex items-center gap-2">
+              ⚙️ Pengaturan Periferal POS
+            </h2>
+            <p className="text-xs text-[var(--text-secondary)] mb-5">Setup printer thermal struk dan pemindai barcode fisik</p>
+
+            <div className="space-y-5">
+              {/* Printer Section */}
+              <div className="p-4 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                    🖨️ Printer Thermal Struk
+                  </h3>
+                  <span className="flex items-center gap-1 text-[10px] bg-[var(--success-transparent)] text-[var(--success)] px-2 py-0.5 rounded-full font-black border border-[var(--success)]/20">
+                    ONLINE
+                  </span>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">
+                      Metode Koneksi
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['browser', 'network'] as const).map(t => (
+                        <button
+                          key={t}
+                          onClick={() => setPeripheralConfig(prev => ({ ...prev, printerType: t }))}
+                          className={`py-2 rounded-xl text-xs font-black border transition-all ${
+                            peripheralConfig.printerType === t
+                              ? 'text-white border-transparent'
+                              : 'bg-[var(--bg-surface-elevated)] border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]'
+                          }`}
+                          style={peripheralConfig.printerType === t ? { background: 'var(--accent-gradient)' } : {}}
+                        >
+                          {t === 'browser' ? 'Browser Print (System)' : 'IP Network Printer'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {peripheralConfig.printerType === 'network' && (
+                    <div className="animate-fade-in">
+                      <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">
+                        IP Address Printer (Ethernet/WiFi)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Cth: 192.168.1.100"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none transition-all text-xs font-bold"
+                        value={peripheralConfig.printerIp}
+                        onChange={e => setPeripheralConfig(prev => ({ ...prev, printerIp: e.target.value }))}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex justify-end pt-1">
+                    <button
+                      onClick={handleTestPrint}
+                      className="px-3.5 py-2 rounded-lg text-xs font-bold text-white hover:shadow-md transition-all flex items-center gap-1.5"
+                      style={{ background: 'var(--accent-gradient)' }}
+                    >
+                      <Play size={11} /> Cetak Halaman Tes
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Barcode Scanner Section */}
+              <div className="p-4 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                    🔍 Barcode Scanner
+                  </h3>
+                  <span className="flex items-center gap-1 text-[10px] bg-[var(--success-transparent)] text-[var(--success)] px-2 py-0.5 rounded-full font-black border border-[var(--success)]/20">
+                    LISTENING
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider block mb-1">
+                      Mode Input Pemindai
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      value="Emulasi Keyboard USB (Auto-Detect)"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-secondary)] outline-none text-xs font-bold cursor-not-allowed"
+                    />
+                  </div>
+
+                  {/* Playground test box */}
+                  <div className="p-3 bg-[var(--bg-surface-elevated)] rounded-xl border border-[var(--border)] space-y-2">
+                    <div className="flex items-center gap-1">
+                      <HelpCircle size={12} className="text-[var(--accent-primary)]" />
+                      <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
+                        Playground Scanner (Arahkan pemindai & scan kesini)
+                      </p>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Posisikan kursor & scan barcode disini untuk tes..."
+                      className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-xs"
+                      value={playgroundInput}
+                      onChange={e => setPlaygroundInput(e.target.value)}
+                      onKeyDown={handlePlaygroundKeyDown}
+                    />
+
+                    {playgroundLogs.length > 0 && (
+                      <div className="space-y-1 max-h-24 overflow-y-auto custom-scrollbar pt-1">
+                        {playgroundLogs.map((log, i) => (
+                          <div key={i} className="flex gap-1.5 items-start text-[10px] leading-tight text-[var(--text-secondary)] font-mono">
+                            <span className="text-[var(--accent-primary)]">&bull;</span>
+                            <span>{log}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowPeripheralModal(false)}
+                className="px-5 py-2.5 rounded-xl font-bold bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition-all text-xs"
+              >
+                Tutup & Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Payment Modal ── */}
       {showPaymentModal && (
@@ -469,6 +1040,12 @@ export function POS() {
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-[var(--success)]">Diskon</span>
                     <span className="text-[var(--success)]">-{fmt(totalDiscount)}</span>
+                  </div>
+                )}
+                {taxRate > 0 && (
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-[var(--text-secondary)]">Pajak PPN ({taxRate}%)</span>
+                    <span className="text-[var(--text-primary)]">{fmt(taxAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-black pt-2 border-t border-[var(--border)] mt-1">

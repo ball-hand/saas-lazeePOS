@@ -6,7 +6,7 @@ import { verifyToken, requireRole } from '../../middleware/auth.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-const protect = [verifyToken, requireRole('superadmin')];
+const protect = [verifyToken, requireRole('central')];
 
 /* ───────────────────────────────────────────────────────
    GET /api/central/platform/settings

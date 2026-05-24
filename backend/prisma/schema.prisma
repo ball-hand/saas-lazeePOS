@@ -1,299 +1,325 @@
-// backend/prisma/schema.prisma
-
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   PLATFORM MODELS  — managed by the SuperAdmin / Central Portal
-───────────────────────────────────────────────────────────────── */
-
-/// A subscription tier / plan as sold by the SaaS platform.
-model Plan {
-  id          Int    @id @default(autoincrement())
-  name        String @unique // "Starter" | "Pro" | "Enterprise"
-  description String? 
-
-  // Limits
-  maxProducts Int  @default(100)
-  maxUsers    Int  @default(3)
-  maxBranches Int  @default(1)
-
-  // Billing
-  monthlyPrice Float 
-  features     String?   // { "pos": true, "api": false, … }
-
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  tenants              Tenant[]
-  subscriptions        Subscription[]
-  paymentTransactions  PaymentTransaction[]
-
-  @@index([name])
-  @@index([isActive])
-  @@map("plans")
+enum Role {
+  central
+  admin
+  kasir
 }
 
-/// One subscription per tenant (enforced by @@unique on tenantId).
-model Subscription {
-  id                  Int               @id @default(autoincrement())
-  tenantId            Int
-  tenant              Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  planId              Int
-  plan                Plan              @relation(fields: [planId], references: [id])
-
-  billingCycle        String            @default("monthly") // "monthly" | "yearly"
-  status              String            @default("trial")   // "trial" | "active" | "suspended" | "cancelled"
-  currentPeriodStart  DateTime
-  currentPeriodEnd    DateTime
-  trialEndsAt         DateTime?
-
-  paymentProvider     String? // "stripe" | "midtrans" | "xendit" | …
-  paymentMethod       String? // "credit_card" | "bank_transfer" | "qris" | …
-  lastPaymentAt       DateTime?
-  nextBillingAt       DateTime?
-
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-
-  @@unique([tenantId])
-  @@index([status])
-  @@index([nextBillingAt])
-  @@index([tenantId, status])
-  @@map("subscriptions")
+enum TxnStatus {
+  COMPLETED
+  VOID
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   TENANT MODELS  — scoped to a tenant via tenantId
-───────────────────────────────────────────────────────────────── */
+enum DiscountType {
+  PERCENT_OFF
+  PERCENT_OFF_MIN_AMOUNT
+  BUY_X_GET_Y
+  FIXED_AMOUNT
+}
+
+enum APStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum PlanStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+}
 
 model Tenant {
-  id             Int      @id @default(autoincrement())
-  name           String
-  subdomain      String   @unique  // e.g. "kopisenja" → kopisenja.lazeepos.com
-  logoUrl        String?  
-
-  themeMode      String   @default("dark")   // "light" | "dark"
-  primaryColor   String   @default("#8B5CF6")
-
-  // SaaS fields
-  planId         Int?
-  plan           Plan?    @relation(fields: [planId], references: [id])
-  subscription   Subscription?
-
-  status         String   @default("active")  // "active" | "suspended" | "trial_expired"
-  trialEndsAt    DateTime?
-  suspendedAt    DateTime?
+  id            String   @id @default(uuid())
+  name          String
+  subdomain     String   @unique
+  themeMode     String   @default("light")
+  primaryColor  String   @default("#3B82F6")
+  logoUrl       String?
+  status        PlanStatus @default(TRIAL)
+  planId        String?
+  trialEndsAt   DateTime?
+  suspendedAt   DateTime?
   suspendedReason String?
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  // Relations — all tenant-scoped
-  users              User[]
-  products           Product[]
-  cashFlow           CashFlow[]
-  discountRules      DiscountRule[]
-  receipts           Receipt[]
-  paymentTransactions PaymentTransaction[]
-
-  @@index([subdomain])
-  @@index([status])
-  @@index([planId])
-  @@map("tenants")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  // Soft‑delete flag – tenant can be suspended
+  isActive      Boolean  @default(true)
+  // Relationships
+  users         User[]   @relation("TenantUsers")
+  products      Product[] @relation("TenantProducts")
+  warehouses    Warehouse[] @relation("TenantWarehouses")
+  cashflows     CashFlow[] @relation("TenantCashFlows")
+  webhooks      Webhook[] @relation("TenantWebhooks")
+  discounts     Discount[] @relation("TenantDiscounts")
+  suppliers     Supplier[] @relation("TenantSuppliers")
+  accountsPayable AccountPayable[] @relation("TenantAP")
+  shifts        Shift[]  @relation("TenantShifts")
+  transactions  Transaction[] @relation("TenantTransactions")
+  receipts      Receipt[] @relation("TenantReceipts")
+  plan          Plan?    @relation("TenantPlan", fields: [planId], references: [id])
+  subscription  Subscription?
+  paymentTransactions PaymentTransaction[] @relation("TenantPaymentTransactions")
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-
-  /// null = superadmin (platform-wide access).
-  /// set = tenant staff (admin / cashier).
-  tenantId      Int?
-  tenant        Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
+  id            String   @id @default(uuid())
   email         String   @unique
-  passwordHash  String
   name          String?
-  role          String   @default("cashier")  // "superadmin" | "admin" | "cashier"
+  passwordHash  String
+  role          Role     @default(admin)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  // FK
+  tenantId      String?
+  tenant        Tenant?  @relation("TenantUsers", fields: [tenantId], references: [id])
+  // Soft‑delete for users
   isActive      Boolean  @default(true)
   lastLoginAt   DateTime?
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([tenantId])
-  @@index([role])
-  @@map("users")
+  shifts        Shift[]  @relation("ShiftKasir")
+  transactions  Transaction[] @relation("TxnKasir")
 }
 
+// =======================
+//  Business Entities (scoped to Tenant)
+// =======================
 model Product {
-  id            Int      @id @default(autoincrement())
-  tenantId      Int
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  sku           String?
+  id            String   @id @default(uuid())
   name          String
-  description   String?  
-  price         Float  
-  costPrice     Float? 
+  sku           String?  @unique
+  description   String?
+  price         Float    // master price
+  costPrice     Float?
   category      String?
-  imageUrl      String?  
+  imageUrl      String?
   isActive      Boolean  @default(true)
-
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
+  tenantId      String
+  tenant        Tenant   @relation("TenantProducts", fields: [tenantId], references: [id])
   warehouse     Warehouse?
-  receiptItems  ReceiptItem[]
-
-  @@unique([tenantId, sku])
-  @@index([tenantId])
-  @@index([category])
-  @@map("products")
+  transactionItems TransactionItem[] @relation("TxnItemProduct")
 }
 
 model Warehouse {
-  id            Int      @id @default(autoincrement())
-  productId     Int      @unique
-  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  quantity      Int      @default(0)
+  id            String   @id @default(uuid())
+  quantity      Int
   reorderLevel  Int      @default(5)
-  location      String?
+  location      String?  // warehouse / rack
+  lastUpdated   DateTime @updatedAt
   lastRestocked DateTime?
-  updatedAt     DateTime @default(now()) @updatedAt
-
-  @@index([productId])
-  @@map("warehouse")
+  tenantId      String
+  tenant        Tenant   @relation("TenantWarehouses", fields: [tenantId], references: [id])
+  productId     String   @unique
+  product       Product  @relation(fields: [productId], references: [id])
 }
 
 model CashFlow {
-  id              Int      @id @default(autoincrement())
-  tenantId        Int
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  type            String   // "sale" | "expense" | "income"
-  amount          Float  
-  description     String?  
-  referenceId     String?  // receiptNumber for sales
+  id              String   @id @default(uuid())
+  type            String   // 'sale', 'expense', 'income'
+  amount          Float
+  description     String
   transactionDate DateTime @default(now())
-
-  @@index([tenantId])
-  @@index([transactionDate])
-  @@map("cash_flow")
+  userId          String?
+  tenantId        String
+  tenant          Tenant   @relation("TenantCashFlows", fields: [tenantId], references: [id])
 }
 
-model DiscountRule {
-  id                Int      @id @default(autoincrement())
-  tenantId          Int
-  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+model Webhook {
+  id            String   @id @default(uuid())
+  url           String
+  events        String   // comma-separated, e.g., 'transaction.created,product.updated'
+  secret        String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  tenantId      String
+  tenant        Tenant   @relation("TenantWebhooks", fields: [tenantId], references: [id])
+}
 
+model IdempotencyKey {
+  id            String   @id
+  responseBody  Json
+  statusCode    Int
+  createdAt     DateTime @default(now())
+}
+
+model Supplier {
+  id            String   @id @default(uuid())
+  name          String
+  contact       String?
+  tenantId      String
+  tenant        Tenant   @relation("TenantSuppliers", fields: [tenantId], references: [id])
+  accountsPayable AccountPayable[] @relation("SupplierAP")
+}
+
+model AccountPayable {
+  id            String   @id @default(uuid())
+  amount        Float
+  dueDate       DateTime
+  status        APStatus @default(PENDING)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  tenantId      String
+  tenant        Tenant   @relation("TenantAP", fields: [tenantId], references: [id])
+  supplierId    String
+  supplier      Supplier @relation("SupplierAP", fields: [supplierId], references: [id])
+}
+
+model Discount {
+  id                String   @id @default(uuid())
   name              String
-  discountType      String   // "percentage" | "fixed_amount" | "bogo"
-  discountValue     Float  
-  appliesTo         String   @default("all")         // "all" | "category" | "product"
-  appliesToId       Int?                                      // productId when appliesTo = "product"
+  discountType      String   // 'percentage', 'fixed_amount', 'bogo'
+  discountValue     Float
+  appliesTo         String   @default("all") // 'all', 'category', 'product'
+  appliesToId       String?
   appliesToCategory String?
   minQuantity       Int      @default(1)
-  minOrderAmount    Float? 
+  minOrderAmount    Float?
   startsAt          DateTime?
   endsAt            DateTime?
   isActive          Boolean  @default(true)
-
   createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  tenantId          String
+  tenant            Tenant   @relation("TenantDiscounts", fields: [tenantId], references: [id])
+}
 
-  @@index([tenantId])
-  @@index([isActive])
-  @@map("discount_rules")
+model Plan {
+  id            String   @id @default(uuid())
+  name          String   @unique
+  description   String?
+  monthlyPrice  Float    @default(0)
+  maxProducts   Int      @default(100)
+  maxUsers      Int      @default(3)
+  maxBranches   Int      @default(1)
+  features      Json
+  status        PlanStatus @default(ACTIVE)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  tenants       Tenant[] @relation("TenantPlan")
+  subscriptions Subscription[]
+  paymentTransactions PaymentTransaction[]
+}
+
+model Subscription {
+  id                 String   @id @default(uuid())
+  tenantId           String   @unique
+  tenant             Tenant   @relation(fields: [tenantId], references: [id])
+  planId             String
+  plan               Plan     @relation(fields: [planId], references: [id])
+  billingCycle       String   @default("monthly") // monthly, yearly
+  status             String   @default("active")  // active, canceled, past_due
+  nextBillingAt      DateTime?
+  lastPaymentAt      DateTime?
+  paymentProvider    String?
+  currentPeriodStart DateTime @default(now())
+  currentPeriodEnd   DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// =======================
+//  Transaction & Shift
+// =======================
+model Shift {
+  id            String   @id @default(uuid())
+  openedAt      DateTime
+  closedAt      DateTime?
+  openingCash   Float
+  closingCash   Float?
+  kasirId       String
+  kasir         User     @relation("ShiftKasir", fields: [kasirId], references: [id])
+  tenantId      String
+  tenant        Tenant   @relation("TenantShifts", fields: [tenantId], references: [id])
+  transactions  Transaction[] @relation("ShiftTransactions")
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  status        TxnStatus @default(COMPLETED)
+  totalAmount   Float
+  paidAmount    Float
+  change        Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  // Soft delete flag – Kasir can only void
+  isVoided      Boolean  @default(false)
+  tenantId      String
+  tenant        Tenant   @relation("TenantTransactions", fields: [tenantId], references: [id])
+  shiftId       String
+  shift         Shift    @relation("ShiftTransactions", fields: [shiftId], references: [id])
+  kasirId       String   // who processed (even if voided)
+  kasir         User     @relation("TxnKasir", fields: [kasirId], references: [id])
+  items         TransactionItem[] @relation("TxnItems")
+}
+
+model TransactionItem {
+  id            String   @id @default(uuid())
+  quantity      Int
+  unitPrice     Float    // price at time of sale (may already include discount)
+  discountApplied Float? // amount discounted on this line
+  productId     String
+  product       Product  @relation("TxnItemProduct", fields: [productId], references: [id])
+  transactionId String
+  transaction   Transaction @relation("TxnItems", fields: [transactionId], references: [id])
 }
 
 model Receipt {
-  id              Int      @id @default(autoincrement())
-  tenantId        Int
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  customerName    String?
-  subtotalAmount  Float  
-  discountAmount  Float  @default(0)
-  taxAmount       Float  @default(0)
-  totalAmount     Float  
-  paidAmount      Float  
-  changeGiven     Float  @default(0)
-  paymentMethod   String   @default("cash") // "cash" | "card" | "transfer"
-  receiptNumber   String   @unique
-  notes           String?  
-  createdAt       DateTime @default(now())
-
-  items           ReceiptItem[]
-
-  @@index([tenantId])
-  @@index([receiptNumber])
-  @@index([createdAt])
-  @@map("receipts")
-}
-
-/* ─────────────────────────────────────────────────────────────────
-   PAYMENT TRANSACTIONS  — Midtrans billing records
-───────────────────────────────────────────────────────────────── */
-
-/// Tracks every Midtrans charge attempt (subscription upgrades).
-model PaymentTransaction {
-  id                Int      @id @default(autoincrement())
-
-  tenantId          Int
-  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  orderId           String   @unique  // midtrans order_id
-  snapToken         String?    // Midtrans Snap token
-  snapRedirectUrl   String?  
-
-  planId            Int?
-  plan              Plan?    @relation(fields: [planId], references: [id])
-  billingCycle      String   @default("monthly")  // "monthly" | "yearly"
-
-  amount            Float  
-  currency          String   @default("IDR")
-
-  // Status mirrors Midtrans: pending | settlement | expire | cancel | deny | failure
-  status            String   @default("pending")
-
-  paymentType       String?  // credit_card | bank_transfer | gopay | shopeepay | qris …
-  midtransOrderId   String?  // Midtrans transaction_id
-  fraudStatus       String?  // accept | challenge | deny
-  paidAt            DateTime?
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@index([tenantId])
-  @@index([orderId])
-  @@index([status])
-  @@map("payment_transactions")
+  id             String        @id @default(uuid())
+  receiptNumber  String        @unique
+  customerName   String?
+  subtotalAmount Float
+  discountAmount Float
+  taxAmount      Float
+  totalAmount    Float
+  paidAmount     Float
+  changeGiven    Float
+  paymentMethod  String        @default("cash")
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  tenantId       String
+  tenant         Tenant        @relation("TenantReceipts", fields: [tenantId], references: [id])
+  items          ReceiptItem[] @relation("ReceiptItems")
 }
 
 model ReceiptItem {
-  id              Int      @id @default(autoincrement())
-  receiptId       Int
-  receipt         Receipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
-
-  productId       Int?
-  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  id              String   @id @default(uuid())
+  productId       String?
   productName     String
   sku             String?
   quantity        Int
-  unitPrice       Float  
-  discountApplied Float  @default(0)
-  totalPrice      Float  
+  unitPrice       Float
+  discountApplied Float
+  totalPrice      Float
+  receiptId       String
+  receipt         Receipt  @relation("ReceiptItems", fields: [receiptId], references: [id])
+}
 
-  @@index([receiptId])
-  @@index([productId])
-  @@map("receipt_items")
+model PaymentTransaction {
+  id              String    @id @default(uuid())
+  tenantId        String
+  tenant          Tenant    @relation("TenantPaymentTransactions", fields: [tenantId], references: [id])
+  planId          String
+  plan            Plan      @relation(fields: [planId], references: [id])
+  orderId         String    @unique
+  snapToken       String?
+  snapRedirectUrl String?
+  amount          Float
+  billingCycle    String
+  status          String    @default("pending")
+  paymentType     String?
+  paidAt          DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

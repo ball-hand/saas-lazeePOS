@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // GET /api/discounts — list discount rules
 router.get('/', authenticate, async (req, res) => {
   try {
-    const discounts = await prisma.discountRule.findMany({
+    const discounts = await prisma.discount.findMany({
       where: { tenantId: req.user.tenantId },
       orderBy: { createdAt: 'desc' },
     });
@@ -31,14 +31,14 @@ router.post('/', authenticate, requireRole('admin'), async (req, res) => {
       return res.status(400).json({ message: 'Name, type, and value are required' });
     }
 
-    const discount = await prisma.discountRule.create({
+    const discount = await prisma.discount.create({
       data: {
         tenantId: req.user.tenantId,
         name,
         discountType,
         discountValue: parseFloat(discountValue),
         appliesTo: appliesTo || 'all',
-        appliesToId: appliesToId ? parseInt(appliesToId) : null,
+        appliesToId: appliesToId || null,
         appliesToCategory: appliesToCategory || null,
         minQuantity: parseInt(minQuantity) || 1,
         minOrderAmount: minOrderAmount ? parseFloat(minOrderAmount) : null,
@@ -64,17 +64,17 @@ router.put('/:id', authenticate, requireRole('admin'), async (req, res) => {
       appliesToCategory, minQuantity, minOrderAmount, startsAt, endsAt, isActive,
     } = req.body;
 
-    const existing = await prisma.discountRule.findFirst({ where: { id: parseInt(id), tenantId: req.user.tenantId } });
+    const existing = await prisma.discount.findFirst({ where: { id, tenantId: req.user.tenantId } });
     if (!existing) return res.status(404).json({ message: 'Discount not found' });
 
-    const discount = await prisma.discountRule.update({
-      where: { id: parseInt(id) },
+    const discount = await prisma.discount.update({
+      where: { id },
       data: {
         ...(name !== undefined && { name }),
         ...(discountType !== undefined && { discountType }),
         ...(discountValue !== undefined && { discountValue: parseFloat(discountValue) }),
         ...(appliesTo !== undefined && { appliesTo }),
-        ...(appliesToId !== undefined && { appliesToId: appliesToId ? parseInt(appliesToId) : null }),
+        ...(appliesToId !== undefined && { appliesToId: appliesToId || null }),
         ...(appliesToCategory !== undefined && { appliesToCategory }),
         ...(minQuantity !== undefined && { minQuantity: parseInt(minQuantity) }),
         ...(minOrderAmount !== undefined && { minOrderAmount: minOrderAmount ? parseFloat(minOrderAmount) : null }),
@@ -94,11 +94,12 @@ router.put('/:id', authenticate, requireRole('admin'), async (req, res) => {
 // DELETE /api/discounts/:id
 router.delete('/:id', authenticate, requireRole('admin'), async (req, res) => {
   try {
-    const existing = await prisma.discountRule.findFirst({ where: { id: parseInt(req.params.id), tenantId: req.user.tenantId } });
+    const { id } = req.params;
+    const existing = await prisma.discount.findFirst({ where: { id, tenantId: req.user.tenantId } });
     if (!existing) return res.status(404).json({ message: 'Discount not found' });
 
-    await prisma.discountRule.delete({
-      where: { id: parseInt(req.params.id) },
+    await prisma.discount.delete({
+      where: { id },
     });
     res.json({ message: 'Discount rule deleted' });
   } catch (error) {
@@ -117,7 +118,7 @@ router.post('/apply', authenticate, async (req, res) => {
     }
 
     const now = new Date();
-    const rules = await prisma.discountRule.findMany({
+    const rules = await prisma.discount.findMany({
       where: {
         tenantId: req.user.tenantId,
         isActive: true,

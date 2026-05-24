@@ -90,7 +90,7 @@ router.get('/low-stock', verifyToken, requireTenant, async (req, res) => {
 ──────────────────────────────────────────────────────── */
 router.get('/:productId', verifyToken, requireTenant, async (req, res) => {
   try {
-    const productId = parseInt(req.params.productId);
+    const productId = req.params.productId;
     const wh = await prisma.warehouse.findUnique({
       where: { productId },
       include: { product: { select: { id: true, name: true, sku: true, category: true, tenantId: true } } },
@@ -112,7 +112,7 @@ router.get('/:productId', verifyToken, requireTenant, async (req, res) => {
 ──────────────────────────────────────────────────────── */
 router.put('/:productId', verifyToken, requireTenant, requireRole('admin'), async (req, res) => {
   try {
-    const productId = parseInt(req.params.productId);
+    const productId = req.params.productId;
     const { quantity, reorderLevel, location } = req.body;
 
     // Verify ownership before update
@@ -154,7 +154,7 @@ router.post('/adjust', verifyToken, requireTenant, requireRole('admin'), async (
     }
 
     const warehouse = await prisma.warehouse.findUnique({
-      where: { productId: parseInt(productId) },
+      where: { productId },
       include: { product: { select: { tenantId: true, name: true } } },
     });
 
@@ -168,7 +168,7 @@ router.post('/adjust', verifyToken, requireTenant, requireRole('admin'), async (
     }
 
     const updated = await prisma.warehouse.update({
-      where: { productId: parseInt(productId) },
+      where: { productId },
       data: {
         quantity: newQty,
         lastRestocked: parseInt(adjustment) > 0 ? new Date() : undefined,

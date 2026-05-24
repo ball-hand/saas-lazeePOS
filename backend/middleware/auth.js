@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'LAZEE_POS_SUPER_SECRET_KEY';
 /* ─────────────────────────────────────────────────────────
    verifyToken
    Verifies JWT and attaches `req.user`.
-   Superadmin tokens have no tenantId; tenant tokens always carry one.
+   Central owner tokens have no tenantId; tenant tokens always carry one.
 ───────────────────────────────────────────────────────── */
 export function verifyToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -49,7 +49,7 @@ export function requireRole(roles) {
 /* ─────────────────────────────────────────────────────────
    requireTenant
    Ensures the request is a tenant request (subdomain hit),
-   not a central/superadmin area.
+   not a central owner area.
    Also enforces that a tenant-user cannot access another tenant's data.
 ───────────────────────────────────────────────────────── */
 export function requireTenant(req, res, next) {
@@ -59,9 +59,9 @@ export function requireTenant(req, res, next) {
     });
   }
 
-  if (req.user?.role === 'superadmin') {
+  if (req.user?.role === 'central') {
     return res.status(403).json({
-      message: 'Superadmin tidak dapat mengakses endpoint tenant.',
+      message: 'Central owner tidak dapat mengakses endpoint tenant.',
     });
   }
 

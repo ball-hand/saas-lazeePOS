@@ -4,8 +4,12 @@ import { ThemeProvider } from './context/ThemeContext';
 
 import { LandingPage } from './pages/LandingPage';
 import { Login } from './pages/Login';
-import { SuperAdminLogin } from './pages/central/SuperAdminLogin';
-import { SuperAdminDashboard } from './pages/central/SuperAdminDashboard';
+import { CentralLogin } from './pages/central/CentralLogin';
+import { CentralDashboard } from './pages/central/CentralDashboard';
+import { CentralTenants } from './pages/central/CentralTenants';
+import { CentralPlans } from './pages/central/CentralPlans';
+import { CentralPlatform } from './pages/central/CentralPlatform';
+import { CentralTenantDetail } from './pages/central/CentralTenantDetail';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Tenant (toko) pages
@@ -31,7 +35,7 @@ export default function App() {
           {/* ── PUBLIC ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/central-login" element={<SuperAdminLogin />} />
+          <Route path="/central-login" element={<CentralLogin />} />
 
           {/* ── TENANT ROUTES  (toko subdomain) ─────────── */}
           <Route element={<ProtectedRoute />}>
@@ -50,12 +54,13 @@ export default function App() {
             <Route path="/settings"  element={<Settings />} />
           </Route>
 
-          {/* ── SUPERADMIN ROUTES ──────────────────────── */}
-          <Route element={<ProtectedRoute requireSuperadmin={true} />}>
-            <Route path="/super-admin"         element={<SuperAdminDashboard />} />
-            <Route path="/super-admin/tenants" element={<SuperAdminDashboard />} />   {/* placeholder — future page */}
-            <Route path="/super-admin/plans"   element={<SuperAdminDashboard />} />   {/* placeholder — future page */}
-            <Route path="/super-admin/platform" element={<SuperAdminDashboard />} /> {/* placeholder — future page */}
+          {/* ── CENTRAL ROUTES ──────────────────────── */}
+          <Route element={<ProtectedRoute requireCentral={true} />}>
+            <Route path="/central"         element={<CentralDashboard />} />
+            <Route path="/central/tenants" element={<CentralTenants />} />
+            <Route path="/central/tenants/:id" element={<CentralTenantDetail />} />
+            <Route path="/central/plans"   element={<CentralPlans />} />
+            <Route path="/central/platform" element={<CentralPlatform />} />
           </Route>
 
           {/* ── 404 ─────────────────────────────────────── */}

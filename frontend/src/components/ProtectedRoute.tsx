@@ -4,11 +4,11 @@ import { Layout } from './Layout';
 
 interface ProtectedRouteProps {
   requireAdmin?: boolean;
-  requireSuperadmin?: boolean;
+  requireCentral?: boolean;
 }
 
-export function ProtectedRoute({ requireAdmin = false, requireSuperadmin = false }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, user, isSuperAdmin } = useAuth();
+export function ProtectedRoute({ requireAdmin = false, requireCentral = false }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading, user, isCentral } = useAuth();
 
   if (isLoading) {
     return (
@@ -20,9 +20,9 @@ export function ProtectedRoute({ requireAdmin = false, requireSuperadmin = false
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  if (requireSuperadmin && !isSuperAdmin) return <Navigate to="/" replace />;
-  // requireAdmin — let superadmin pass too (they manage tenants too)
-  if (requireAdmin && user?.role !== 'admin' && !isSuperAdmin) return <Navigate to="/" replace />;
+  if (requireCentral && !isCentral) return <Navigate to="/" replace />;
+  // requireAdmin — let central pass too (they manage tenants too)
+  if (requireAdmin && user?.role !== 'admin' && !isCentral) return <Navigate to="/" replace />;
 
   return (
     <Layout>

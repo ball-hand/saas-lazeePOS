@@ -6,7 +6,7 @@ export interface User {
   id: number;
   email: string;
   name: string;
-  role: string;            // "superadmin" | "admin" | "cashier"
+  role: string;            // "central" | "admin" | "cashier"
   tenantId?: number | null;
   tenant?: {
     id: number;
@@ -23,7 +23,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  isSuperAdmin: boolean;
+  isCentral: boolean;
   isTenantAdmin: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
@@ -62,11 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user');
   };
 
-  const isSuperAdmin = user?.role === 'superadmin';
+  const isCentral = user?.role === 'central';
   const isTenantAdmin = user?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isSuperAdmin, isTenantAdmin, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isCentral, isTenantAdmin, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

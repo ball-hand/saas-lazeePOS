@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { 
   LayoutDashboard, ShoppingCart, Package, ReceiptText, 
   Wallet, Tags, Settings as SettingsIcon, LogOut, X,
-  CreditCard, Warehouse,
+  CreditCard, Warehouse, Building2
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -15,7 +15,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const { storeName, logoUrl } = useTheme();
 
-  const navItems = [
+  const tenantNavItems = [
     { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/pos', icon: <ShoppingCart size={20} />, label: 'POS Terminal' },
     { to: '/products',  icon: <Package size={20} />,       label: 'Produk' },
@@ -28,6 +28,15 @@ export function Sidebar({ onClose }: SidebarProps) {
       { to: '/settings',  icon: <SettingsIcon size={20} />, label: 'Pengaturan' },
     ] : []),
   ];
+
+  const centralNavItems = [
+    { to: '/central', icon: <LayoutDashboard size={20} />, label: 'Platform Dashboard' },
+    { to: '/central/tenants', icon: <Building2 size={20} />, label: 'Daftar Tenant' },
+    { to: '/central/plans', icon: <CreditCard size={20} />, label: 'Paket Berlangganan' },
+    { to: '/central/platform', icon: <SettingsIcon size={20} />, label: 'Pengaturan Sistem' },
+  ];
+
+  const navItems = user?.role === 'central' ? centralNavItems : tenantNavItems;
 
   return (
     <aside className="w-64 h-full flex flex-col bg-[var(--bg-surface-elevated)] border-r border-[var(--border)] shadow-xl md:shadow-none">

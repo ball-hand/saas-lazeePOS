@@ -91,6 +91,10 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
       },
     });
 
+    // Counts for limit utilization
+    const activeUsers = await prisma.user.count({ where: { tenantId: req.user.tenantId, isActive: true } });
+    const productCount = await prisma.product.count({ where: { tenantId: req.user.tenantId, isActive: true } });
+
     res.json({
       tenant: {
         id: tenant.id,
@@ -101,6 +105,8 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
       },
       subscription: tenant.subscription,
       recentTransactions: transactions,
+      activeUsers,
+      productCount,
     });
   } catch (err) {
     console.error('Get subscription error:', err);
@@ -362,10 +368,14 @@ async function _activateSubscription(tenantId, planId, billingCycle, orderId) {
         paymentProvider: 'midtrans',
       },
     }),
-    // Promote tenant status to active
+    // PERBAIKAN: Promote tenant status to ACTIVE and ensure isActive is true
     prisma.tenant.update({
       where: { id: tenantId },
-      data: { status: 'active', planId },
+      data: { 
+        status: 'ACTIVE', 
+        planId: String(planId), 
+        isActive: true 
+      },
     }),
   ]);
 
