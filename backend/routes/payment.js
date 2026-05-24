@@ -155,6 +155,8 @@ router.post('/create-transaction', verifyToken, requireTenant, async (req, res) 
     const adminEmail = tenant.users[0]?.email || 'user@lazeepos.com';
     const adminName = tenant.users[0]?.name || tenant.name;
 
+    const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+
     // Create Midtrans Snap transaction
     const snapParam = {
       transaction_details: {
@@ -174,9 +176,9 @@ router.post('/create-transaction', verifyToken, requireTenant, async (req, res) 
         email: adminEmail,
       },
       callbacks: {
-        finish: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/billing?status=finish`,
-        error:  `${process.env.FRONTEND_URL || 'http://localhost:5173'}/billing?status=error`,
-        pending: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/billing?status=pending`,
+        finish: `${origin}/billing?status=finish`,
+        error:  `${origin}/billing?status=error`,
+        pending: `${origin}/billing?status=pending`,
       },
     };
 
@@ -252,8 +254,6 @@ router.post('/notification', async (req, res) => {
       data: {
         status: newStatus,
         paymentType: payment_type || null,
-        midtransOrderId: transaction_id || null,
-        fraudStatus: fraud_status || null,
         paidAt,
       },
     });
