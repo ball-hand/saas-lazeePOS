@@ -80,66 +80,80 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
 
     if (!tenant) return res.status(404).json({ message: 'Tenant tidak ditemukan.' });
 
-    // Active sync for the latest pending transaction (fallback for webhook in local dev)
+    // Active sync for ALL pending transactions (fallback for webhook in local dev)
     let currentTenant = tenant;
     try {
-      const pendingTx = await prisma.paymentTransaction.findFirst({
+      const pendingTxs = await prisma.paymentTransaction.findMany({
         where: { tenantId: req.user.tenantId, status: 'pending' },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        take: 10
       });
 
-      console.log(`[Active Sync] Found pending transaction:`, pendingTx ? pendingTx.orderId : 'None');
+      console.log(`[Active Sync] Found ${pendingTxs.length} pending transaction(s).`);
 
-      if (pendingTx) {
-        console.log(`[Active Sync] Querying Midtrans for order_id: ${pendingTx.orderId}...`);
-        const midtransStatus = await coreApi.transaction.status(pendingTx.orderId);
-        console.log(`[Active Sync] Midtrans Response Status: ${midtransStatus.transaction_status}`);
-        
-        let newStatus = 'pending';
-        let paidAt = pendingTx.paidAt;
-        
-        if (midtransStatus.transaction_status === 'capture') {
-          newStatus = midtransStatus.fraud_status === 'accept' ? 'settlement' : 'challenge';
-        } else if (midtransStatus.transaction_status === 'settlement') {
-          newStatus = 'settlement';
-          paidAt = new Date();
-        } else if (['cancel', 'deny', 'expire'].includes(midtransStatus.transaction_status)) {
-          newStatus = midtransStatus.transaction_status;
-        }
-
-        console.log(`[Active Sync] Evaluated new status: ${newStatus}`);
-
-        if (newStatus !== 'pending') {
-          console.log(`[Active Sync] Updating transaction in database...`);
-          await prisma.paymentTransaction.update({
-            where: { id: pendingTx.id },
-            data: { 
-              status: newStatus,
-              paymentType: midtransStatus.payment_type || null,
-              paidAt 
-            },
-          });
+      for (const pendingTx of pendingTxs) {
+        try {
+          console.log(`[Active Sync] Querying Midtrans for order_id: ${pendingTx.orderId}...`);
+          const midtransStatus = await coreApi.transaction.status(pendingTx.orderId);
+          console.log(`[Active Sync] Midtrans Response Status: ${midtransStatus.transaction_status}`);
           
-          if (newStatus === 'settlement' && pendingTx.planId) {
-            console.log(`[Active Sync] Activating subscription for plan: ${pendingTx.planId}`);
-            await _activateSubscription(pendingTx.tenantId, pendingTx.planId, pendingTx.billingCycle, pendingTx.orderId);
-            
-            // Refresh tenant data after activation
-            const updatedTenant = await prisma.tenant.findUnique({
-              where: { id: req.user.tenantId },
-              include: { subscription: { include: { plan: true } } }
+          let newStatus = 'pending';
+          let paidAt = pendingTx.paidAt;
+          
+          if (midtransStatus.transaction_status === 'capture') {
+            newStatus = midtransStatus.fraud_status === 'accept' ? 'settlement' : 'challenge';
+          } else if (midtransStatus.transaction_status === 'settlement') {
+            newStatus = 'settlement';
+            paidAt = new Date();
+          } else if (['cancel', 'deny', 'expire'].includes(midtransStatus.transaction_status)) {
+            newStatus = midtransStatus.transaction_status;
+          }
+
+          console.log(`[Active Sync] Evaluated new status: ${newStatus}`);
+
+          if (newStatus !== 'pending') {
+            console.log(`[Active Sync] Updating transaction in database...`);
+            await prisma.paymentTransaction.update({
+              where: { id: pendingTx.id },
+              data: { 
+                status: newStatus,
+                paymentType: midtransStatus.payment_type || null,
+                paidAt 
+              },
             });
-            if (updatedTenant) currentTenant = updatedTenant;
-            console.log(`[Active Sync] Tenant subscription activated and refreshed.`);
+            
+            if (newStatus === 'settlement' && pendingTx.planId) {
+              console.log(`[Active Sync] Activating subscription for plan: ${pendingTx.planId}`);
+              await _activateSubscription(pendingTx.tenantId, pendingTx.planId, pendingTx.billingCycle, pendingTx.orderId);
+              
+              // Refresh tenant data after activation
+              const updatedTenant = await prisma.tenant.findUnique({
+                where: { id: req.user.tenantId },
+                include: { subscription: { include: { plan: true } } }
+              });
+              if (updatedTenant) currentTenant = updatedTenant;
+              console.log(`[Active Sync] Tenant subscription activated and refreshed.`);
+            }
+          }
+        } catch (err) {
+          if (err.message && err.message.includes('404')) {
+            const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            if (new Date(pendingTx.createdAt) < oneDayAgo) {
+              console.log(`[Active Sync] Transaction ${pendingTx.orderId} is old and untouched (404). Cancelling locally.`);
+              await prisma.paymentTransaction.update({
+                where: { id: pendingTx.id },
+                data: { status: 'cancel' }
+              });
+            } else {
+              console.log(`[Active Sync] Transaction ${pendingTx.orderId} belum dibayar.`);
+            }
+          } else {
+            console.error(`[Active Sync] Sync failed for transaction ${pendingTx.orderId}:`, err.message);
           }
         }
       }
     } catch (err) {
-      if (err.message && err.message.includes('404')) {
-        console.log(`[Active Sync] Transaction belum dibayar (masih di layar pemilihan metode pembayaran Midtrans).`);
-      } else {
-        console.error(`[Active Sync] Sync failed for tenant ${req.user.tenantId}:`, err.message);
-      }
+      console.error(`[Active Sync] Global sync error:`, err.message);
     }
 
     // Recent payment transactions
