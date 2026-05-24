@@ -142,11 +142,11 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
       }
     }
 
-    // Last 5 payment transactions
+    // Recent payment transactions
     const transactions = await prisma.paymentTransaction.findMany({
       where: { tenantId: req.user.tenantId },
       orderBy: { createdAt: 'desc' },
-      take: 5,
+      take: 50,
       select: {
         id: true, orderId: true, amount: true, status: true,
         paymentType: true, billingCycle: true, paidAt: true, createdAt: true,

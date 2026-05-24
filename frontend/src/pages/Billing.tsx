@@ -501,7 +501,7 @@ export function Billing() {
                         </span>
                       </td>
                       <td className="py-3 text-right text-[var(--text-secondary)] text-xs">
-                        {new Date(tx.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {new Date(tx.createdAt).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </td>
                     </tr>
                   );
