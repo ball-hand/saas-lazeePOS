@@ -88,8 +88,13 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
         orderBy: { createdAt: 'desc' }
       });
 
+      console.log(`[Active Sync] Found pending transaction:`, pendingTx ? pendingTx.orderId : 'None');
+
       if (pendingTx) {
+        console.log(`[Active Sync] Querying Midtrans for order_id: ${pendingTx.orderId}...`);
         const midtransStatus = await coreApi.transaction.status(pendingTx.orderId);
+        console.log(`[Active Sync] Midtrans Response Status: ${midtransStatus.transaction_status}`);
+        
         let newStatus = 'pending';
         let paidAt = pendingTx.paidAt;
         
@@ -102,7 +107,10 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
           newStatus = midtransStatus.transaction_status;
         }
 
+        console.log(`[Active Sync] Evaluated new status: ${newStatus}`);
+
         if (newStatus !== 'pending') {
+          console.log(`[Active Sync] Updating transaction in database...`);
           await prisma.paymentTransaction.update({
             where: { id: pendingTx.id },
             data: { 
@@ -113,18 +121,25 @@ router.get('/subscription', verifyToken, requireTenant, async (req, res) => {
           });
           
           if (newStatus === 'settlement' && pendingTx.planId) {
+            console.log(`[Active Sync] Activating subscription for plan: ${pendingTx.planId}`);
             await _activateSubscription(pendingTx.tenantId, pendingTx.planId, pendingTx.billingCycle, pendingTx.orderId);
+            
             // Refresh tenant data after activation
             const updatedTenant = await prisma.tenant.findUnique({
               where: { id: req.user.tenantId },
               include: { subscription: { include: { plan: true } } }
             });
             if (updatedTenant) currentTenant = updatedTenant;
+            console.log(`[Active Sync] Tenant subscription activated and refreshed.`);
           }
         }
       }
     } catch (err) {
-      // Ignored if Midtrans throws 404 or fails
+      if (err.message && err.message.includes('404')) {
+        console.log(`[Active Sync] Transaction belum dibayar (masih di layar pemilihan metode pembayaran Midtrans).`);
+      } else {
+        console.error(`[Active Sync] Sync failed for tenant ${req.user.tenantId}:`, err.message);
+      }
     }
 
     // Last 5 payment transactions
