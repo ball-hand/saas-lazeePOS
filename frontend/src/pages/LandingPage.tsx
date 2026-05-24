@@ -124,38 +124,135 @@ export function LandingPage() {
       {/* =========================================
           HERO SECTION (HEADER UTAMA)
       ========================================= */}
-      <section className="pt-32 pb-16 px-6 max-w-7xl mx-auto text-center flex flex-col items-center animate-fade-in relative">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] text-xs font-bold uppercase tracking-wider border border-[var(--accent-primary)]/20 mb-6 shadow-sm">
-          <Sparkles size={14} className="animate-pulse" /> POS Generasi Baru Berbasis Cloud
-        </div>
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight max-w-4xl leading-[1.15] mb-6">
-          Kelola Ribuan Cabang dalam <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'var(--accent-gradient)' }}>Satu Dasbor Cerdas.</span>
-        </h1>
-        <p className="text-lg md:text-xl text-[var(--text-secondary)] font-medium max-w-2xl mb-10 leading-relaxed">
-          Sistem kasir pintar multi-tenant premium dengan arsitektur tangguh. Dibuat khusus untuk akselerasi UMKM hingga jaringan bisnis raksasa.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-16">
-          <a href="#harga" className="px-8 py-4 rounded-2xl text-base font-bold text-white flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1" style={{ background: 'var(--accent-gradient)' }}>
-            Mulai Sekarang <ArrowRight size={20} />
-          </a>
-          <a href="#demo" className="px-8 py-4 rounded-2xl text-base font-bold text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] hover:bg-[var(--bg-main)] transition-all flex items-center justify-center shadow-sm gap-2">
-            <Play size={16} fill="currentColor" /> Lihat Preview POS
-          </a>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full max-w-4xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] p-6 rounded-[2rem] shadow-sm">
-          {[
-            { val: "10K+", label: "Tenants Terdaftar" },
-            { val: "Rp 50M+", label: "Transaksi Diproses" },
-            { val: "99.99%", label: "SLA Uptime Sistem" },
-            { val: "< 100ms", label: "Waktu Muat Halaman" },
-          ].map((s, i) => (
-            <div key={i} className="text-center">
-              <p className="text-2xl md:text-3xl font-black text-[var(--text-primary)] font-mono" style={{ color: 'var(--accent-primary)' }}>{s.val}</p>
-              <p className="text-xs text-[var(--text-secondary)] font-bold mt-1 uppercase tracking-wider">{s.label}</p>
+      <section className="pt-32 pb-16 px-6 max-w-7xl mx-auto animate-fade-in relative">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Column: Headline and CTA */}
+          <div className="lg:col-span-7 text-left flex flex-col items-start">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] text-xs font-bold uppercase tracking-wider border border-[var(--accent-primary)]/20 mb-6 shadow-sm">
+              <Sparkles size={14} className="animate-pulse" /> POS Generasi Baru Berbasis Cloud
             </div>
-          ))}
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
+              Kelola Ribuan Cabang dalam <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'var(--accent-gradient)' }}>Satu Dasbor Cerdas.</span>
+            </h1>
+            <p className="text-base md:text-lg text-[var(--text-secondary)] font-medium max-w-xl mb-8 leading-relaxed">
+              Sistem kasir pintar multi-tenant premium dengan arsitektur tangguh. Dibuat khusus untuk akselerasi UMKM hingga jaringan bisnis raksasa.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-10">
+              <a href="#harga" className="px-8 py-4 rounded-2xl text-base font-bold text-white flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1" style={{ background: 'var(--accent-gradient)' }}>
+                Mulai Sekarang <ArrowRight size={20} />
+              </a>
+              <a href="#demo" className="px-8 py-4 rounded-2xl text-base font-bold text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] hover:bg-[var(--bg-main)] transition-all flex items-center justify-center shadow-sm gap-2">
+                <Play size={16} fill="currentColor" /> Lihat Preview POS
+              </a>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full bg-[var(--bg-surface-elevated)] border border-[var(--border)] p-5 rounded-[1.8rem] shadow-sm">
+              {[
+                { val: "10K+", label: "Tenants" },
+                { val: "Rp 50M+", label: "Transaksi" },
+                { val: "99.99%", label: "Uptime" },
+                { val: "<100ms", label: "Page Load" },
+              ].map((s, i) => (
+                <div key={i} className="text-center md:text-left border-r last:border-0 border-[var(--border)] pr-2 last:pr-0">
+                  <p className="text-lg md:text-xl font-black text-[var(--text-primary)] font-mono" style={{ color: 'var(--accent-primary)' }}>{s.val}</p>
+                  <p className="text-[10px] text-[var(--text-secondary)] font-bold uppercase tracking-wider mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Column: Beautiful CSS Moving Illustration */}
+          <div className="lg:col-span-5 flex justify-center items-center relative min-h-[350px] lg:min-h-[450px]">
+            {/* Background Glow */}
+            <div className="absolute w-72 h-72 rounded-full bg-[var(--accent-primary)]/10 blur-[60px] animate-pulse-soft" />
+
+            {/* Isometric Terminal Base */}
+            <div className="w-full max-w-[380px] bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-[2.5rem] p-6 shadow-2xl relative animate-float">
+              
+              {/* Tablet Header Bar */}
+              <div className="h-6 border-b border-[var(--border)] mb-4 flex items-center justify-between text-[10px] text-[var(--text-secondary)] font-bold px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span>LAZEEPOS-01</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>WIFI</span>
+                  <span className="w-2.5 h-1.5 bg-[var(--text-secondary)] rounded-[2px]" />
+                </div>
+              </div>
+
+              {/* Graphic/Sales Chart Mock */}
+              <div className="bg-[var(--bg-main)] rounded-2xl p-4 border border-[var(--border)] mb-4 relative overflow-hidden">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">Omzet Harian</span>
+                  <span className="text-xs font-mono font-black text-emerald-500">+18.5%</span>
+                </div>
+                <div className="h-24 flex items-end gap-3 px-2 pt-2 border-b border-[var(--border)]/50">
+                  {[40, 75, 55, 90, 65, 85].map((val, idx) => (
+                    <div key={idx} className="flex-1 bg-[var(--accent-primary-transparent)] rounded-t-lg relative group h-full flex items-end">
+                      <div 
+                        className="w-full rounded-t-lg transition-all duration-500 origin-bottom" 
+                        style={{ 
+                          height: `${val}%`,
+                          background: 'var(--accent-gradient)',
+                          animation: 'grow-bar 3.5s ease-in-out infinite',
+                          animationDelay: `${idx * 0.2}s`
+                        }} 
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Floating Sales Alert Card */}
+              <div className="absolute -top-6 -right-6 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 animate-float-reverse backdrop-blur-md">
+                <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                  <DollarSign size={14} />
+                </div>
+                <div className="text-left">
+                  <p className="text-[9px] font-bold opacity-80 uppercase leading-none">Checkout Sukses</p>
+                  <p className="text-xs font-mono font-black mt-0.5">Rp 120.000</p>
+                </div>
+              </div>
+
+              {/* Printed Receipt animation */}
+              <div className="absolute -bottom-8 left-12 w-44 bg-white text-black p-3.5 rounded-xl shadow-2xl border border-gray-100 flex flex-col justify-between overflow-hidden animate-print">
+                <div className="border-b border-dashed border-gray-300 pb-2 mb-2 text-center">
+                  <p className="text-[8px] font-black tracking-widest font-mono">LAZEE CAFE</p>
+                  <p className="text-[6px] font-mono opacity-60">demo.lazeepos.com</p>
+                </div>
+                <div className="space-y-1 text-[6px] font-mono">
+                  <div className="flex justify-between">
+                    <span>1x Kopi Susu Aren</span>
+                    <span>Rp 20.000</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>1x Croissant</span>
+                    <span>Rp 24.000</span>
+                  </div>
+                  <div className="flex justify-between border-t border-dashed border-gray-200 pt-1 font-black">
+                    <span>Total</span>
+                    <span>Rp 44.000</span>
+                  </div>
+                </div>
+                <div className="text-center text-[5px] font-mono opacity-50 mt-2 border-t border-dashed border-gray-200 pt-1.5">
+                  Terima Kasih atas Kunjungan Anda
+                </div>
+              </div>
+
+              {/* Barcode Laser pulse */}
+              <div className="absolute -left-6 bottom-16 bg-[var(--bg-surface-elevated)] border border-[var(--border)] p-3 rounded-2xl shadow-xl flex items-center justify-center animate-float-reverse backdrop-blur-md">
+                <div className="relative w-10 h-10 border border-red-500/20 bg-red-500/5 rounded-lg flex items-center justify-center overflow-hidden">
+                  <div className="absolute w-full h-[1px] bg-red-500 shadow-[0_0_8px_red] animate-scan" />
+                  <Zap size={18} className="text-red-500 animate-pulse-soft" />
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -448,17 +545,26 @@ export function LandingPage() {
       {/* =========================================
           FOOTER
       ========================================= */}
-      <footer className="py-16 bg-[var(--bg-surface-elevated)] border-t border-[var(--border)] text-center relative">
-        <div className="flex items-center justify-center gap-2 text-[var(--accent-primary)] mb-4">
-          <Store size={26} strokeWidth={2.5} />
-          <span className="text-lg font-extrabold tracking-tight text-[var(--text-primary)]">Lazee POS</span>
+      <footer className="py-16 bg-[var(--bg-surface-elevated)] border-t border-[var(--border)] text-center relative overflow-hidden">
+        {/* Floating Particles in Footer */}
+        <div className="absolute inset-0 pointer-events-none opacity-40">
+          <div className="absolute bottom-4 left-[15%] w-3 h-3 rounded-full bg-[var(--accent-primary)] blur-[1px] animate-particle-1" />
+          <div className="absolute bottom-8 left-[45%] w-2 h-2 rounded-full bg-indigo-500 blur-[1px] animate-particle-2" />
+          <div className="absolute bottom-6 left-[80%] w-4 h-4 rounded-full bg-purple-500 blur-[2px] animate-particle-3" />
         </div>
-        <p className="text-[var(--text-secondary)] font-medium text-xs max-w-md mx-auto mb-6 leading-relaxed">
-          Lazee POS membantu UMKM & Perusahaan Franchise mengelola penjualan cabang, melacak arus kas, dan mempermudah checkout secara real-time.
-        </p>
-        <p className="text-[var(--text-secondary)]/50 font-bold text-[10px] uppercase tracking-wider">
-          © {new Date().getFullYear()} PT Lazee Teknologi Global. Hak Cipta Dilindungi.
-        </p>
+
+        <div className="relative z-10">
+          <div className="flex items-center justify-center gap-2 text-[var(--accent-primary)] mb-4">
+            <Store size={26} strokeWidth={2.5} />
+            <span className="text-lg font-extrabold tracking-tight text-[var(--text-primary)]">Lazee POS</span>
+          </div>
+          <p className="text-[var(--text-secondary)] font-medium text-xs max-w-md mx-auto mb-6 leading-relaxed">
+            Lazee POS membantu UMKM & Perusahaan Franchise mengelola penjualan cabang, melacak arus kas, dan mempermudah checkout secara real-time.
+          </p>
+          <p className="text-[var(--text-secondary)]/50 font-bold text-[10px] uppercase tracking-wider">
+            © {new Date().getFullYear()} PT Lazee Teknologi Global. Hak Cipta Dilindungi.
+          </p>
+        </div>
       </footer>
 
     </div>
