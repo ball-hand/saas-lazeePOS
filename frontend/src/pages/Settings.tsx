@@ -5,12 +5,14 @@ import api from '../api/client';
 import toast from 'react-hot-toast';
 
 export function Settings() {
-  const { themeMode, primaryColor, storeName, updateTheme } = useTheme();
+  const { themeMode, primaryColor, storeName: contextStoreName, logoUrl: contextLogoUrl, updateTheme } = useTheme();
   
   // Branding state
-  const [name, setName] = useState(storeName);
+  const [storeName, setStoreName] = useState(contextStoreName);
   const [color, setColor] = useState(primaryColor);
   const [mode, setMode] = useState(themeMode);
+  const [logoUrl, setLogoUrl] = useState(contextLogoUrl);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   
   // Custom Receipt & Tax state
   const [receiptSubtitle, setReceiptSubtitle] = useState('Sistem Kasir Digital');
@@ -19,9 +21,10 @@ export function Settings() {
 
   // Load current values from DB and localStorage
   useEffect(() => {
-    setName(storeName);
+    setStoreName(contextStoreName);
     setColor(primaryColor);
     setMode(themeMode);
+    setLogoUrl(contextLogoUrl);
 
     const storedConfig = localStorage.getItem('pos_receipt_config');
     if (storedConfig) {
@@ -34,29 +37,44 @@ export function Settings() {
         console.error('Error parsing pos_receipt_config:', e);
       }
     }
-  }, [storeName, primaryColor, themeMode]);
+  }, [contextStoreName, primaryColor, themeMode, contextLogoUrl]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const loadingToast = toast.loading('Menyimpan pengaturan...');
     try {
-      // 1. Persist branding changes to backend DB
+      let uploadedLogoUrl = logoUrl;
+
+      // 1. Upload logo if new file selected
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append('file', logoFile);
+        const uploadRes = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        uploadedLogoUrl = uploadRes.data.url;
+        setLogoUrl(uploadedLogoUrl);
+      }
+
+      // 2. Persist branding changes to backend DB
       const { data } = await api.put('/settings/tenant', {
-        name,
+        name: storeName,
         primaryColor: color,
-        themeMode: mode
+        themeMode: mode,
+        logoUrl: uploadedLogoUrl
       });
 
-      // 2. Update frontend ThemeContext state
+      // 3. Update frontend ThemeContext state
       if (data?.tenant) {
         updateTheme({
           name: data.tenant.name,
           primaryColor: data.tenant.primaryColor,
-          themeMode: data.tenant.themeMode
+          themeMode: data.tenant.themeMode,
+          logoUrl: data.tenant.logoUrl
         });
       }
 
-      // 3. Save Custom Receipt Settings (Subtitle, Footer, Tax PPN) to localStorage
+      // 4. Save Custom Receipt Settings (Subtitle, Footer, Tax PPN) to localStorage
       const receiptConfig = {
         receiptSubtitle,
         receiptFooter,
@@ -72,10 +90,12 @@ export function Settings() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-8 pb-10 max-w-3xl">
-      <div>
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Pengaturan & Personalisasi</h1>
-        <p className="text-[var(--text-secondary)] mt-1 font-medium">Sesuaikan branding aplikasi POS, struk pencetakan, dan default pajak toko Anda.</p>
+    <div className="animate-fade-in flex flex-col gap-6 pb-10">
+      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-transparent">
+        <div>
+          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Pengaturan Toko</h1>
+          <p className="text-[var(--text-secondary)] mt-1 font-medium">Atur profil, tema, pajak, dan cetak struk kasir Anda.</p>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="flex flex-col gap-6">
@@ -86,18 +106,51 @@ export function Settings() {
             <Store size={18} className="text-[var(--accent-primary)]" /> Branding & Tema Aplikasi
           </h2>
 
-          {/* Nama Toko */}
-          <div>
-            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">
-              Nama Bisnis / Tenant *
-            </label>
-            <input 
-              type="text" 
-              required
-              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all font-semibold text-sm"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+          <div className="flex flex-col sm:flex-row gap-6">
+            {/* Logo Upload */}
+            <div className="flex flex-col gap-2 items-start">
+              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Logo Toko</label>
+              <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-[var(--border)] flex items-center justify-center cursor-pointer hover:border-[var(--accent-primary)] hover:bg-[var(--bg-main)] transition-all overflow-hidden group relative">
+                <input 
+                  type="file" 
+                  accept="image/png, image/jpeg, image/webp" 
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setLogoFile(e.target.files[0]);
+                      setLogoUrl(URL.createObjectURL(e.target.files[0]));
+                    }
+                  }}
+                />
+                {logoUrl ? (
+                  <>
+                    <img src={logoUrl.startsWith('blob:') ? logoUrl : `${import.meta.env.VITE_API_URL || ''}${logoUrl}`} alt="Logo" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <span className="text-white text-xs font-bold">Ubah</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-[var(--text-secondary)] flex flex-col items-center">
+                    <Store size={24} className="mb-1 opacity-50" />
+                    <span className="text-[10px] font-bold">Upload</span>
+                  </div>
+                )}
+              </label>
+            </div>
+
+            {/* Nama Toko */}
+            <div className="flex-1">
+              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">
+                Nama Bisnis / Tenant *
+              </label>
+              <input 
+                type="text" 
+                required
+                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all font-semibold text-sm"
+                value={storeName}
+                onChange={(e) => setStoreName(e.target.value)}
+              />
+            </div>
           </div>
 
           {/* Pilihan Warna Tema */}

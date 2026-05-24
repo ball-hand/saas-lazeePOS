@@ -12,7 +12,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 no-print">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-10 sm:pt-16 p-4 sm:p-6 no-print">
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}

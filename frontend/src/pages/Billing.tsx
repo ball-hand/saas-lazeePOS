@@ -148,12 +148,10 @@ export function Billing() {
 
   return (
     <div className="animate-fade-in flex flex-col gap-8 pb-10">
-
-      {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 flex items-start justify-between border-b border-transparent">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Langganan & Billing</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola paket langganan dan pantau kuota pemakaian fitur toko Anda.</p>
+          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Langganan & Penagihan</h1>
+          <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola paket aktif Anda dan riwayat tagihan.</p>
         </div>
         <button onClick={fetchData} className="p-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] transition-all" title="Refresh">
           <RefreshCw size={18} />

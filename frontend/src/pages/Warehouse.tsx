@@ -108,12 +108,11 @@ export function Warehouse() {
   const labelCls = "block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="animate-fade-in flex flex-col gap-8 pb-10">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="animate-fade-in flex flex-col gap-6 pb-10">
+      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-transparent">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Manajemen Gudang</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Pantau suplai stok besar di gudang utama dan distribusi ke rak kasir.</p>
+          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Stok Gudang</h1>
+          <p className="text-[var(--text-secondary)] mt-1 font-medium">Pantau dan kelola persediaan barang jualan Anda.</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <button 

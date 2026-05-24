@@ -6,22 +6,20 @@ import toast from 'react-hot-toast';
 
 const fmt = (val: number) => 'Rp ' + Math.round(val).toLocaleString('id-ID');
 
-const emptyForm = {
-  sku: '', name: '', category: '', description: '',
-  price: '', costPrice: '', initialStock: '', reorderLevel: '10',
-};
-
 export function Products() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editTarget, setEditTarget] = useState<any | null>(null);
-  const [formData, setFormData] = useState({ ...emptyForm });
-  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<any>({
+    sku: '', name: '', description: '', price: '', costPrice: '', category: '', initialStock: '', reorderLevel: ''
+  });
+  const [productImage, setProductImage] = useState<File | null>(null);
+  const [productImageUrl, setProductImageUrl] = useState('');
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -41,76 +39,50 @@ export function Products() {
 
   useEffect(() => { fetchProducts(); }, [searchQuery, activeCategory]);
 
-  const openAdd = () => {
-    setEditTarget(null);
-    setFormData({ ...emptyForm });
-    setIsModalOpen(true);
-  };
-
-  const openEdit = (p: any) => {
-    setEditTarget(p);
-    setFormData({
-      sku: p.sku || '',
-      name: p.name || '',
-      category: p.category || '',
-      description: p.description || '',
-      price: String(p.price),
-      costPrice: p.costPrice ? String(p.costPrice) : '',
-      initialStock: p.warehouse ? String(p.warehouse.quantity) : '',
-      reorderLevel: p.warehouse ? String(p.warehouse.reorderLevel) : '10',
-    });
-    setIsModalOpen(true);
-  };
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.price) {
-      toast.error('Nama dan harga wajib diisi.'); return;
-    }
-    setIsSaving(true);
+    setIsSubmitting(true);
     try {
-      if (editTarget) {
-        await api.put(`/products/${editTarget.id}`, {
-          sku: formData.sku || null,
-          name: formData.name,
-          category: formData.category || null,
-          description: formData.description || null,
-          price: parseFloat(formData.price),
-          costPrice: formData.costPrice ? parseFloat(formData.costPrice) : null,
+      let uploadedImageUrl = formData.imageUrl;
+
+      if (productImage) {
+        const uploadData = new FormData();
+        uploadData.append('file', productImage);
+        const uploadRes = await api.post('/upload', uploadData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
-        // Update stock separately if changed
-        if (formData.initialStock && editTarget.warehouse) {
-          const newQty = parseInt(formData.initialStock);
-          const diff = newQty - editTarget.warehouse.quantity;
-          if (diff !== 0) {
-            await api.post('/warehouse/adjust', {
-              productId: editTarget.id,
-              adjustment: diff,
-              reason: 'Manual edit dari halaman Produk',
-            });
-          }
-        }
-        toast.success('Produk berhasil diperbarui!');
+        uploadedImageUrl = uploadRes.data.url;
+      }
+
+      const payload = { ...formData, imageUrl: uploadedImageUrl };
+
+      if (formData.id) {
+        await api.put(`/products/${formData.id}`, payload);
+        toast.success('Produk berhasil diperbarui');
       } else {
-        await api.post('/products', {
-          sku: formData.sku || null,
-          name: formData.name,
-          category: formData.category || null,
-          description: formData.description || null,
-          price: parseFloat(formData.price),
-          costPrice: formData.costPrice ? parseFloat(formData.costPrice) : null,
-          initialStock: formData.initialStock ? parseInt(formData.initialStock) : 0,
-          reorderLevel: formData.reorderLevel ? parseInt(formData.reorderLevel) : 10,
-        });
-        toast.success('Produk berhasil ditambahkan!');
+        await api.post('/products', payload);
+        toast.success('Produk berhasil ditambahkan');
       }
       setIsModalOpen(false);
       fetchProducts();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Gagal menyimpan produk.');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Terjadi kesalahan');
     } finally {
-      setIsSaving(false);
+      setIsSubmitting(false);
     }
+  };
+
+  const openEdit = (p: any) => {
+    setFormData(p);
+    setProductImageUrl(p.imageUrl || '');
+    setProductImage(null);
+    setIsModalOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({ sku: '', name: '', description: '', price: '', costPrice: '', category: '', initialStock: '', reorderLevel: '' });
+    setProductImageUrl('');
+    setProductImage(null);
   };
 
   const handleDelete = async (p: any) => {
@@ -124,70 +96,45 @@ export function Products() {
     }
   };
 
-  const field = (key: keyof typeof emptyForm) => ({
-    value: formData[key],
+  const field = (key: string) => ({
+    value: formData[key] || '',
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setFormData(prev => ({ ...prev, [key]: e.target.value })),
+      setFormData((prev: any) => ({ ...prev, [key]: e.target.value })),
   });
 
   const inputCls = "w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all text-sm";
   const labelCls = "block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10">
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="animate-fade-in flex flex-col gap-8 pb-10">
+      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-transparent">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Katalog Produk</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola produk, harga, dan stok toko Anda.</p>
+          <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola daftar barang jualanmu.</p>
         </div>
-        <button
-          onClick={openAdd}
-          className="px-5 py-2.5 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 text-sm"
+        <button 
+          onClick={() => { resetForm(); setIsModalOpen(true); }}
+          className="px-5 py-2.5 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
           style={{ background: 'var(--accent-gradient)' }}
         >
-          <Plus size={18} /> Tambah Produk
+          <Plus size={18} /> Tambah Produk Baru
         </button>
       </div>
 
-      {/* Search + Filter */}
       <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center justify-between shadow-sm">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
-          <input
-            type="text"
-            placeholder="Cari nama atau SKU..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all text-sm"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
+          <input type="text" placeholder="Cari nama atau SKU..." className={inputCls + " pl-10"} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => setActiveCategory('')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${!activeCategory ? 'text-white border-transparent' : 'bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-secondary)]'}`}
-            style={!activeCategory ? { background: 'var(--accent-gradient)' } : {}}
-          >
-            Semua
-          </button>
+          <button onClick={() => setActiveCategory('')} className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${!activeCategory ? 'text-white border-transparent' : 'bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-secondary)]'}`} style={!activeCategory ? { background: 'var(--accent-gradient)' } : {}}>Semua</button>
           {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(activeCategory === cat ? '' : cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${activeCategory === cat ? 'text-white border-transparent' : 'bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-secondary)]'}`}
-              style={activeCategory === cat ? { background: 'var(--accent-gradient)' } : {}}
-            >
-              {cat}
-            </button>
+            <button key={cat} onClick={() => setActiveCategory(activeCategory === cat ? '' : cat)} className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${activeCategory === cat ? 'text-white border-transparent' : 'bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-secondary)]'}`} style={activeCategory === cat ? { background: 'var(--accent-gradient)' } : {}}>{cat}</button>
           ))}
-          <button onClick={fetchProducts} className="p-2 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] transition-all" title="Refresh">
-            <RefreshCw size={14} />
-          </button>
+          <button onClick={fetchProducts} className="p-2 rounded-lg border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-all"><RefreshCw size={14} /></button>
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[640px]">
@@ -195,73 +142,47 @@ export function Products() {
               <tr className="text-[var(--text-secondary)] border-b border-[var(--border)] text-xs uppercase tracking-wider bg-[var(--bg-main)]/30">
                 <th className="p-4 font-semibold">SKU</th>
                 <th className="p-4 font-semibold">Nama Produk</th>
-                <th className="p-4 font-semibold">Kategori</th>
-                <th className="p-4 font-semibold text-right">Harga Jual</th>
+                <th className="p-4 font-semibold text-right">Harga</th>
                 <th className="p-4 font-semibold text-center">Stok</th>
                 <th className="p-4 font-semibold text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)] text-sm">
               {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="p-10 text-center">
-                    <Loader2 size={24} className="animate-spin mx-auto text-[var(--accent-primary)]" />
-                  </td>
-                </tr>
+                <tr><td colSpan={5} className="text-center p-8"><Loader2 size={24} className="animate-spin mx-auto text-[var(--accent-primary)]" /></td></tr>
               ) : products.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-10 text-center text-[var(--text-secondary)]">
-                    <Package size={32} className="mx-auto mb-2 opacity-20" />
-                    <p className="font-medium text-sm">Belum ada produk</p>
-                  </td>
-                </tr>
+                <tr><td colSpan={5} className="text-center p-8 text-[var(--text-secondary)]">Tidak ada produk ditemukan.</td></tr>
               ) : (
-                products.map(p => {
+                products.map((p: any) => {
                   const stock = p.warehouse?.quantity ?? 0;
-                  const reorder = p.warehouse?.reorderLevel ?? 10;
-                  const isLow = stock <= reorder;
                   return (
-                    <tr key={p.id} className={`hover:bg-[var(--bg-main)]/40 transition-colors ${!p.isActive ? 'opacity-50' : ''}`}>
-                      <td className="p-4 font-mono text-xs text-[var(--text-secondary)]">{p.sku || '—'}</td>
+                    <tr key={p.id} className="hover:bg-[var(--bg-main)]/40 transition-colors">
+                      <td className="p-4 font-mono text-xs text-[var(--text-secondary)]">{p.sku || '-'}</td>
                       <td className="p-4">
-                        <p className="font-bold text-[var(--text-primary)]">{p.name}</p>
-                        {!p.isActive && <span className="text-[10px] text-[var(--danger)] font-bold">NONAKTIF</span>}
+                        <div className="flex items-center gap-3">
+                          {p.imageUrl ? (
+                            <img src={`http://localhost:5000${p.imageUrl}`} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-[var(--border)]" />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] flex items-center justify-center font-bold border border-[var(--border)]">
+                              {p.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-bold text-[var(--text-primary)]">{p.name}</p>
+                            <p className="text-xs text-[var(--text-secondary)]">{p.category || 'Uncategorized'}</p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="p-4 text-[var(--text-secondary)] font-medium">{p.category || '—'}</td>
                       <td className="p-4 text-right font-bold text-[var(--text-primary)]">{fmt(p.price)}</td>
-                      <td className="p-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
-                          stock === 0
-                            ? 'bg-[var(--danger)]/10 text-[var(--danger)] border-[var(--danger)]/20'
-                            : isLow
-                              ? 'bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/20'
-                              : 'bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20'
-                        }`}>
-                          {stock} Unit
-                        </span>
-                      </td>
+                      <td className="p-4 text-center">{stock}</td>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => openEdit(p)}
-                            className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)] transition-all"
-                            title="Edit"
-                          >
-                            <Edit3 size={15} />
-                          </button>
-                          {p.isActive && (
-                            <button
-                              onClick={() => handleDelete(p)}
-                              className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-all"
-                              title="Nonaktifkan"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          )}
+                          <button onClick={() => openEdit(p)} className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-primary)]"><Edit3 size={15} /></button>
+                          <button onClick={() => handleDelete(p)} className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger)]"><Trash2 size={15} /></button>
                         </div>
                       </td>
                     </tr>
-                  );
+                  )
                 })
               )}
             </tbody>
@@ -269,16 +190,32 @@ export function Products() {
         </div>
       </div>
 
-      {/* Add / Edit Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={editTarget ? 'Edit Produk' : 'Tambah Produk Baru'}
-      >
-        <form className="flex flex-col gap-4 mt-2" onSubmit={handleSave}>
-          <div className="grid grid-cols-2 gap-4">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={formData.id ? "Edit Produk" : "Tambah Produk Baru"}>
+        <form onSubmit={handleSave} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2 items-center mb-2">
+            <label className="w-24 h-24 rounded-2xl border-2 border-dashed border-[var(--border)] flex items-center justify-center cursor-pointer hover:border-[var(--accent-primary)] hover:bg-[var(--bg-main)] transition-all overflow-hidden group relative">
+              <input type="file" accept="image/png, image/jpeg, image/webp" className="hidden" onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setProductImage(e.target.files[0]);
+                  setProductImageUrl(URL.createObjectURL(e.target.files[0]));
+                }
+              }} />
+              {productImageUrl ? (
+                <>
+                  <img src={productImageUrl.startsWith('blob:') ? productImageUrl : `http://localhost:5000${productImageUrl}`} alt="Product" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-bold">Ubah</div>
+                </>
+              ) : (
+                <div className="text-[var(--text-secondary)] flex flex-col items-center">
+                  <Package size={24} className="mb-1 opacity-50" />
+                  <span className="text-[10px] font-bold text-center">Upload<br/>Foto</span>
+                </div>
+              )}
+            </label>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className={labelCls}>Kode SKU</label>
+              <label className={labelCls}>SKU</label>
               <input type="text" className={inputCls} placeholder="Cth: KP-001" {...field('sku')} />
             </div>
             <div>

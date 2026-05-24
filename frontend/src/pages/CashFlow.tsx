@@ -71,7 +71,7 @@ export function CashFlow() {
 
   return (
     <div className="animate-fade-in flex flex-col gap-8 pb-10">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-transparent">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Arus Kas</h1>
           <p className="text-[var(--text-secondary)] mt-1 font-medium">Pantau pemasukan, pengeluaran, dan kesehatan finansial bisnismu.</p>

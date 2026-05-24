@@ -35,6 +35,7 @@ import paymentRoutes          from './routes/payment.js';
 import transactionRoutes    from './routes/transactions.js';
 import accountsPayableRoutes from './routes/accountsPayable.js';
 import receiptRoutes         from './routes/receipts.js';
+import uploadRoutes          from './routes/upload.js';
 
 dotenv.config();
 
@@ -43,6 +44,9 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+
+// Serve public static files (for image uploads)
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Setup request logging to logs/app.log and console
 const logDir = path.join(__dirname, 'logs');
@@ -102,6 +106,7 @@ app.use('/api/v1/dashboard',  dashboardRoutes);
 app.use('/api/v1/settings',   settingsRoutes);
 app.use('/api/v1/payment',    paymentRoutes);
 app.use('/api/v1/receipts',   receiptRoutes);
+app.use('/api/v1/upload',     uploadRoutes);
 
 /* ─────────────────────────────────────────────────────────
    Global error handler

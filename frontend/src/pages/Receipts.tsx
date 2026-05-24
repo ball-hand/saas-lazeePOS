@@ -1,15 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Eye, Calendar } from 'lucide-react';
+import api from '../api/client';
+import toast from 'react-hot-toast';
+import { ReceiptModal } from '../components/ReceiptModal';
 
 export function Receipts() {
-  const [receipts] = useState([
-    { id: 1, receiptNumber: 'REC-20260522-001', customerName: 'Muhamad Ikbal', totalAmount: 110000, paymentMethod: 'Cash', createdAt: new Date() },
-    { id: 2, receiptNumber: 'REC-20260521-004', customerName: 'Umum', totalAmount: 45000, paymentMethod: 'QRIS', createdAt: new Date() },
-  ]);
+  const [receipts, setReceipts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  
+  const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+
+  const fetchReceipts = async () => {
+    setIsLoading(true);
+    try {
+      const { data } = await api.get('/receipts', {
+        params: { search, startDate, endDate }
+      });
+      setReceipts(data.receipts || []);
+    } catch (error) {
+      toast.error('Gagal memuat riwayat struk');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Debounce search slightly
+    const timeout = setTimeout(() => {
+      fetchReceipts();
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [search, startDate, endDate]);
 
   return (
     <div className="animate-fade-in flex flex-col gap-8 pb-10">
-      <div>
+      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 border-b border-transparent">
         <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Riwayat Penjualan</h1>
         <p className="text-[var(--text-secondary)] mt-1 font-medium">Cari, tinjau, dan cetak ulang nota invoice transaksi kasir.</p>
       </div>
@@ -21,14 +49,16 @@ export function Receipts() {
           <input 
             type="text" 
             placeholder="Cari Nomor Nota atau Pelanggan..." 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all text-sm"
           />
         </div>
         <div className="flex items-center gap-2 bg-[var(--bg-main)] p-1.5 rounded-xl border border-[var(--border)] w-full md:w-auto justify-between md:justify-start">
           <Calendar size={16} className="text-[var(--text-secondary)] ml-2 hidden md:block" />
-          <input type="date" className="bg-transparent text-[var(--text-primary)] text-sm px-2 py-0.5 outline-none" />
+          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-transparent text-[var(--text-primary)] text-sm px-2 py-0.5 outline-none" />
           <span className="text-[var(--text-secondary)] text-xs font-bold px-1">s/d</span>
-          <input type="date" className="bg-transparent text-[var(--text-primary)] text-sm px-2 py-0.5 outline-none" />
+          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-transparent text-[var(--text-primary)] text-sm px-2 py-0.5 outline-none" />
         </div>
       </div>
 
@@ -47,26 +77,45 @@ export function Receipts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)] text-sm">
-              {receipts.map((r) => (
-                <tr key={r.id} className="hover:bg-[var(--bg-main)]/40 transition-colors">
-                  <td className="p-4 font-mono font-bold text-[var(--accent-primary)]">{r.receiptNumber}</td>
-                  <td className="p-4 text-[var(--text-secondary)]">{r.createdAt.toLocaleString()}</td>
-                  <td className="p-4 text-[var(--text-primary)] font-medium">{r.customerName}</td>
-                  <td className="p-4">
-                    <span className="px-2 py-0.5 rounded-md bg-[var(--bg-main)] border border-[var(--border)] text-xs font-bold text-[var(--text-secondary)]">{r.paymentMethod}</span>
-                  </td>
-                  <td className="p-4 text-right font-extrabold text-[var(--text-primary)]">Rp {r.totalAmount.toLocaleString()}</td>
-                  <td className="p-4 text-center">
-                    <button className="px-3 py-1.5 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-secondary)] transition-all text-xs font-bold flex items-center gap-1 mx-auto shadow-sm">
-                      <Eye size={14} /> Detail Nota
-                    </button>
-                  </td>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-[var(--text-secondary)] animate-pulse font-medium">Memuat data...</td>
                 </tr>
-              ))}
+              ) : receipts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-[var(--text-secondary)] font-medium">Belum ada riwayat transaksi yang ditemukan.</td>
+                </tr>
+              ) : (
+                receipts.map((r) => (
+                  <tr key={r.id} className="hover:bg-[var(--bg-main)]/40 transition-colors">
+                    <td className="p-4 font-mono font-bold text-[var(--accent-primary)]">{r.receiptNumber}</td>
+                    <td className="p-4 text-[var(--text-secondary)]">{new Date(r.createdAt).toLocaleString()}</td>
+                    <td className="p-4 text-[var(--text-primary)] font-medium">{r.customerName || 'Umum'}</td>
+                    <td className="p-4">
+                      <span className="px-2 py-0.5 rounded-md bg-[var(--bg-main)] border border-[var(--border)] text-xs font-bold text-[var(--text-secondary)] capitalize">{r.paymentMethod}</span>
+                    </td>
+                    <td className="p-4 text-right font-extrabold text-[var(--text-primary)]">Rp {r.totalAmount.toLocaleString()}</td>
+                    <td className="p-4 text-center">
+                      <button 
+                        onClick={() => setSelectedReceipt(r)}
+                        className="px-3 py-1.5 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-secondary)] transition-all text-xs font-bold flex items-center gap-1 mx-auto shadow-sm"
+                      >
+                        <Eye size={14} /> Detail Nota
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
+      
+      <ReceiptModal 
+        isOpen={!!selectedReceipt} 
+        onClose={() => setSelectedReceipt(null)} 
+        receipt={selectedReceipt} 
+      />
     </div>
   );
 }

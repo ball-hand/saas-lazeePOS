@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DollarSign, ShoppingBag, Package, TrendingUp, Wallet, RefreshCw } from 'lucide-react';
+import { DollarSign, ShoppingBag, Package, TrendingUp, Wallet, RefreshCw, Crown } from 'lucide-react';
 import api from '../api/client';
 import { StatsCard } from '../components/StatsCard';
 import toast from 'react-hot-toast';
@@ -64,7 +64,7 @@ export function Dashboard() {
     <div className="animate-fade-in flex flex-col gap-8 pb-10">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 mb-2 flex items-start justify-between border-b border-transparent">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Ringkasan Dasbor</h1>
           <p className="text-[var(--text-secondary)] mt-1 font-medium">Pantau performa dan aktivitas tokomu hari ini.</p>
