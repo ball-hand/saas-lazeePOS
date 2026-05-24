@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Wallet, TrendingUp, TrendingDown, Plus, Archive } from 'lucide-react';
 import { Modal } from "../components/Modal";
+import api from "../api/client";
 import toast from 'react-hot-toast';
 
 export function CashFlow() {
@@ -20,19 +21,15 @@ export function CashFlow() {
 
   const fetchCashFlow = async () => {
     try {
-      // Simulasi API (Ganti dengan endpoint aslimu)
-      // const [transRes, sumRes] = await Promise.all([
-      //   api.get('/cashflow', { params: { type: typeFilter, startDate, endDate } }),
-      //   api.get('/cashflow/summary')
-      // ]);
-      
-      setTransactions([
-        { id: 1, type: 'sale', description: 'Penjualan #INV-001', amount: 150.00, transactionDate: new Date(), isDeleted: false },
-        { id: 2, type: 'expense', description: 'Bayar Tagihan Listrik', amount: 50.00, transactionDate: new Date(), isDeleted: false },
+      const [transRes, sumRes] = await Promise.all([
+        api.get('/cashflow', { params: { type: typeFilter, startDate, endDate } }),
+        api.get('/cashflow/summary')
       ]);
+      
+      setTransactions(transRes.data.transactions || []);
       setSummary({
-        today: { income: 150, expense: 50, net: 100 },
-        thisMonth: { income: 1500, expense: 500, net: 1000 }
+        today: sumRes.data.today || { income: 0, expense: 0, net: 0 },
+        thisMonth: sumRes.data.thisMonth || { income: 0, expense: 0, net: 0 }
       });
     } catch (error) {
       toast.error('Gagal memuat data arus kas');
@@ -49,7 +46,7 @@ export function CashFlow() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // await api.post('/cashflow', formData);
+      await api.post('/cashflow', formData);
       toast.success('Transaksi berhasil dicatat');
       setIsModalOpen(false);
       setFormData({ type: 'expense', amount: '', description: '' });
@@ -65,11 +62,8 @@ export function CashFlow() {
     if (!window.confirm('Yakin ingin mengarsipkan transaksi ini? (Data tidak akan dihapus permanen)')) return;
     
     try {
-      // Implementasi Soft Delete di sisi API
-      // await api.patch(`/cashflow/${id}/archive`);
-      
-      setTransactions(prev => prev.filter(t => t.id !== id));
-      toast.success('Transaksi berhasil diarsipkan (Soft Delete)');
+      // Endpoint arsip belum ada di cashflow.js (opsional untuk nanti)
+      toast.error('Fitur arsip belum tersedia');
     } catch (error) {
       toast.error('Gagal mengarsipkan transaksi');
     }

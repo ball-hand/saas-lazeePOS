@@ -115,39 +115,56 @@ export function Dashboard() {
 
         {/* Popular Products */}
         <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm flex flex-col">
-          <h2 className="text-lg font-bold text-[var(--text-primary)] mb-5">🏆 Produk Terlaris Bulan Ini</h2>
-          <div className="overflow-x-auto custom-scrollbar -mx-6 px-6">
-            <table className="w-full text-left min-w-[360px]">
-              <thead>
-                <tr className="text-[var(--text-secondary)] border-b border-[var(--border)] text-xs uppercase tracking-wider">
-                  <th className="pb-3 font-semibold">Produk</th>
-                  <th className="pb-3 font-semibold text-center">Terjual</th>
-                  <th className="pb-3 font-semibold text-right">Pendapatan</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border)]">
-                {(stats.popularProducts || []).map((p: any, i: number) => (
-                  <tr key={p.id ?? i} className="hover:bg-[var(--bg-main)] transition-colors">
-                    <td className="py-3 font-semibold text-sm text-[var(--text-primary)]">{p.name}</td>
-                    <td className="py-3 text-center">
-                      <span className="bg-[var(--bg-main)] px-3 py-1 rounded-full border border-[var(--border)] text-sm font-bold text-[var(--text-primary)]">
-                        {p.quantitySold}
+          <h2 className="text-lg font-extrabold text-[var(--text-primary)] mb-5 flex items-center gap-2">
+            <Crown size={20} className="text-yellow-500" /> Produk Terlaris Bulan Ini
+          </h2>
+          <div className="flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2 max-h-72">
+            {(stats.popularProducts || []).map((p: any, i: number) => {
+              // Calculate a simple percentage relative to the top selling product for visual bar
+              const maxSold = stats.popularProducts[0]?.quantitySold || 1;
+              const percentage = Math.min((p.quantitySold / maxSold) * 100, 100);
+              
+              return (
+                <div key={p.id ?? i} className="flex items-center gap-4 group">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black flex-shrink-0 shadow-sm ${
+                    i === 0 ? 'bg-yellow-100 text-yellow-600 border border-yellow-300' :
+                    i === 1 ? 'bg-gray-100 text-gray-500 border border-gray-300' :
+                    i === 2 ? 'bg-orange-100 text-orange-600 border border-orange-300' :
+                    'bg-[var(--bg-main)] text-[var(--text-secondary)] border border-[var(--border)]'
+                  }`}>
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-end mb-1">
+                      <p className="font-bold text-[var(--text-primary)] text-sm truncate pr-2">{p.name}</p>
+                      <p className="text-[var(--success)] font-extrabold text-sm">{fmt(p.revenue || 0)}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-[var(--bg-main)] rounded-full overflow-hidden border border-[var(--border)]">
+                        <div 
+                          className="h-full rounded-full transition-all duration-1000 ease-out"
+                          style={{ 
+                            width: `${percentage}%`,
+                            background: i === 0 ? 'linear-gradient(to right, #f59e0b, #fbbf24)' : 'var(--accent-gradient)' 
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-[var(--text-secondary)] whitespace-nowrap">
+                        {p.quantitySold} terjual
                       </span>
-                    </td>
-                    <td className="py-3 text-[var(--success)] font-bold text-right text-sm">
-                      {fmt(p.revenue || 0)}
-                    </td>
-                  </tr>
-                ))}
-                {(!stats.popularProducts || stats.popularProducts.length === 0) && (
-                  <tr>
-                    <td colSpan={3} className="text-center text-[var(--text-secondary)] py-8 font-medium text-sm">
-                      Belum ada data penjualan bulan ini
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            
+            {(!stats.popularProducts || stats.popularProducts.length === 0) && (
+              <div className="flex flex-col items-center justify-center py-10 text-[var(--text-secondary)] opacity-60">
+                <Package size={40} className="mb-3 opacity-50" />
+                <p className="font-medium text-sm">Belum ada data penjualan</p>
+                <p className="text-xs mt-1">Transaksi bulan ini akan muncul di sini</p>
+              </div>
+            )}
           </div>
         </div>
 

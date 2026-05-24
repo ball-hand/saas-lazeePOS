@@ -17,17 +17,18 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   const tenantNavGroups = [
     {
-      title: "Menu Utama",
+      title: "Toko & Transaksi",
       items: [
         { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
         { to: '/pos', icon: <ShoppingCart size={20} />, label: 'POS Terminal' },
       ]
     },
     {
-      title: "Manajemen Inventori",
+      title: "Katalog & Gudang",
       items: [
         { to: '/products',  icon: <Package size={20} />,       label: 'Katalog Produk' },
         { to: '/warehouse',  icon: <Warehouse size={20} />,     label: 'Stok Gudang' },
+        ...(user?.role === 'admin' ? [{ to: '/discounts', icon: <Tags size={20} />, label: 'Aturan Diskon' }] : []),
       ]
     },
     {
@@ -38,11 +39,10 @@ export function Sidebar({ onClose }: SidebarProps) {
       ]
     },
     ...(user?.role === 'admin' ? [{
-      title: "Administrasi",
+      title: "Sistem & Langganan",
       items: [
-        { to: '/discounts', icon: <Tags size={20} />,         label: 'Aturan Diskon' },
+        { to: '/settings',  icon: <SettingsIcon size={20} />, label: 'Pengaturan Toko' },
         { to: '/billing',   icon: <CreditCard size={20} />,  label: 'Langganan' },
-        { to: '/settings',  icon: <SettingsIcon size={20} />, label: 'Pengaturan' },
       ]
     }] : []),
   ];
