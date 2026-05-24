@@ -411,8 +411,22 @@ router.post('/cancel/:orderId', verifyToken, requireTenant, async (req, res) => 
 ═══════════════════════════════════════════════════ */
 async function _activateSubscription(tenantId, planId, billingCycle, orderId) {
   const now = new Date();
+  
+  // Get existing subscription to see if we should accumulate time
+  const existingSub = await prisma.subscription.findUnique({
+    where: { tenantId }
+  });
+
+  let baseDate = now;
+  // If they are extending the same plan and it's currently active, add to existing end date
+  if (existingSub && existingSub.status === 'active' && new Date(existingSub.currentPeriodEnd) > now) {
+    if (existingSub.planId === planId && existingSub.billingCycle === billingCycle) {
+      baseDate = new Date(existingSub.currentPeriodEnd);
+    }
+  }
+
   const isYearly = billingCycle === 'yearly';
-  const periodEnd = new Date(now);
+  const periodEnd = new Date(baseDate);
   if (isYearly) {
     periodEnd.setFullYear(periodEnd.getFullYear() + 1);
   } else {
@@ -427,7 +441,8 @@ async function _activateSubscription(tenantId, planId, billingCycle, orderId) {
         planId,
         billingCycle,
         status: 'active',
-        currentPeriodStart: now,
+        // Only update currentPeriodStart if we didn't accumulate time
+        currentPeriodStart: baseDate === now ? now : undefined,
         currentPeriodEnd: periodEnd,
         nextBillingAt: periodEnd,
         lastPaymentAt: now,
