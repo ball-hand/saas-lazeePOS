@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, ReceiptText, 
   Wallet, Tags, Settings as SettingsIcon, LogOut, X,
   CreditCard, Warehouse, Building2, ChevronDown, ChevronRight, Receipt,
-  LifeBuoy, Rocket, ServerCrash, Server, Users
+  LifeBuoy, Rocket, ServerCrash, Server, Users, Store, Box, LineChart, ShieldCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,6 +22,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   const tenantNavGroups = [
     {
       title: "Toko & Transaksi",
+      groupIcon: <Store size={20} />,
       items: [
         ...(user?.role === 'admin' ? [{ to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' }] : []),
         { to: '/pos', icon: <ShoppingCart size={20} />, label: 'POS Terminal' },
@@ -29,6 +30,7 @@ export function Sidebar({ onClose }: SidebarProps) {
     },
     {
       title: "Katalog & Gudang",
+      groupIcon: <Box size={20} />,
       items: [
         { to: '/products',  icon: <Package size={20} />,       label: 'Katalog Produk' },
         { to: '/warehouse',  icon: <Warehouse size={20} />,     label: 'Stok Gudang' },
@@ -37,6 +39,7 @@ export function Sidebar({ onClose }: SidebarProps) {
     },
     {
       title: "Keuangan & Laporan",
+      groupIcon: <LineChart size={20} />,
       items: [
         { to: '/receipts',   icon: <ReceiptText size={20} />,   label: 'Riwayat Struk' },
         { to: '/cashflow',   icon: <Wallet size={20} />,        label: 'Arus Kas' },
@@ -45,6 +48,7 @@ export function Sidebar({ onClose }: SidebarProps) {
     },
     ...(user?.role === 'admin' ? [{
       title: "Sistem & Langganan",
+      groupIcon: <SettingsIcon size={20} />,
       items: [
         { to: '/settings',  icon: <SettingsIcon size={20} />, label: 'Pengaturan Toko' },
         { to: '/users',     icon: <Users size={20} />, label: 'Staf & Kasir' },
@@ -56,6 +60,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   const centralNavGroups = [
     {
       title: "Platform Admin",
+      groupIcon: <ShieldCheck size={20} />,
       items: [
         { to: '/central', icon: <LayoutDashboard size={20} />, label: 'Platform Dashboard' },
         { to: '/central/tenants', icon: <Building2 size={20} />, label: 'Daftar Tenant' },
@@ -73,7 +78,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   const navGroups = user?.role === 'central' ? centralNavGroups : tenantNavGroups;
 
   return (
-    <aside className="w-64 h-full flex flex-col bg-[var(--bg-surface-elevated)] border-r border-[var(--border)] shadow-xl md:shadow-none">
+    <aside className="w-72 h-full flex flex-col bg-[var(--bg-surface-elevated)] border-r border-[var(--border)] shadow-xl md:shadow-none">
       {/* Header Sidebar */}
       <div className="p-6 pb-4 flex justify-between items-start">
         <div className="flex-1 min-w-0 flex flex-col items-center text-center">
@@ -119,11 +124,14 @@ export function Sidebar({ onClose }: SidebarProps) {
               {group.title && (
                 <button 
                   onClick={() => setExpandedGroups(prev => ({ ...prev, [group.title]: !isExpanded }))}
-                  className="w-full flex items-center justify-between px-3 mb-2 group-btn"
+                  className="w-full flex items-center justify-between px-4 mb-2 group-btn"
                 >
-                  <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider group-btn-hover:text-[var(--text-primary)] transition-colors">
-                    {group.title}
-                  </p>
+                  <div className="flex items-center gap-3 text-[var(--text-secondary)] group-btn-hover:text-[var(--text-primary)] transition-colors">
+                    {group.groupIcon}
+                    <p className="text-sm font-semibold">
+                      {group.title}
+                    </p>
+                  </div>
                   <div className="text-[var(--text-secondary)]">
                     {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </div>
@@ -144,7 +152,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                       end={item.to === '/central' || item.to === '/'}
                       onClick={onClose}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group ${
+                        `flex items-center gap-3 pl-11 pr-4 py-2.5 rounded-xl transition-all duration-200 group ${
                           isActive
                             ? 'bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] font-semibold shadow-[inset_3px_0_0_0_var(--accent-primary)]'
                             : 'text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] font-medium'

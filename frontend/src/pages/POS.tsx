@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ShoppingCart, Search, Plus, Minus, CreditCard,
-  Package, Loader2, Tag, X, Settings, HelpCircle, AlertCircle, Play,
+  Package, Loader2, Tag, X, Settings, HelpCircle, Play, Pin
 } from 'lucide-react';
 import api from '../api/client';
+import { Modal } from '../components/Modal';
 import { ReceiptModal } from '../components/ReceiptModal';
 import toast from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ interface Product {
   category?: string;
   imageUrl?: string;
   warehouse?: { quantity: number };
+  isPinned?: boolean;
 }
 
 interface CartItem extends Product {
@@ -78,6 +80,11 @@ export function POS() {
   const [discountMap, setDiscountMap] = useState<Record<string, number>>({});
   const [receipt, setReceipt] = useState<any>(null);
   const [showReceipt, setShowReceipt] = useState(false);
+
+  /* ── Discounts State ── */
+  const [activeDiscounts, setActiveDiscounts] = useState<any[]>([]);
+  const [selectedDiscountId, setSelectedDiscountId] = useState<string | null>(null);
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
 
   /* ── Hold / Recall Queue State ── */
   const [heldCarts, setHeldCarts] = useState<HeldCart[]>(() => {
@@ -141,10 +148,18 @@ export function POS() {
 
   useEffect(() => {
     fetchProducts();
+    fetchActiveDiscounts();
   }, []);
 
+  const fetchActiveDiscounts = async () => {
+    try {
+      const { data } = await api.get('/discounts');
+      setActiveDiscounts((data.discounts || []).filter((d: any) => d.isActive));
+    } catch {}
+  };
+
   /* ── Apply discounts whenever cart changes ── */
-  const applyDiscounts = useCallback(async (cartItems: CartItem[]) => {
+  const applyDiscounts = useCallback(async (cartItems: CartItem[], manualDiscountId: string | null) => {
     if (!cartItems.length) { setDiscountMap({}); return; }
     try {
       const items = cartItems.map(i => ({
@@ -153,7 +168,11 @@ export function POS() {
         unitPrice: i.price,
         category: i.category,
       }));
-      const { data } = await api.post('/discounts/apply', { items });
+      
+      const payload: any = { items };
+      if (manualDiscountId) payload.manualDiscountId = manualDiscountId;
+
+      const { data } = await api.post('/discounts/apply', payload);
       const map: Record<string, number> = {};
       for (const d of (data.discounts || [])) map[d.productId] = d.discount;
       setDiscountMap(map);
@@ -162,7 +181,7 @@ export function POS() {
     }
   }, []);
 
-  useEffect(() => { applyDiscounts(cart); }, [cart, applyDiscounts]);
+  useEffect(() => { applyDiscounts(cart, selectedDiscountId); }, [cart, selectedDiscountId, applyDiscounts]);
 
   /* ── Cart helpers ── */
   const addToCart = (product: Product) => {
@@ -597,6 +616,11 @@ export function POS() {
                   >
                     <div className="w-full h-24 bg-[var(--bg-main)] rounded-xl mb-3 flex items-center justify-center text-[var(--text-secondary)] group-hover:bg-[var(--accent-primary-transparent)] transition-colors relative">
                       <Package size={28} className="opacity-30 group-hover:opacity-80 group-hover:text-[var(--accent-primary)] transition-all" />
+                      {product.isPinned && (
+                        <div className="absolute top-2 right-2 bg-amber-500/10 text-amber-500 p-1 rounded-md shadow-sm border border-amber-500/20" title="Produk Pilihan (Di-pin)">
+                          <Pin size={12} fill="currentColor" />
+                        </div>
+                      )}
                       {outOfStock && (
                         <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-[var(--danger)] bg-[var(--danger)]/10 rounded-xl">
                           HABIS
@@ -715,6 +739,24 @@ export function POS() {
 
         {/* Totals + Checkout */}
         <div className="p-4 border-t border-[var(--border)]">
+          <div className="flex justify-between items-center mb-3">
+            <button 
+              onClick={() => setShowDiscountModal(true)}
+              className={`text-xs font-bold flex items-center gap-1.5 transition-colors px-2 py-1 rounded-lg -ml-2 ${selectedDiscountId ? 'bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)]'}`}
+            >
+              <Tag size={14} /> 
+              {selectedDiscountId ? 'Diskon/Kupon Diterapkan' : 'Gunakan Kupon Promo'}
+            </button>
+            {selectedDiscountId && (
+              <button 
+                onClick={() => setSelectedDiscountId(null)} 
+                className="text-[10px] text-[var(--danger)] font-bold hover:underline"
+              >
+                Batalkan Kupon
+              </button>
+            )}
+          </div>
+          
           {totalDiscount > 0 && (
             <div className="flex justify-between text-sm mb-1">
               <span className="text-[var(--text-secondary)]">Subtotal</span>
@@ -1098,11 +1140,43 @@ export function POS() {
       )}
 
       {/* ── Receipt Modal ── */}
-      <ReceiptModal
-        isOpen={showReceipt}
-        onClose={() => setShowReceipt(false)}
-        receipt={receipt}
-      />
+      {showReceipt && receipt && (
+        <ReceiptModal isOpen={showReceipt} receipt={receipt} onClose={() => setShowReceipt(false)} />
+      )}
+
+      {/* ── Disount/Coupon Modal ── */}
+      <Modal isOpen={showDiscountModal} onClose={() => setShowDiscountModal(false)} title="Pilih Kupon / Promo Aktif">
+        <div className="flex flex-col gap-3">
+          {activeDiscounts.length === 0 ? (
+            <div className="text-center p-6 text-[var(--text-secondary)] flex flex-col items-center gap-2">
+              <Tag size={32} className="opacity-20" />
+              <p className="text-sm font-medium">Tidak ada promo yang sedang aktif saat ini.</p>
+            </div>
+          ) : (
+            activeDiscounts.map(d => (
+              <button
+                key={d.id}
+                onClick={() => { setSelectedDiscountId(d.id); setShowDiscountModal(false); }}
+                className={`flex flex-col items-start text-left p-4 rounded-xl border transition-all ${
+                  selectedDiscountId === d.id 
+                    ? 'border-[var(--accent-primary)] bg-[var(--accent-primary-transparent)] shadow-[0_0_0_1px_var(--accent-primary)]' 
+                    : 'border-[var(--border)] bg-[var(--bg-main)] hover:border-[var(--accent-primary)]'
+                }`}
+              >
+                <div className="flex justify-between w-full mb-1">
+                  <span className="font-bold text-[var(--text-primary)] text-sm">{d.name}</span>
+                  {selectedDiscountId === d.id && <span className="text-xs font-black text-[var(--accent-primary)]">DIPILIH</span>}
+                </div>
+                <span className="text-xs text-[var(--text-secondary)]">
+                  Diskon: <span className="font-bold text-[var(--success)]">{d.discountType === 'percentage' ? `${d.discountValue}%` : d.discountType === 'fixed_amount' ? fmt(d.discountValue) : 'Beli N Gratis 1'}</span>
+                </span>
+                {d.minOrderAmount > 0 && <span className="text-[10px] text-[var(--text-secondary)] mt-1">Min. Belanja: {fmt(d.minOrderAmount)}</span>}
+              </button>
+            ))
+          )}
+        </div>
+      </Modal>
+
     </div>
   );
 }

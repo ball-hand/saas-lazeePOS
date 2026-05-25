@@ -111,17 +111,20 @@ router.delete('/:id', authenticate, requireRole('admin'), async (req, res) => {
 // POST /api/discounts/apply — calculate discounts for a cart
 router.post('/apply', authenticate, async (req, res) => {
   try {
-    const { items } = req.body; // [{ productId, quantity, unitPrice }]
+    const { items, manualDiscountId } = req.body; // [{ productId, quantity, unitPrice }]
 
     if (!items || !items.length) {
       return res.json({ discounts: [], totalDiscount: 0 });
     }
 
     const now = new Date();
+    
+    // If a manual discount is selected, only fetch that one, otherwise fetch all active rules
     const rules = await prisma.discount.findMany({
       where: {
         tenantId: req.user.tenantId,
         isActive: true,
+        ...(manualDiscountId ? { id: manualDiscountId } : {}),
         OR: [
           { startsAt: null },
           { startsAt: { lte: now } },

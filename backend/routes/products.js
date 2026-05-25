@@ -33,7 +33,7 @@ router.get('/', verifyToken, requireTenant, async (req, res) => {
         skip,
         take,
         include: { warehouse: true },
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
       }),
       prisma.product.count({ where }),
     ]);
@@ -105,7 +105,7 @@ router.post('/', verifyToken, requireTenant, requireProductLimit, requireRole('a
 router.put('/:id', verifyToken, requireTenant, requireRole('admin'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { sku, name, description, price, costPrice, category, imageUrl, isActive } = req.body;
+    const { sku, name, description, price, costPrice, category, imageUrl, isActive, isPinned } = req.body;
 
     const existing = await prisma.product.findFirst({ where: { id, tenantId: req.user.tenantId } });
     if (!existing) return res.status(404).json({ message: 'Product not found' });
@@ -121,6 +121,7 @@ router.put('/:id', verifyToken, requireTenant, requireRole('admin'), async (req,
         ...(category !== undefined && { category: category || null }),
         ...(imageUrl !== undefined && { imageUrl: imageUrl || null }),
         ...(isActive !== undefined && { isActive }),
+        ...(isPinned !== undefined && { isPinned }),
       },
       include: { warehouse: true },
     });

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit3, Trash2, Package, Loader2, RefreshCw } from 'lucide-react';
+import { Plus, Search, Edit3, Trash2, Package, Loader2, RefreshCw, Pin } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import api, { getMediaUrl } from '../api/client';
 import toast from 'react-hot-toast';
@@ -96,6 +96,16 @@ export function Products() {
     }
   };
 
+  const handlePin = async (p: any) => {
+    try {
+      await api.put(`/products/${p.id}`, { isPinned: !p.isPinned });
+      toast.success(`Produk ${!p.isPinned ? 'di-pin 📌' : 'di-unpin'}`);
+      fetchProducts();
+    } catch (err: any) {
+      toast.error('Gagal merubah status pin.');
+    }
+  };
+
   const field = (key: string) => ({
     value: formData[key] || '',
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -177,8 +187,15 @@ export function Products() {
                       <td className="p-4 text-center">{stock}</td>
                       <td className="p-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          <button onClick={() => openEdit(p)} className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-primary)]"><Edit3 size={15} /></button>
-                          <button onClick={() => handleDelete(p)} className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger)]"><Trash2 size={15} /></button>
+                          <button 
+                            onClick={() => handlePin(p)} 
+                            className={`p-2 rounded-lg transition-colors ${p.isPinned ? 'text-amber-500 bg-amber-500/10 hover:bg-amber-500/20' : 'text-[var(--text-secondary)] hover:text-amber-500 hover:bg-amber-500/10'}`} 
+                            title={p.isPinned ? "Lepas Pin" : "Pin Produk"}
+                          >
+                            <Pin size={15} fill={p.isPinned ? "currentColor" : "none"} />
+                          </button>
+                          <button onClick={() => openEdit(p)} className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)]"><Edit3 size={15} /></button>
+                          <button onClick={() => handleDelete(p)} className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10"><Trash2 size={15} /></button>
                         </div>
                       </td>
                     </tr>

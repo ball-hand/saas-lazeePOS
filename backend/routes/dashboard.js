@@ -14,12 +14,11 @@ router.get('/', authenticate, requireRole('admin'), async (req, res) => {
 
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    // 1. Today's Sales (Abaikan transaksi yang dibatalkan / di-void)
-    const todaySales = await prisma.transaction.aggregate({
+    // 1. Today's Sales
+    const todaySales = await prisma.receipt.aggregate({
       where: {
         tenantId: req.user.tenantId,
         createdAt: { gte: today },
-        isVoided: false,
       },
       _sum: {
         totalAmount: true,
@@ -27,12 +26,11 @@ router.get('/', authenticate, requireRole('admin'), async (req, res) => {
       _count: true,
     });
 
-    // 2. This Month's Sales (Abaikan transaksi yang dibatalkan)
-    const monthSales = await prisma.transaction.aggregate({
+    // 2. This Month's Sales
+    const monthSales = await prisma.receipt.aggregate({
       where: {
         tenantId: req.user.tenantId,
         createdAt: { gte: firstDayOfMonth },
-        isVoided: false,
       },
       _sum: {
         totalAmount: true,
@@ -56,13 +54,13 @@ router.get('/', authenticate, requireRole('admin'), async (req, res) => {
     });
 
     // 5. Popular Products (Berdasarkan jumlah terjual bulan ini)
-    const popularProductsAggr = await prisma.transactionItem.groupBy({
+    const popularProductsAggr = await prisma.receiptItem.groupBy({
       by: ['productId'],
       where: {
-        transaction: {
+        productId: { not: null },
+        receipt: {
           tenantId: req.user.tenantId,
           createdAt: { gte: firstDayOfMonth },
-          isVoided: false,
         },
       },
       _sum: {
@@ -76,7 +74,7 @@ router.get('/', authenticate, requireRole('admin'), async (req, res) => {
       take: 5,
     });
 
-    const productIds = popularProductsAggr.map(p => p.productId);
+    const productIds = popularProductsAggr.map(p => p.productId).filter(Boolean);
 
     // Ambil detail nama produk untuk mapping
     const productsInfo = await prisma.product.findMany({
@@ -85,13 +83,12 @@ router.get('/', authenticate, requireRole('admin'), async (req, res) => {
     });
 
     // Ambil data item aktual untuk menghitung total pendapatan per produk secara presisi
-    const topProductItems = await prisma.transactionItem.findMany({
+    const topProductItems = await prisma.receiptItem.findMany({
       where: {
         productId: { in: productIds },
-        transaction: { 
+        receipt: { 
           tenantId: req.user.tenantId, 
           createdAt: { gte: firstDayOfMonth }, 
-          isVoided: false 
         }
       },
       select: { productId: true, quantity: true, unitPrice: true, discountApplied: true }

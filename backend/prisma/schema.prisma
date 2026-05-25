@@ -108,6 +108,7 @@ model Product {
   category      String?
   imageUrl      String?
   isActive      Boolean  @default(true)
+  isPinned      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   tenantId      String
