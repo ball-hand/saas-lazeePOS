@@ -30,6 +30,7 @@ import { Discounts } from './pages/Discounts';
 import { Settings } from './pages/Settings';
 import { Billing } from './pages/Billing';
 import { Support } from './pages/Support';
+import { Users } from './pages/Users';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -49,7 +50,6 @@ export default function App() {
 
           {/* ── TENANT ROUTES  (toko subdomain) ─────────── */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/pos"        element={<POS />} />
             <Route path="/products"   element={<Products />} />
             <Route path="/warehouse"  element={<Warehouse />} />
@@ -61,6 +61,8 @@ export default function App() {
 
           {/* ── TENANT ADMIN ROUTES ────────────────────── */}
           <Route element={<ProtectedRoute requireAdmin={true} />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/users"     element={<Users />} />
             <Route path="/discounts" element={<Discounts />} />
             <Route path="/settings"  element={<Settings />} />
           </Route>

@@ -44,6 +44,7 @@ import accountsPayableRoutes from './routes/accountsPayable.js';
 import receiptRoutes         from './routes/receipts.js';
 import uploadRoutes          from './routes/upload.js';
 import publicRoutes          from './routes/public.js';
+import usersRoutes           from './routes/users.js';
 
 dotenv.config();
 
@@ -133,6 +134,7 @@ app.use('/api/v1/tickets',    ticketsRoutes);
 app.use('/api/v1/releases',   releasesRoutes);
 app.use('/api/v1/receipts',   receiptRoutes);
 app.use('/api/v1/upload',     uploadRoutes);
+app.use('/api/v1/users',      usersRoutes);
 
 /* ─────────────────────────────────────────────────────────
    Global error handler

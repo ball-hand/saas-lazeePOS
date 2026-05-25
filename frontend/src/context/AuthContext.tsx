@@ -3,13 +3,13 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   name: string;
   role: string;            // "central" | "admin" | "cashier"
-  tenantId?: number | null;
+  tenantId?: string | null;
   tenant?: {
-    id: number;
+    id: string;
     name: string;
     subdomain: string;
     themeMode: 'light' | 'dark';

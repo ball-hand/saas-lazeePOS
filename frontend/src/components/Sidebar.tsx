@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, ReceiptText, 
   Wallet, Tags, Settings as SettingsIcon, LogOut, X,
   CreditCard, Warehouse, Building2, ChevronDown, ChevronRight, Receipt,
-  LifeBuoy, Rocket, ServerCrash, Server
+  LifeBuoy, Rocket, ServerCrash, Server, Users
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,7 +23,7 @@ export function Sidebar({ onClose }: SidebarProps) {
     {
       title: "Toko & Transaksi",
       items: [
-        { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
+        ...(user?.role === 'admin' ? [{ to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' }] : []),
         { to: '/pos', icon: <ShoppingCart size={20} />, label: 'POS Terminal' },
       ]
     },
@@ -47,6 +47,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       title: "Sistem & Langganan",
       items: [
         { to: '/settings',  icon: <SettingsIcon size={20} />, label: 'Pengaturan Toko' },
+        { to: '/users',     icon: <Users size={20} />, label: 'Staf & Kasir' },
         { to: '/billing',   icon: <CreditCard size={20} />,  label: 'Langganan' },
       ]
     }] : []),

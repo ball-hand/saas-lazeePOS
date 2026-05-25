@@ -25,7 +25,7 @@ export function Login() {
         .then(res => {
           login(token, res.data.user);
           toast.success(`Pendaftaran Berhasil! Selamat datang di dashboard Anda.`);
-          navigate('/dashboard');
+          navigate(res.data.user.role === 'admin' ? '/dashboard' : '/pos');
         })
         .catch(err => {
           toast.error(err.response?.data?.message || 'Token pendaftaran tidak valid.');
@@ -41,7 +41,7 @@ export function Login() {
       const { data } = await api.post('/auth/login', { email, password });
       login(data.token, data.user);
       toast.success(`Selamat datang, ${data.user.name}! 👋`);
-      navigate(data.user.role === 'central' ? '/central' : '/dashboard');
+      navigate(data.user.role === 'central' ? '/central' : data.user.role === 'admin' ? '/dashboard' : '/pos');
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Email atau password salah.');
     } finally {

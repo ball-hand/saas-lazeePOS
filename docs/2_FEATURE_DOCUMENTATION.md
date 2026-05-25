@@ -36,7 +36,11 @@ Diakses melalui `subdomain.lazeepos.com/login` oleh pihak manajer/pemilik bisnis
    *   Mengatur diskon (persentase, nilai tetap, Beli-1-Gratis-1) dengan kondisi spesifik (minimal kuantitas, dll).
 4. **Buku Kas (CashFlow)**
    *   Pencatatan uang masuk dan uang keluar yang dilakukan secara manual atau otomatis terhubung dengan modul Kasir.
-5. **Pengaturan & White-labeling (Settings)**
+5. **Manajemen Karyawan (Staf & Kasir)**
+   *   Mengundang, menambahkan, atau menonaktifkan akun operator kasir.
+   *   Kapasitas maksimal karyawan otomatis divalidasi sesuai dengan kuota batas langganan toko (*maxUsers*).
+   *   Pencegahan penghapusan (Anti-lockout) agar toko tidak kehilangan akses Admin utamanya.
+6. **Pengaturan & White-labeling (Settings)**
    *   **Branding**: Mengubah bentuk logo, mengunggah gambar logo, mengganti nama toko.
    *   **Tema CSS**: Menyesuaikan Warna Utama (*Primary Color*) yang akan di-inject ke seluruh CSS aplikasi dan *Landing Page* agar sesuai identitas merek toko.
 6. **Billing SaaS (Langganan)**
