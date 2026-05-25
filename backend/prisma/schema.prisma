@@ -45,6 +45,8 @@ model Tenant {
   themeMode     String   @default("light")
   primaryColor  String   @default("#3B82F6")
   logoUrl       String?
+  logoShape     String   @default("square")
+  landingPageConfig Json?
   status        PlanStatus @default(TRIAL)
   planId        String?
   trialEndsAt   DateTime?

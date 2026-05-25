@@ -36,6 +36,7 @@ import transactionRoutes    from './routes/transactions.js';
 import accountsPayableRoutes from './routes/accountsPayable.js';
 import receiptRoutes         from './routes/receipts.js';
 import uploadRoutes          from './routes/upload.js';
+import publicRoutes          from './routes/public.js';
 
 dotenv.config();
 
@@ -71,6 +72,7 @@ app.use(tenantIdentificator);
 app.get('/api/v1/health', (_req, res) => {
   res.json({ status: 'success', data: { env: process.env.NODE_ENV || 'development' } });
 });
+app.use('/api/v1/public', publicRoutes);
 
 /* ─────────────────────────────────────────────────────────
    CENTRAL / SUPERADMIN  — /api/v1/central/*

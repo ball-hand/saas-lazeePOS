@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Edit3, Trash2, Package, Loader2, RefreshCw } from 'lucide-react';
 import { Modal } from '../components/Modal';
-import api from '../api/client';
+import api, { getMediaUrl } from '../api/client';
 import toast from 'react-hot-toast';
 
 const fmt = (val: number) => 'Rp ' + Math.round(val).toLocaleString('id-ID');
@@ -107,7 +107,7 @@ export function Products() {
 
   return (
     <div className="animate-fade-in flex flex-col gap-8 pb-10">
-      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-transparent">
+      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Katalog Produk</h1>
           <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola daftar barang jualanmu.</p>
@@ -161,7 +161,7 @@ export function Products() {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           {p.imageUrl ? (
-                            <img src={`http://localhost:5000${p.imageUrl}`} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-[var(--border)]" />
+                            <img src={getMediaUrl(p.imageUrl)} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-[var(--border)]" />
                           ) : (
                             <div className="w-10 h-10 rounded-lg bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] flex items-center justify-center font-bold border border-[var(--border)]">
                               {p.name.charAt(0).toUpperCase()}
@@ -202,7 +202,7 @@ export function Products() {
               }} />
               {productImageUrl ? (
                 <>
-                  <img src={productImageUrl.startsWith('blob:') ? productImageUrl : `http://localhost:5000${productImageUrl}`} alt="Product" className="w-full h-full object-cover" />
+                  <img src={getMediaUrl(productImageUrl)} alt="Product" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-bold">Ubah</div>
                 </>
               ) : (
@@ -247,7 +247,7 @@ export function Products() {
               <input type="number" min="0" className={inputCls} placeholder="0" {...field('costPrice')} />
             </div>
           </div>
-          {!editTarget && (
+          {!formData.id && (
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className={labelCls}>Stok Awal</label>
@@ -259,10 +259,10 @@ export function Products() {
               </div>
             </div>
           )}
-          {editTarget && (
+          {formData.id && (
             <div>
               <label className={labelCls}>Update Stok (qty baru)</label>
-              <input type="number" min="0" className={inputCls} placeholder={String(editTarget.warehouse?.quantity ?? 0)} {...field('initialStock')} />
+              <input type="number" min="0" className={inputCls} placeholder="Biarkan kosong jika tidak diubah" {...field('initialStock')} />
               <p className="text-xs text-[var(--text-secondary)] mt-1">Kosongkan jika tidak ingin mengubah stok</p>
             </div>
           )}
@@ -276,11 +276,11 @@ export function Products() {
             </button>
             <button
               type="submit"
-              disabled={isSaving}
+              disabled={isSubmitting}
               className="px-5 py-2 rounded-xl font-bold text-white text-sm flex items-center gap-2 disabled:opacity-50"
               style={{ background: 'var(--accent-gradient)' }}
             >
-              {isSaving ? <><Loader2 size={14} className="animate-spin" /> Menyimpan...</> : 'Simpan Produk'}
+              {isSubmitting ? <><Loader2 size={14} className="animate-spin" /> Menyimpan...</> : 'Simpan Produk'}
             </button>
           </div>
         </form>

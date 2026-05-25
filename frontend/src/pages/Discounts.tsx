@@ -116,13 +116,13 @@ export function Discounts() {
 
   return (
     <div className="animate-fade-in flex flex-col gap-6 pb-10">
-      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-transparent">
+      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Aturan Diskon</h1>
           <p className="text-[var(--text-secondary)] mt-1 font-medium">Buat promo, diskon otomatis, dan paket menarik untuk pelanggan.</p>
         </div>
         <button 
-          onClick={() => { resetForm(); setIsModalOpen(true); }}
+          onClick={openAddModal}
           className="px-5 py-2.5 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
           style={{ background: 'var(--accent-gradient)' }}
         >

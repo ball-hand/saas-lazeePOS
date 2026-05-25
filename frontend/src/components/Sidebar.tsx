@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { getMediaUrl } from '../api/client';
 import { 
   LayoutDashboard, ShoppingCart, Package, ReceiptText, 
   Wallet, Tags, Settings as SettingsIcon, LogOut, X,
-  CreditCard, Warehouse, Building2
+  CreditCard, Warehouse, Building2, ChevronDown, ChevronRight
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -13,7 +15,8 @@ interface SidebarProps {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const { user, logout } = useAuth();
-  const { storeName, logoUrl } = useTheme();
+  const { storeName, logoUrl, logoShape } = useTheme();
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   const tenantNavGroups = [
     {
@@ -65,14 +68,21 @@ export function Sidebar({ onClose }: SidebarProps) {
     <aside className="w-64 h-full flex flex-col bg-[var(--bg-surface-elevated)] border-r border-[var(--border)] shadow-xl md:shadow-none">
       {/* Header Sidebar */}
       <div className="p-6 pb-4 flex justify-between items-start">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex flex-col items-center text-center">
           {logoUrl ? (
-            <img src={logoUrl} alt={storeName} className="h-10 w-auto mb-2 object-contain" />
+            <img 
+              src={getMediaUrl(logoUrl)} 
+              alt={storeName} 
+              className={`h-16 w-16 mb-3 object-cover shadow-sm border border-[var(--border)] bg-white ${logoShape === 'circle' ? 'rounded-full' : 'rounded-2xl'}`} 
+            />
           ) : (
-            <h1 className="text-2xl font-extrabold mb-1 truncate text-[var(--accent-primary)] tracking-tight">
-              {storeName}
-            </h1>
+            <div className={`h-16 w-16 bg-[var(--accent-gradient)] flex items-center justify-center text-white mb-3 shadow-md ${logoShape === 'circle' ? 'rounded-full' : 'rounded-2xl'}`}>
+              <span className="font-black text-3xl">L</span>
+            </div>
           )}
+          <h1 className="text-xl font-extrabold mb-1 text-[var(--accent-primary)] tracking-tight leading-tight">
+            {storeName}
+          </h1>
           <div className="mt-2 inline-flex items-center gap-2 bg-[var(--bg-main)] px-3 py-1.5 rounded-full border border-[var(--border)] shadow-sm">
             <div className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${user?.role === 'admin' ? 'bg-[var(--accent-primary)]' : 'bg-[var(--success)]'}`}></div>
             <span className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">{user?.role}</span>
@@ -92,34 +102,50 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       {/* Navigasi Utama */}
       <nav className="flex-1 px-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar py-4">
-        {navGroups.map((group, idx) => (
-          <div key={idx}>
-            {group.title && (
-              <p className="px-3 mb-2 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-                {group.title}
-              </p>
-            )}
-            <div className="flex flex-col gap-1.5">
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group ${
-                      isActive
-                        ? 'bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] font-semibold shadow-[inset_3px_0_0_0_var(--accent-primary)]'
-                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] font-medium'
-                    }`
-                  }
+        {navGroups.map((group, idx) => {
+          // Initialize expanded state for this group if it doesn't exist
+          const isExpanded = expandedGroups[group.title] !== false; // Default to true
+          
+          return (
+            <div key={idx}>
+              {group.title && (
+                <button 
+                  onClick={() => setExpandedGroups(prev => ({ ...prev, [group.title]: !isExpanded }))}
+                  className="w-full flex items-center justify-between px-3 mb-2 group-btn"
                 >
-                  <span className={`transition-transform duration-200 group-hover:scale-110`}>{item.icon}</span>
-                  <span className="text-sm">{item.label}</span>
-                </NavLink>
-              ))}
+                  <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider group-btn-hover:text-[var(--text-primary)] transition-colors">
+                    {group.title}
+                  </p>
+                  <div className="text-[var(--text-secondary)]">
+                    {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </div>
+                </button>
+              )}
+              
+              {isExpanded && (
+                <div className="flex flex-col gap-1.5 animate-fade-in">
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={onClose}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group ${
+                          isActive
+                            ? 'bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] font-semibold shadow-[inset_3px_0_0_0_var(--accent-primary)]'
+                            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)] font-medium'
+                        }`
+                      }
+                    >
+                      <span className={`transition-transform duration-200 group-hover:scale-110`}>{item.icon}</span>
+                      <span className="text-sm">{item.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Profil User & Logout */}

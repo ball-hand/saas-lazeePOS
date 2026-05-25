@@ -6,8 +6,9 @@ interface ThemeContextType {
   themeMode: 'light' | 'dark';
   primaryColor: string;
   logoUrl: string | null;
+  logoShape: 'square' | 'circle';
   storeName: string;
-  updateTheme: (theme: Partial<{ themeMode: 'light' | 'dark', primaryColor: string, logoUrl: string | null, name: string }>) => void;
+  updateTheme: (theme: Partial<{ themeMode: 'light' | 'dark', primaryColor: string, logoUrl: string | null, logoShape: 'square' | 'circle', name: string }>) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -17,6 +18,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>('dark');
   const [primaryColor, setPrimaryColor] = useState('#8B5CF6');
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoShape, setLogoShape] = useState<'square' | 'circle'>('square');
   const [storeName, setStoreName] = useState('Demo Store');
 
   useEffect(() => {
@@ -24,6 +26,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setThemeMode(user.tenant.themeMode as 'light' | 'dark');
       setPrimaryColor(user.tenant.primaryColor);
       setLogoUrl(user.tenant.logoUrl || null);
+      setLogoShape(user.tenant.logoShape as 'square' | 'circle' || 'square');
       setStoreName(user.tenant.name);
     }
   }, [user]);
@@ -47,15 +50,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     
   }, [themeMode, primaryColor]);
 
-  const updateTheme = (updates: Partial<{ themeMode: 'light' | 'dark', primaryColor: string, logoUrl: string | null, name: string }>) => {
+  const updateTheme = (updates: Partial<{ themeMode: 'light' | 'dark', primaryColor: string, logoUrl: string | null, logoShape: 'square' | 'circle', name: string }>) => {
     if (updates.themeMode) setThemeMode(updates.themeMode);
     if (updates.primaryColor) setPrimaryColor(updates.primaryColor);
     if (updates.logoUrl !== undefined) setLogoUrl(updates.logoUrl);
+    if (updates.logoShape) setLogoShape(updates.logoShape);
     if (updates.name) setStoreName(updates.name);
   };
 
   return (
-    <ThemeContext.Provider value={{ themeMode, primaryColor, logoUrl, storeName, updateTheme }}>
+    <ThemeContext.Provider value={{ themeMode, primaryColor, logoUrl, logoShape, storeName, updateTheme }}>
       {children}
     </ThemeContext.Provider>
   );

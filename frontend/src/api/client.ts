@@ -45,4 +45,18 @@ api.interceptors.response.use(
   }
 );
 
+export const getMediaUrl = (path: string | null | undefined) => {
+  if (!path) return '';
+  if (path.startsWith('blob:') || path.startsWith('http')) return path;
+  
+  const envUrl = import.meta.env.VITE_API_URL;
+  const { protocol, hostname, port } = window.location;
+  if (hostname.includes('localhost') || hostname.includes('lazeepos.local') || hostname.includes('127.0.0.1')) {
+    const apiPort = port === '5173' ? '5000' : (port || '5000');
+    return `${protocol}//${hostname}${apiPort ? `:${apiPort}` : ''}${path}`;
+  }
+  const baseUrl = envUrl ? envUrl.replace('/api/v1', '') : `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+  return `${baseUrl}${path}`;
+};
+
 export default api;

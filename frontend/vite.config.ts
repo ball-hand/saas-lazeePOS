@@ -6,6 +6,9 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    allowedHosts: [
+      '6f61-2404-c0-2c10-00-1e9c-647b.ngrok-free.app'
+    ],
     host: true, // Wajib agar bisa diakses dari luar Docker (Nginx)
     port: 5173, // Port default Vite
   },

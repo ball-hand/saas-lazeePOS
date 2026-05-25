@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Store, TrendingUp, ShieldCheck, Zap, ArrowRight, CheckCircle2, Star,
   Play, ChevronDown, Award, HelpCircle, DollarSign, RefreshCw, BarChart3,
-  Smartphone, Printer, Settings, Layers, Sparkles, X
+  Smartphone, Printer, Layers, Sparkles, X, Package
 } from 'lucide-react';
+import { TenantLandingPage } from './TenantLandingPage';
 
 const fmt = (val: number) =>
   'Rp ' + val.toLocaleString('id-ID');
@@ -14,6 +15,25 @@ export function LandingPage() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [storeId, setStoreId] = useState('');
+  const [subdomain, setSubdomain] = useState<string | null>(null);
+
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    // Check if it's a tenant subdomain
+    if (hostname !== 'localhost' && !hostname.startsWith('127.0') && !hostname.startsWith('192.168') && hostname !== 'lazeepos.local') {
+      const parts = hostname.split('.');
+      if (parts.length >= 3 || (parts.length === 2 && parts[1] === 'localhost')) {
+        const sub = parts[0];
+        if (sub !== 'www' && sub !== 'app' && sub !== 'central') {
+          setSubdomain(sub);
+        }
+      }
+    }
+  }, []);
+
+  if (subdomain) {
+    return <TenantLandingPage subdomain={subdomain} />;
+  }
 
   const handleTenantLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -384,31 +404,33 @@ export function LandingPage() {
       {/* =========================================
           FITUR LENGKAP UTAMA
       ========================================= */}
-      <section id="fitur" className="py-24 bg-[var(--bg-surface-elevated)] border-y border-[var(--border)]">
+      <section id="fitur" className="py-24 bg-[var(--bg-main)]">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20">
-            <span className="text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)]">Fitur Unggulan</span>
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mt-2 mb-4">Satu Platform Cerdas untuk Seluruh Kebutuhan Toko</h2>
-            <p className="text-[var(--text-secondary)] font-medium max-w-2xl mx-auto text-sm md:text-base">
+          <div className="text-center mb-20 relative">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[var(--accent-primary)]/10 blur-[80px] -z-10 rounded-full" />
+            <span className="text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)] bg-[var(--accent-primary-transparent)] px-4 py-1.5 rounded-full border border-[var(--accent-primary)]/20 shadow-sm">Fitur Unggulan</span>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mt-6 mb-4 leading-tight">Satu Platform Cerdas untuk <br />Seluruh Kebutuhan Toko</h2>
+            <p className="text-[var(--text-secondary)] font-medium max-w-2xl mx-auto text-base md:text-lg">
               Nikmati fitur manajemen retail enterprise yang dirancang khusus untuk kemudahan dan fleksibilitas operasional bisnis kasir harian Anda.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { icon: <Store size={26} />, title: 'Isolasi Tenant & Subdomain', desc: 'Dapatkan domain unik eksklusif untuk toko Anda sendiri. Data pelanggan, produk, dan laporan 100% aman terisolasi.' },
-              { icon: <TrendingUp size={26} />, title: 'Mesin Diskon Cerdas Kondisional', desc: 'Tingkatkan retensi pembeli dengan promo Beli 1 Gratis 1 (BOGO), diskon persentase, dan promo potongan minimum belanja.' },
-              { icon: <RefreshCw size={26} />, title: 'Sinkronisasi Stok Gudang Otomatis', desc: 'Stok barang di gudang terpotong secara instan begitu kasir menyelesaikan transaksi pembayaran di terminal.' },
-              { icon: <Printer size={26} />, title: 'Integrasi Hardware & Thermal Printer', desc: 'Setup printer kasir (browser/network IP) dan scanner barcode fisik dengan modul pengujian periferal terintegrasi.' },
-              { icon: <DollarSign size={26} />, title: 'Buku Kas Ledger Terpadu', desc: 'Catat arus kas masuk, pengeluaran operasional toko, dan setoran kasir dalam pembukuan otomatis harian.' },
-              { icon: <Settings size={26} />, title: 'Personalisasi Tema & Branding', desc: 'Ubah warna utama UI visual (Light/Dark Mode), setel tagline kustom struk belanja, dan tarif default pajak PPN.' }
+              { icon: <Store size={28} />, title: 'Isolasi Tenant & Subdomain', desc: 'Dapatkan domain unik eksklusif untuk toko Anda sendiri. Data pelanggan, produk, dan laporan 100% aman terisolasi.' },
+              { icon: <TrendingUp size={28} />, title: 'Mesin Diskon Cerdas Kondisional', desc: 'Tingkatkan retensi pembeli dengan promo Beli 1 Gratis 1 (BOGO), diskon persentase, dan promo potongan minimum belanja.' },
+              { icon: <RefreshCw size={28} />, title: 'Sinkronisasi Stok Gudang Otomatis', desc: 'Stok barang di gudang terpotong secara instan begitu kasir menyelesaikan transaksi pembayaran di terminal.' },
+              { icon: <Printer size={28} />, title: 'Integrasi Hardware & Thermal Printer', desc: 'Setup printer kasir (browser/network IP) dan scanner barcode fisik dengan modul pengujian periferal terintegrasi.' },
+              { icon: <DollarSign size={28} />, title: 'Buku Kas Ledger Terpadu', desc: 'Catat arus kas masuk, pengeluaran operasional toko, dan setoran kasir dalam pembukuan otomatis harian.' },
+              { icon: <Layers size={28} />, title: 'Halaman Landing Publik', desc: 'Setiap tenant memiliki halaman landing page (katalog publik) yang bisa diakses pelanggan secara online.' }
             ].map((f, i) => (
-              <div key={i} className="bg-[var(--bg-main)] border border-[var(--border)] rounded-3xl p-6 hover:border-[var(--accent-primary)]/50 transition-all duration-300 group hover:shadow-md">
-                <div className="w-12 h-12 rounded-xl bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
+              <div key={i} className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-8 hover:border-[var(--accent-primary)]/50 transition-all duration-300 group hover:-translate-y-1 shadow-lg hover:shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent-primary)]/5 blur-[50px] rounded-full group-hover:bg-[var(--accent-primary)]/10 transition-colors" />
+                <div className="w-14 h-14 rounded-2xl bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-inner border border-[var(--accent-primary)]/20">
                   {f.icon}
                 </div>
-                <h3 className="text-lg font-bold mb-2 text-[var(--text-primary)]">{f.title}</h3>
-                <p className="text-[var(--text-secondary)] text-xs font-semibold leading-relaxed">{f.desc}</p>
+                <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">{f.title}</h3>
+                <p className="text-[var(--text-secondary)] text-sm font-semibold leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -418,24 +440,25 @@ export function LandingPage() {
       {/* =========================================
           ALUR LANGKAH OPERASIONAL (CARA KERJA)
       ========================================= */}
-      <section id="alur" className="py-24 max-w-7xl mx-auto px-6">
+      <section id="alur" className="py-24 max-w-7xl mx-auto px-6 border-t border-[var(--border)]">
         <div className="text-center mb-16">
-          <span className="text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)]">Panduan Operasional</span>
-          <h2 className="text-3xl font-extrabold mt-2">Mulai Transaksi Pertama Anda dalam 3 Menit</h2>
+          <span className="text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)] bg-[var(--accent-primary-transparent)] px-4 py-1.5 rounded-full border border-[var(--accent-primary)]/20 shadow-sm">Panduan Operasional</span>
+          <h2 className="text-3xl font-extrabold mt-6">Mulai Transaksi Pertama Anda dalam 3 Menit</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
           {[
             { step: "01", title: "Registrasi Tenant", desc: "Daftarkan brand Anda dan pilih subdomain unik toko Anda secara gratis." },
-            { step: "02", title: "Branding Toko", desc: "Atur warna tema, pasang tagline struk kasir, dan atur pajak PPN bawaan." },
+            { step: "02", title: "Branding Toko", desc: "Atur warna tema, Landing Page publik, dan pajak PPN bawaan." },
             { step: "03", title: "Input Katalog", desc: "Tambahkan produk, SKU barang, harga pokok modal, dan jumlah stok awal." },
             { step: "04", title: "Siap Checkout", desc: "Buka Terminal POS, scan produk, dan cetak struk pertama pelanggan Anda!" }
           ].map((s, i) => (
-            <div key={i} className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] p-6 rounded-[2rem] shadow-sm relative flex flex-col justify-between min-h-[12rem]">
-              <span className="text-4xl font-mono font-black opacity-20 absolute top-4 right-6 text-[var(--accent-primary)]">{s.step}</span>
-              <div className="mt-8">
-                <h3 className="font-extrabold text-base mb-2 text-[var(--text-primary)]">{s.title}</h3>
-                <p className="text-[var(--text-secondary)] text-xs font-semibold leading-relaxed">{s.desc}</p>
+            <div key={i} className="bg-[var(--bg-main)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border)] hover:border-[var(--accent-primary)]/50 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl relative flex flex-col justify-between min-h-[14rem] transition-all group overflow-hidden">
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-[var(--accent-primary)]/5 rounded-full group-hover:scale-150 transition-transform" />
+              <span className="text-5xl font-mono font-black opacity-[0.08] absolute top-6 right-6 text-[var(--accent-primary)] group-hover:opacity-20 transition-opacity">{s.step}</span>
+              <div className="mt-auto relative z-10">
+                <h3 className="font-extrabold text-lg mb-3 text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">{s.title}</h3>
+                <p className="text-[var(--text-secondary)] text-sm font-semibold leading-relaxed">{s.desc}</p>
               </div>
             </div>
           ))}

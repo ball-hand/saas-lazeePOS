@@ -18,7 +18,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* Sidebar Container (Responsif: tersembunyi di mobile, menetap di desktop) */}
       <div 
-        className={`fixed inset-y-0 left-0 z-30 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:z-50 md:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

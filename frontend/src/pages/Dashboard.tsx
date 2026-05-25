@@ -61,10 +61,8 @@ export function Dashboard() {
   }
 
   return (
-    <div className="animate-fade-in flex flex-col gap-8 pb-10">
-
-      {/* Header */}
-      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 mb-2 flex items-start justify-between border-b border-transparent">
+    <div className="animate-fade-in flex flex-col gap-6 pb-10">
+      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-2">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Ringkasan Dasbor</h1>
           <p className="text-[var(--text-secondary)] mt-1 font-medium">Pantau performa dan aktivitas tokomu hari ini.</p>

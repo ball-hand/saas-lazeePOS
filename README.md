@@ -1,313 +1,206 @@
 # 🛒 LazeePOS — SaaS Point of Sale System
 
-A modern, multi-tenant SaaS POS system for Indonesian SMBs. Each store gets its own subdomain, theme, and fully isolated data.
+<div align="center">
+  
+A modern, multi-tenant SaaS POS system for Indonesian SMBs. Each store gets its own subdomain, theme, public storefront, and fully isolated data.
 
-![Stack](https://img.shields.io/badge/Stack-React%20%2B%20Node.js%20%2B%20Prisma-blueviolet)
-![License](https://img.shields.io/badge/License-MIT-green)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=for-the-badge)](https://github.com/ball-hand/saas-lazeePOS)
+[![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)](#)
+[![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)](#)
+[![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)](#)
+[![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)](#)
+[![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)](#)
+[![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)](#)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
+</div>
 
 ---
 
 ## ✨ Features
 
 ### Core POS & Operations
-- 🏪 **Multi-tenant** — each store on its own subdomain (`toko.lazeepos.com`)
-- 🧾 **POS Terminal** — product catalog, cart, discount engine, receipt printing
-- 📦 **Inventory / Warehouse** — stock tracking, low-stock alerts, adjustments
-- 💳 **Midtrans Payment Gateway** — subscription billing via Snap (GoPay, QRIS, Bank Transfer, Cards)
-- 🏷️ **Discount Engine** — percentage, fixed amount, BOGO, time-based, min-qty
-- 📊 **Dashboard** — real-time sales, revenue, popular products
-- 💰 **Cash Flow** — income/expense tracking, daily/monthly summaries
-- 👥 **Staff Management** — multi-role (admin / cashier) with per-plan seat limits
-- ⚙️ **Tenant Settings** — custom theme color, logo, store name
-- 🌙 **Dark/Light theme** — per-tenant glassmorphism UI
+- 🏪 **Multi-Tenant Architecture** — Each store gets a unique subdomain (`<namatoko>.lazeepos.com`) with 100% data isolation.
+- 🛍️ **Public Storefront (Landing Page)** — Every tenant gets an auto-generated, highly customizable public landing page. Add Jargon, Store Introductions, Google Maps Location, Announcement Banners, and Photo Galleries.
+- 🧾 **POS Terminal** — Intuitive product catalog, cart management, automatic tax (PPN) calculation, and receipt generation.
+- 📦 **Inventory & Warehouse** — Real-time stock tracking, automatic deduction on sale, low-stock alerts, and manual adjustments.
+- 💳 **Midtrans Payment Gateway** — Built-in subscription billing via Snap (GoPay, QRIS, Bank Transfer, E-Wallets).
+- 🏷️ **Smart Discount Engine** — Conditional rules: percentage off, fixed amount off, BOGO (Buy 1 Get 1), minimum spend criteria.
+- 📊 **Analytics Dashboard** — Real-time sales, total revenue, most popular products, and recent transactions.
+- 💰 **Ledger / Cash Flow** — Automated tracking of sales income and manual entry for operational expenses.
+- ⚙️ **White-Label Branding** — Tenant admins can customize their primary theme color, Light/Dark mode, store logo (Square/Circle shapes), and custom receipt footers.
+- 👥 **Role-Based Access Control** — Multi-role system (Central Admin, Tenant Admin, Tenant Cashier) with per-plan seat limits.
 
-### SuperAdmin / Central Panel
-- 🏢 **Tenant Management** — view, create, suspend/restore, and close tenant stores
-- 🔑 **Impersonation (Login as Tenant)** — instant tenant-scoped login for support/debugging without sharing passwords
-- 🔴 **Kill Switch** — one-click suspend or restore a tenant; suspended tenants are auto-logged out
-- 💳 **Per-Tenant Billing Detail** — plan, revenue, active users, product count, payment history
-- 📈 **SaaS Analytics** — MRR, MRR-by-plan breakdown, MTD revenue, MoM growth %, active outlets, churn rate
-- 📋 **System Logs** — tail application / nginx / mysql logs filtered by level (error/warn/info) directly from the dashboard
-- 💻 **System Info** — Node memory, disk usage, OS uptime — no SSH needed
-- 💾 **Manual DB Backup** — one-click mysqldump trigger to external storage
-- ⚙️ **Platform Settings** — branded name, theme colour, logo for the central portal
-- 📦 **Plan Management** — CRUD plans with per-plan limits (max products, max users, max branches)
+### SuperAdmin / Central Platform
+- 🏢 **Tenant Management** — Monitor, create, suspend, restore, or destroy tenant stores.
+- 🔑 **Instant Impersonation** — One-click login as any tenant for debugging and support, without needing passwords.
+- 🔴 **Kill Switch** — Suspend a store instantly; suspended stores block public access and auto-logout all staff.
+- 💳 **Per-Tenant Billing CRM** — Detailed views of a tenant's subscription plan, active staff count, active products, and payment history.
+- 📈 **SaaS Analytics** — Track MRR (Monthly Recurring Revenue), MTD (Month-To-Date), churn rates, active outlets, and growth %.
+- 📋 **System Logs Tailer** — View application, nginx, and mysql logs directly from the Central Dashboard.
+- 💻 **System Health** — Real-time Node.js memory footprint, disk usage, and OS uptime.
+- 💾 **Database Backups** — Trigger manual `mysqldump` backups directly from the web interface.
+- 📦 **Plan & Tiers Management** — Manage subscription plans (Starter, Pro, Enterprise) and enforce limits on products, staff users, and branch counts.
 
 ---
 
 ## 🛠 Tech Stack
 
-| Layer | Tech |
+| Layer | Technology |
 |-------|------|
-| Frontend | React 19 + TypeScript + Vite + Tailwind CSS |
-| Backend | Node.js + Express 5 + Prisma ORM |
-| Database | MySQL 8.0 |
-| Auth | JWT + bcrypt |
-| Payments | Midtrans (Snap + Core API) |
-| Deployment | Docker + Nginx |
+| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS, Lucide React |
+| **Backend** | Node.js, Express 5, Prisma ORM |
+| **Database** | MySQL 8.0 |
+| **Authentication** | JWT (JSON Web Tokens), bcrypt |
+| **Payments** | Midtrans (Snap + Core API) |
+| **Deployment** | Docker, Nginx, PM2 |
 
 ---
 
 ## 🗂 Project Structure
 
-```
+```text
 saas-lazeePOS/
 ├── backend/
 │   ├── middleware/
-│   │   ├── auth.js          # JWT, requireRole, requireTenant
-│   │   ├── planLimits.js    # per-plan product/user seat limits
-│   │   └── tenant.js        # subdomain → tenant resolution
+│   │   ├── auth.js          # JWT verification, Role & Tenant guards
+│   │   ├── planLimits.js    # Subscription enforcement guards
+│   │   └── tenant.js        # Subdomain → Tenant resolution
 │   ├── routes/
-│   │   ├── central/
-│   │   │   ├── auth.js          # /analytics, /dashboard, /auth/me
-│   │   │   ├── tenants.js       # CRUD tenant stores
-│   │   │   ├── tenant-actions.js# /impersonate /kill-switch /billing
-│   │   │   ├── plans.js         # CRUD subscription plans
-│   │   │   ├── platform.js      # portal name/theme/logo
-│   │   │   └── system.js        # /system/logs /system/info /backup
-│   │   ├── auth.js              # tenant login/register
-│   │   ├── products.js          # product CRUD + plan-limit guard
-│   │   ├── warehouse.js         # inventory + low-stock
-│   │   ├── receipts.js          # POS sales + cashflow automation
-│   │   ├── discounts.js         # conditional discount rules
-│   │   ├── cashflow.js          # manual income/expense
-│   │   ├── dashboard.js         # tenant KPI cards
-│   │   ├── payment.js           # Midtrans subscription + webhook
-│   │   ├── settings.js          # tenant branding + staff CRUD
-│   │   └── settings.js          # staff mgmt with plan-limit guard
+│   │   ├── central/         # SaaS platform owner routes
+│   │   ├── public.js        # Public unauthenticated routes (Storefronts)
+│   │   ├── auth.js          # Tenant staff authentication
+│   │   ├── products.js      # Product CRUD + Stock integration
+│   │   ├── warehouse.js     # Inventory & Adjustments
+│   │   ├── receipts.js      # POS checkout & transaction creation
+│   │   ├── discounts.js     # Rules engine
+│   │   ├── cashflow.js      # Ledger operations
+│   │   ├── dashboard.js     # Tenant metrics
+│   │   ├── payment.js       # Midtrans integration & Webhooks
+│   │   ├── settings.js      # Store configurations & Branding
+│   │   └── upload.js        # Image & Media uploads
 │   ├── prisma/
-│   │   ├── schema.prisma
-│   │   └── seed.js
-│   └── server.js
+│   │   ├── schema.prisma    # Database structure
+│   │   └── seed.js          # Default Plans, Central Admin & Demo Store
+│   └── server.js            # Express app entry point
 ├── frontend/
 │   └── src/
-│       ├── api/           # axios client + JWT interceptor
-│       ├── context/       # AuthContext + ThemeContext
-│       ├── components/    # Layout, Sidebar, Modal, ProtectedRoute
-│       │   ├── central/   # SuperAdminLogin, SuperAdminDashboard
-│       │   └── ...
-│       └── pages/         # all screens
-├── nginx/
-└── docker-compose.yml
+│       ├── api/             # Axios client with intelligent response unwrapping
+│       ├── context/         # AuthContext & ThemeContext
+│       ├── components/      # Reusable UI (Sidebar, Modals, Badges)
+│       └── pages/           # Application views (Central, Admin, POS)
+├── nginx/                   # Reverse proxy configurations
+└── docker-compose.yml       # Container orchestration
 ```
-
-### Route map
-
-```
-PUBLIC
-  GET  /api/health
-
-CENTRAL / SUPERADMIN  (no subdomain → centralAuthRoutes first)
-  POST /api/central/auth/login              — superadmin login
-  GET  /api/central/auth/me                 — current superadmin profile
-  GET  /api/central/dashboard               — tenant KPIs + top-tenants
-  GET  /api/central/tenants                 — list all stores
-  POST /api/central/tenants                 — create new store (+ admin user)
-  GET  /api/central/tenants/:id             — store detail
-  PUT  /api/central/tenants/:id             — update store config
-  DELETE /api/central/tenants/:id           — close/destroy store
-  POST /api/central/tenants/:id/impersonate — login as that store's admin
-  POST /api/central/tenants/:id/kill-switch — suspend / restore instantly
-  GET  /api/central/tenants/:id/billing     — billing detail for a specific store
-  GET  /api/central/plans                   — all subscription tiers
-  GET  /api/central/plans/:id               — single plan detail
-  POST /api/central/plans                   — create plan
-  PUT  /api/central/plans/:id               — update plan
-  DELETE /api/central/plans/:id             — delete plan
-  GET  /api/central/platform/settings       — read platform branding config
-  PUT  /api/central/platform/settings       — write platform branding config
-  GET  /api/central/analytics               — MRR, MTD, churn, active outlets
-  GET  /api/central/system/logs             — filterable log tailer
-  GET  /api/central/system/info             — server health / disk / memory
-  POST /api/central/backup                  — trigger mysqldump backup
-
-TENANT / TOKO  (subdomain.lazeepos.com + JWT)
-  POST /api/auth/login
-  POST /api/auth/register
-  GET  /api/auth/me
-  GET  /api/products
-  POST /api/products              ← requires plan maxProducts guard
-  PUT  /api/products/:id
-  DELETE /api/products/:id
-  GET  /api/warehouse
-  PUT  /api/warehouse/:id
-  GET  /api/warehouse/low-stock
-  POST /api/warehouse/adjust
-  POST /api/discounts/apply
-  GET  /api/discounts
-  CRUD /api/receipts
-  CRUD /api/cashflow
-  GET  /api/dashboard
-  GET  /api/payment/plans
-  GET  /api/payment/subscription
-  POST /api/payment/create-transaction
-  GET  /api/payment/status/:orderId
-  POST /api/payment/cancel/:orderId
-  POST /api/payment/notification          ← Midtrans webhook (no JWT)
-  GET  /api/settings/tenant
-  PUT  /api/settings/tenant
-  GET  /api/settings/staff
-  POST /api/settings/staff        ← requires plan maxUsers guard
-  DELETE /api/settings/staff/:id
-```
-
-Middleware chain for tenant routes:
-```
-tenantIdentificator → verifyToken → requireTenant → requireRole (optional) → handler
-```
-
-### Role matrix
-
-| Capability | superadmin | admin | cashier |
-|---|---|---|---|
-| Access `/central-login` | ✅ | ❌ | ❌ |
-| Access `/api/central/*` | ✅ | ❌ | ❌ |
-| Tenant login | ❌ | ✅ | ✅ |
-| Tenant dashboard | ✅ (as any tenant via impersonate) | ✅ | ✅ |
-| View products / warehouse | ❌ (tenant guards) | ✅ | ✅ (view only) |
-| Create / edit products | ❌ | ✅ | ❌ |
-| Manage staff | ❌ | ✅ | ❌ |
-| Upgrade subscription | ❌ | ✅ | ❌ |
-| Tenant impersonation | ✅ | — | — |
-| Kill-switch tenants | ✅ | — | — |
-| View SaaS analytics | ✅ | — | — |
 
 ---
 
 ## 🚀 Quick Start (Docker)
 
 ```bash
-# 1. Clone
+# 1. Clone the repository
 git clone https://github.com/ball-hand/saas-lazeePOS.git
 cd saas-lazeePOS
 
-# 2. Configure backend
+# 2. Configure environment variables
 cp backend/.env.example backend/.env
 # Edit backend/.env — set DATABASE_URL, JWT_SECRET, Midtrans keys
 
-# 3. Start services
+# 3. Start services via Docker Compose
 docker-compose up -d
 
-# 4. Run migrations & seed
+# 4. Run database migrations & seed initial data
 docker-compose exec backend npx prisma db push
 docker-compose exec backend npm run db:seed
 
-# 5. Open
+# 5. Access the application
 # Frontend → http://localhost
 # Backend  → http://localhost:5000/api/health
 ```
 
 ---
 
-## 💻 Local Dev (without Docker)
+## 💻 Local Development (Without Docker)
 
+### Backend Setup
 ```bash
-# Backend
 cd backend
 cp .env.example .env
 # Edit .env — set DATABASE_URL=mysql://root:password@localhost:3306/lazeepos
 npm install
 npx prisma db push
-node prisma/seed.js
-npm run dev                 # runs on :5000 with nodemon
+npm run db:seed
+npm run dev                 # Starts on port 5000 using nodemon
+```
 
-# Frontend (separate terminal)
+### Frontend Setup
+```bash
+# In a separate terminal
 cd frontend
 cp .env.example .env
 npm install
-npm run dev                 # runs on :5173
-
-# Add tenant subdomain to /etc/hosts for tenant dev:
-#   127.0.0.1  demo.localhost
-# Then open http://demo.localhost:5173
+npm run dev                 # Starts on port 5173 using Vite
 ```
+
+### Subdomain Routing for Local Development
+To test the tenant architecture locally, add a tenant subdomain to your local `/etc/hosts` file:
+```text
+127.0.0.1  demo.localhost
+```
+You can now access the tenant's public landing page and cashier portal via `http://demo.localhost:5173`.
 
 ---
 
 ## 🔑 Access Points & Credentials
 
-| Entry | URL | Role |
+| Entry Point | URL | Required Role |
 |---|---|---|
-| Landing page | http://localhost:5173 | — |
-| SuperAdmin login | http://localhost:5173/central-login | superadmin |
-| Tenant login | http://localhost:5173/login | admin / cashier |
-| Backend health | http://localhost:5000/api/health | — |
-| Central API | http://localhost:5000/api/central/... requires superadmin JWT |
-| Tenant API | `http://demo.localhost:5000/api/...` subdomain required |
+| **SaaS Landing Page** | `http://localhost:5173` | — |
+| **SuperAdmin Login** | `http://localhost:5173/central-login` | `central` |
+| **Tenant Storefront** | `http://demo.localhost:5173` | — |
+| **Tenant Login** | `http://demo.localhost:5173/login` | `admin` / `kasir` |
 
-**Demo superadmin credentials:**
+### Default Seeded Credentials
 
-| Email | Password | Portal |
-|---|---|---|
-| `admin@lazeepos.com` | `Admin123!` | `/central-login` |
+**Central Owner (SaaS Admin):**
+- Email: `admin@lazeepos.com`
+- Password: `Admin123!`
 
-**Demo tenant credentials (use `demo.localhost` subdomain or `/etc/hosts` entry):**
-
-| Role | Email | Password |
-|---|---|---|
-| Admin | `demo@lazeepos.com` | `Demo123!` |
-| Cashier | `kasir@lazeepos.com` | `Kasir123!` |
-
-> **Local dev subdomain trick:** add `127.0.0.1 demo.localhost` to `/etc/hosts`, then open `http://demo.localhost:5173`. In development server mode on `localhost:PORT` (no subdomain), tenant APIs also work directly without subdomain — the middleware detects the port-only form as a dev host rather than a central domain.
+**Demo Tenant ("demo" Subdomain):**
+- Admin Email: `demo@lazeepos.com` | Password: `Demo123!`
+- Cashier Email: `kasir@lazeepos.com` | Password: `Kasir123!`
 
 ---
 
-## 💳 Midtrans Setup
+## 💳 Midtrans Payment Gateway Setup
 
 1. Register at [dashboard.midtrans.com](https://dashboard.midtrans.com)
-2. Go to **Settings → Access Keys**
-3. Add to `backend/.env`:
-   ```
+2. Navigate to **Settings → Access Keys**
+3. Add the following to your `backend/.env`:
+   ```env
    MIDTRANS_ENV=sandbox
    MIDTRANS_SERVER_KEY=SB-Mid-server-xxxx
    MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxx
    ```
-4. Add to `frontend/.env`:
-   ```
+4. Add the following to your `frontend/.env`:
+   ```env
    VITE_MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxx
    ```
-5. Set webhook in Midtrans dashboard:
-   `https://yourdomain.com/api/payment/notification`
-
-**Supported payment methods:** GoPay, OVO, DANA, QRIS, BCA, Mandiri, BNI, Visa, Mastercard
+5. Configure the Webhook/Notification URL in the Midtrans Dashboard:
+   `https://yourdomain.com/api/v1/payment/notification`
 
 ---
 
-## 💰 Pricing Tiers (Built-in)
+## 💰 Built-in Subscription Tiers
 
-| Plan | Price | Products | Users | Branches |
-|------|-------|----------|-------|----------|
-| Starter | Free | 100 | 3 | 1 |
-| Pro | Rp 149.000/mo | 500 | 10 | 3 |
-| Enterprise | Rp 490.000/mo | ∞ | ∞ | ∞ |
-
----
-
-## 🔧 Environment Variables
-
-```env
-# Server
-PORT=5000
-NODE_ENV=development
-JWT_SECRET=your_long_secret_key_here
-JWT_EXPIRES_IN=7d
-
-# Database
-DATABASE_URL=mysql://root:password@localhost:3306/lazeepos
-
-# SuperAdmin utilities
-MYSQL_BACKUP_PATH=/var/backups/lazeepos
-LOG_DIR=/var/log/lazeepos
-
-# Midtrans
-MIDTRANS_ENV=sandbox
-MIDTRANS_SERVER_KEY=SB-Mid-server-xxxx
-MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxx
-FRONTEND_URL=http://localhost:5173
-```
+| Plan | Price | Max Products | Max Users | Branches | Features |
+|------|-------|----------|-------|----------|----------|
+| **Starter** | Free | 100 | 3 | 1 | POS, Basic Reports, Inventory |
+| **Pro** | Rp 149.000/mo | 500 | 10 | 3 | Starter + Multi-Branch |
+| **Enterprise** | Rp 490.000/mo | Unlimited | Unlimited | Unlimited | Pro + API Access + Priority Support |
 
 ---
 
 ## 📄 License
 
-MIT — free to use, modify, and sell.
+This project is licensed under the **MIT License** — free to use, modify, and distribute.

@@ -148,7 +148,7 @@ export function Billing() {
 
   return (
     <div className="animate-fade-in flex flex-col gap-8 pb-10">
-      <div className="sticky top-[-1rem] z-10 bg-[var(--bg-main)]/80 backdrop-blur-md pb-4 pt-4 -mt-4 flex items-start justify-between border-b border-transparent">
+      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Langganan & Penagihan</h1>
           <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola paket aktif Anda dan riwayat tagihan.</p>
