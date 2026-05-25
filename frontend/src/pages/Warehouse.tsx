@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Package, RefreshCw, ArrowUpRight, ArrowDownLeft, Search, Loader2 } from 'lucide-react';
 import { Modal } from '../components/Modal';
 import api from '../api/client';
+import { CustomSelect } from '../components/shared/CustomSelect';
 import toast from 'react-hot-toast';
 
 export function Warehouse() {
@@ -286,17 +287,16 @@ export function Warehouse() {
         <form className="flex flex-col gap-4 mt-2" onSubmit={handleAdjustSubmit}>
           <div>
             <label className={labelCls}>Pilih Produk</label>
-            <select
-              className={inputCls + " bg-[#1a202c] cursor-pointer"}
+            <CustomSelect
+              className={inputCls}
               value={formData.productId}
-              onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
-            >
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} {p.sku ? `(${p.sku})` : ''}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setFormData({ ...formData, productId: String(val) })}
+              options={products.map((p) => ({
+                value: p.id,
+                label: `${p.name} ${p.sku ? `(${p.sku})` : ''}`
+              }))}
+              placeholder="Pilih Produk..."
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

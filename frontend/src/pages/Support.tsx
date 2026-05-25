@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Modal } from '../components/Modal';
+import { CustomSelect } from '../components/shared/CustomSelect';
 
 interface Ticket {
   id: string;
@@ -179,16 +180,16 @@ export function Support() {
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="block text-sm font-bold text-[var(--text-primary)] mb-1">Prioritas</label>
-            <select
+            <CustomSelect
               value={newPriority}
-              onChange={(e) => setNewPriority(e.target.value)}
-              className="w-full p-2.5 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl focus:border-[var(--accent-primary)]"
-            >
-              <option value="LOW">Low (Pertanyaan Umum)</option>
-              <option value="MEDIUM">Medium (Kendala Minor)</option>
-              <option value="HIGH">High (Fitur Penting Rusak)</option>
-              <option value="CRITICAL">Critical (Sistem Mati/Crash)</option>
-            </select>
+              onChange={(val) => setNewPriority(String(val))}
+              options={[
+                { value: 'LOW', label: 'Low (Pertanyaan Umum)' },
+                { value: 'MEDIUM', label: 'Medium (Kendala Minor)' },
+                { value: 'HIGH', label: 'High (Fitur Penting Rusak)' },
+                { value: 'CRITICAL', label: 'Critical (Sistem Mati/Crash)' }
+              ]}
+            />
           </div>
           <div>
             <label className="block text-sm font-bold text-[var(--text-primary)] mb-1">Subjek Masalah</label>

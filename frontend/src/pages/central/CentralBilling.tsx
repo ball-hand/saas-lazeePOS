@@ -3,6 +3,7 @@ import { Search, Receipt, DollarSign, ArrowUpRight, CheckCircle2, XCircle, Clock
 import toast from 'react-hot-toast';
 import api from '../../api/client';
 import { Link } from 'react-router-dom';
+import { CustomSelect } from '../../components/shared/CustomSelect';
 
 interface Transaction {
   id: string;
@@ -88,16 +89,18 @@ export function CentralBilling() {
             className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-xl focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] transition-all"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-xl focus:border-[var(--accent-primary)]"
-        >
-          <option value="">Semua Status</option>
-          <option value="settlement">Settlement (Berhasil)</option>
-          <option value="pending">Pending</option>
-          <option value="expire">Expire / Cancel</option>
-        </select>
+        <div className="w-full md:w-56">
+          <CustomSelect
+            value={statusFilter}
+            onChange={(val) => setStatusFilter(String(val))}
+            options={[
+              { value: '', label: 'Semua Status' },
+              { value: 'settlement', label: 'Settlement (Berhasil)' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'expire', label: 'Expire / Cancel' }
+            ]}
+          />
+        </div>
       </div>
 
       {/* Table */}

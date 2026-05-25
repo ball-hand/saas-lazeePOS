@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CustomSelect } from '../../components/shared/CustomSelect';
 import { 
   Search, Plus, Building2, Edit2, Ban, CheckCircle2, 
   MoreVertical, ShieldAlert, Package, Users, ChevronRight, LogIn
@@ -190,15 +191,18 @@ export function CentralTenants() {
               value={search} onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <select
-            className="px-4 py-2 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] text-sm outline-none"
-            value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">Semua Status</option>
-            <option value="ACTIVE">Aktif</option>
-            <option value="TRIAL">Trial (24 Jam)</option>
-            <option value="SUSPENDED">Suspended</option>
-          </select>
+          <div className="w-full sm:w-48">
+            <CustomSelect
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(String(val))}
+              options={[
+                { value: '', label: 'Semua Status' },
+                { value: 'ACTIVE', label: 'Aktif' },
+                { value: 'TRIAL', label: 'Trial (24 Jam)' },
+                { value: 'SUSPENDED', label: 'Suspended' }
+              ]}
+            />
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -334,14 +338,16 @@ export function CentralTenants() {
             {editingTenant && (
               <div className="flex-1">
                 <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Status</label>
-                <select className="w-full px-4 py-2 h-10 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] outline-none"
-                  value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}
-                  disabled
-                >
-                  <option value="ACTIVE">Active</option>
-                  <option value="TRIAL">Trial</option>
-                  <option value="SUSPENDED">Suspended</option>
-                </select>
+                <CustomSelect
+                  value={formData.status}
+                  onChange={(val) => setFormData({...formData, status: String(val)})}
+                  disabled={true}
+                  options={[
+                    { value: 'ACTIVE', label: 'Active' },
+                    { value: 'TRIAL', label: 'Trial' },
+                    { value: 'SUSPENDED', label: 'Suspended' }
+                  ]}
+                />
                 <p className="text-[10px] text-[var(--text-secondary)] mt-1">Gunakan tombol Suspend/Restore untuk ubah status.</p>
               </div>
             )}

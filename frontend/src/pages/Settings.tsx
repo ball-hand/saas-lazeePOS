@@ -4,6 +4,7 @@ import { Save, Store, Moon, Sun, Receipt, Percent, FileText, Coffee, Sparkles, P
 import api, { getMediaUrl } from '../api/client';
 import toast from 'react-hot-toast';
 import { RichTextEditor } from '../components/shared/RichTextEditor';
+import { CustomSelect } from '../components/shared/CustomSelect';
 
 export function Settings() {
   const { themeMode, primaryColor, storeName: contextStoreName, logoUrl: contextLogoUrl, logoShape: contextLogoShape, updateTheme } = useTheme();
@@ -595,20 +596,20 @@ export function Settings() {
                   <div key={idx} className="flex gap-3 items-start bg-[var(--bg-main)] p-3 rounded-xl border border-[var(--border)]">
                     <div className="flex-1 space-y-2">
                       <div className="flex gap-2">
-                        <select className="w-1/3 px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm transition-all" value={feat.icon || 'CheckCircle'} onChange={(e) => {
+                        <CustomSelect className="w-1/3" value={feat.icon || 'CheckCircle'} onChange={(val) => {
                           const newFeat = [...landingPageConfig.features];
-                          newFeat[idx].icon = e.target.value;
+                          newFeat[idx].icon = String(val);
                           setLandingPageConfig({ ...landingPageConfig, features: newFeat });
-                        }}>
-                          <option value="CheckCircle">Check (Ceklis)</option>
-                          <option value="Star">Star (Bintang)</option>
-                          <option value="Shield">Shield (Keamanan)</option>
-                          <option value="Heart">Heart (Hati)</option>
-                          <option value="Truck">Truck (Pengiriman)</option>
-                          <option value="ThumbsUp">Thumbs (Jempol)</option>
-                          <option value="Coffee">Coffee (Kopi)</option>
-                          <option value="Utensils">Utensils (Alat Makan)</option>
-                        </select>
+                        }} options={[
+                          { value: 'CheckCircle', label: 'Check (Ceklis)' },
+                          { value: 'Star', label: 'Star (Bintang)' },
+                          { value: 'Shield', label: 'Shield (Keamanan)' },
+                          { value: 'Heart', label: 'Heart (Hati)' },
+                          { value: 'Truck', label: 'Truck (Pengiriman)' },
+                          { value: 'ThumbsUp', label: 'Thumbs (Jempol)' },
+                          { value: 'Coffee', label: 'Coffee (Kopi)' },
+                          { value: 'Utensils', label: 'Utensils (Alat Makan)' }
+                        ]} />
                         <input type="text" placeholder="Cth: Kualitas Premium" className="w-2/3 px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-bold transition-all" value={feat.title} onChange={(e) => {
                           const newFeat = [...landingPageConfig.features];
                           newFeat[idx].title = e.target.value;
@@ -740,17 +741,17 @@ export function Settings() {
                           </div>
                           <div>
                             <label className="text-xs font-bold text-[var(--text-secondary)] uppercase mb-1 block">Rating (1-5)</label>
-                            <select className="w-full px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm transition-all" value={t.rating} onChange={(e) => {
+                            <CustomSelect value={t.rating} onChange={(val) => {
                               const newTesti = [...landingPageConfig.testimonials];
-                              newTesti[idx].rating = parseInt(e.target.value);
+                              newTesti[idx].rating = parseInt(String(val));
                               setLandingPageConfig({ ...landingPageConfig, testimonials: newTesti });
-                            }}>
-                              <option value={5}>5 Bintang (Sangat Bagus)</option>
-                              <option value={4}>4 Bintang (Bagus)</option>
-                              <option value={3}>3 Bintang (Cukup)</option>
-                              <option value={2}>2 Bintang (Kurang)</option>
-                              <option value={1}>1 Bintang (Sangat Kurang)</option>
-                            </select>
+                            }} options={[
+                              { value: 5, label: '5 Bintang (Sangat Bagus)' },
+                              { value: 4, label: '4 Bintang (Bagus)' },
+                              { value: 3, label: '3 Bintang (Cukup)' },
+                              { value: 2, label: '2 Bintang (Kurang)' },
+                              { value: 1, label: '1 Bintang (Sangat Kurang)' }
+                            ]} />
                           </div>
                         </div>
                         <div>

@@ -3,6 +3,7 @@ import { Plus, Tags, Trash2, Edit2, Tag, Percent, ShoppingBag, Layers, AlertCirc
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Modal } from '../components/Modal';
+import { CustomSelect } from '../components/shared/CustomSelect';
 import toast from 'react-hot-toast';
 
 const fmt = (val: number | string) =>
@@ -259,15 +260,15 @@ export function Discounts() {
               <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
                 Jenis Diskon *
               </label>
-              <select
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm cursor-pointer"
+              <CustomSelect
                 value={formData.discountType}
-                onChange={e => setFormData({ ...formData, discountType: e.target.value })}
-              >
-                <option value="percentage">Persentase (%)</option>
-                <option value="fixed_amount">Jumlah Tetap (Rupiah)</option>
-                <option value="bogo">Beli 1 Gratis 1 (BOGO)</option>
-              </select>
+                onChange={val => setFormData({ ...formData, discountType: String(val) })}
+                options={[
+                  { value: 'percentage', label: 'Persentase (%)' },
+                  { value: 'fixed_amount', label: 'Jumlah Tetap (Rupiah)' },
+                  { value: 'bogo', label: 'Beli 1 Gratis 1 (BOGO)' }
+                ]}
+              />
             </div>
             
             {/* Discount Value */}
@@ -299,14 +300,14 @@ export function Discounts() {
               <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
                 Target Penerapan
               </label>
-              <select
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm cursor-pointer"
+              <CustomSelect
                 value={formData.appliesTo}
-                onChange={e => setFormData({ ...formData, appliesTo: e.target.value })}
-              >
-                <option value="all">Semua Produk</option>
-                <option value="category">Kategori Tertentu</option>
-              </select>
+                onChange={val => setFormData({ ...formData, appliesTo: String(val) })}
+                options={[
+                  { value: 'all', label: 'Semua Produk' },
+                  { value: 'category', label: 'Kategori Tertentu' }
+                ]}
+              />
             </div>
             
             {/* Category Name */}

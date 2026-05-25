@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Store, ArrowRight, ShieldCheck, CheckCircle2, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
+import { CustomSelect } from '../components/shared/CustomSelect';
 
 export function Register() {
   const [formData, setFormData] = useState({
@@ -211,20 +212,16 @@ export function Register() {
 
             <div className="pt-4 border-t border-[var(--border)] border-dashed">
               <label className="block text-[10px] font-bold text-[var(--text-secondary)] mb-1.5 uppercase tracking-widest">Pilih Paket Langganan</label>
-              <div className="relative">
-                <select required value={formData.planId} onChange={e => setFormData({...formData, planId: e.target.value})} className="w-full bg-[var(--bg-main)] border border-[var(--border)] px-4 py-3 rounded-xl focus:border-[var(--accent-primary)] outline-none transition-colors appearance-none font-bold text-sm shadow-sm">
-                  {plans.length === 0 && <option value="">Memuat Paket...</option>}
-                  {plans.map((p, idx) => (
-                    <option key={idx} value={p.id}>
-                      {p.name} — Rp {p.monthlyPrice?.toLocaleString('id-ID')} / bln
-                    </option>
-                  ))}
-                </select>
-                {/* Custom Select Arrow */}
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                </div>
-              </div>
+              <CustomSelect 
+                value={formData.planId} 
+                onChange={(val) => setFormData({...formData, planId: String(val)})} 
+                placeholder="Memuat Paket..."
+                options={plans.length === 0 ? [] : plans.map(p => ({
+                  value: p.id,
+                  label: `${p.name} — Rp ${p.monthlyPrice?.toLocaleString('id-ID')} / bln`
+                }))}
+                className="font-bold text-sm shadow-sm"
+              />
             </div>
 
             <button disabled={loading} type="submit" className="w-full py-3.5 rounded-xl text-sm font-bold text-white shadow-lg hover:shadow-[var(--accent-primary)]/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 mt-6 disabled:opacity-70 disabled:hover:translate-y-0" style={{ background: 'var(--accent-gradient)' }}>

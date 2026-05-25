@@ -46,7 +46,7 @@ export function CentralPlatform() {
     if (!file) return;
     
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file);
     
     const loadingToast = toast.loading('Mengunggah logo...');
     try {
