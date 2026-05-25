@@ -1,1 +1,32 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.log
+
+# Dependencies
+node_modules/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Build & Test Output
+dist/
+build/
+coverage/
+.nyc_output/
+
+# Backend Specific
+backend/public/uploads/
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# Frontend Specific
+frontend/dist/
+frontend/.eslintcache
+
+# Misc
 /.kilo

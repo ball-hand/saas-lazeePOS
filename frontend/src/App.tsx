@@ -3,14 +3,21 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
 import { LandingPage } from './pages/LandingPage';
+import { Register } from './pages/Register';
 import { Login } from './pages/Login';
 import { CentralLogin } from './pages/central/CentralLogin';
 import { CentralDashboard } from './pages/central/CentralDashboard';
 import { CentralTenants } from './pages/central/CentralTenants';
 import { CentralPlans } from './pages/central/CentralPlans';
 import { CentralPlatform } from './pages/central/CentralPlatform';
+import { CentralServerStatus } from './pages/central/CentralServerStatus';
 import { CentralTenantDetail } from './pages/central/CentralTenantDetail';
+import { CentralBilling } from './pages/central/CentralBilling';
+import { CentralTickets } from './pages/central/CentralTickets';
+import { CentralReleases } from './pages/central/CentralReleases';
+import { CentralSystemLogs } from './pages/central/CentralSystemLogs';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ReleaseManager } from './components/ReleaseManager';
 
 // Tenant (toko) pages
 import { Dashboard } from './pages/Dashboard';
@@ -22,6 +29,7 @@ import { CashFlow } from './pages/CashFlow';
 import { Discounts } from './pages/Discounts';
 import { Settings } from './pages/Settings';
 import { Billing } from './pages/Billing';
+import { Support } from './pages/Support';
 
 import { Toaster } from 'react-hot-toast';
 
@@ -29,11 +37,13 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+        <ReleaseManager />
 
         <Routes>
 
           {/* ── PUBLIC ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/central-login" element={<CentralLogin />} />
 
@@ -46,6 +56,7 @@ export default function App() {
             <Route path="/receipts"   element={<Receipts />} />
             <Route path="/cashflow"   element={<CashFlow />} />
             <Route path="/billing"    element={<Billing />} />
+            <Route path="/support"    element={<Support />} />
           </Route>
 
           {/* ── TENANT ADMIN ROUTES ────────────────────── */}
@@ -59,8 +70,13 @@ export default function App() {
             <Route path="/central"         element={<CentralDashboard />} />
             <Route path="/central/tenants" element={<CentralTenants />} />
             <Route path="/central/tenants/:id" element={<CentralTenantDetail />} />
+            <Route path="/central/billing" element={<CentralBilling />} />
+            <Route path="/central/tickets" element={<CentralTickets />} />
+            <Route path="/central/releases" element={<CentralReleases />} />
             <Route path="/central/plans"   element={<CentralPlans />} />
             <Route path="/central/platform" element={<CentralPlatform />} />
+            <Route path="/central/server-status" element={<CentralServerStatus />} />
+            <Route path="/central/system" element={<CentralSystemLogs />} />
           </Route>
 
           {/* ── 404 ─────────────────────────────────────── */}

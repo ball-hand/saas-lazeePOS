@@ -2,6 +2,8 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { verifyToken, requireRole } from '../../middleware/auth.js';
+import jwt from 'jsonwebtoken';
+import redis from '../../utils/redis.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -93,6 +95,39 @@ router.get('/:id', ...protect, async (req, res) => {
 });
 
 /* ───────────────────────────────────────────────────────
+   POST /api/central/tenants/:id/impersonate
+   Generate a JWT token for the tenant's primary admin
+──────────────────────────────────────────────────────── */
+router.post('/:id/impersonate', ...protect, async (req, res) => {
+  try {
+    const tenantId = req.params.id;
+    if (!tenantId) return res.status(400).json({ message: 'ID tidak valid.' });
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      include: { users: { where: { role: 'admin' }, take: 1 } },
+    });
+
+    if (!tenant) return res.status(404).json({ message: 'Tenant tidak ditemukan.' });
+    if (tenant.users.length === 0) return res.status(404).json({ message: 'Tenant tidak memiliki akun admin aktif.' });
+
+    const adminUser = tenant.users[0];
+
+    // Generate token
+    const token = jwt.sign(
+      { userId: adminUser.id, role: adminUser.role, tenantId: tenant.id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
+    );
+
+    res.json({ token, subdomain: tenant.subdomain });
+  } catch (error) {
+    console.error('Impersonate error:', error);
+    res.status(500).json({ message: 'Gagal melakukan impersonasi.' });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
    POST  /api/central/tenants
    Create a new tenant (used by internal / admin portal)
 ──────────────────────────────────────────────────────── */
@@ -167,6 +202,9 @@ router.put('/:id', ...protect, async (req, res) => {
       data: updateData,
     });
 
+    // Hapus cache Redis agar perubahan status/detail tenant langsung terasa di middleware
+    await redis.del(`tenant:${tenant.subdomain}`);
+
     res.json({ tenant });
   } catch (error) {
     console.error('Update tenant error:', error);
@@ -192,6 +230,8 @@ router.delete('/:id', ...protect, async (req, res) => {
         isActive: false,
       },
     });
+
+    await redis.del(`tenant:${existing.subdomain}`);
 
     res.json({ message: 'Tenant berhasil di-suspend.' });
   } catch (error) {

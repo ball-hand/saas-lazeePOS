@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Save, Store, Moon, Sun, Receipt, Percent, FileText } from 'lucide-react';
+import { Save, Store, Moon, Sun, Receipt, Percent, FileText, Coffee, Sparkles, Plus, Trash2, Star, MessageSquare } from 'lucide-react';
 import api, { getMediaUrl } from '../api/client';
 import toast from 'react-hot-toast';
+import { RichTextEditor } from '../components/shared/RichTextEditor';
 
 export function Settings() {
   const { themeMode, primaryColor, storeName: contextStoreName, logoUrl: contextLogoUrl, logoShape: contextLogoShape, updateTheme } = useTheme();
@@ -319,29 +320,89 @@ export function Settings() {
           </h2>
 
           <div className="flex flex-col gap-4">
-            <div>
-              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">
-                Judul Utama (Hero Title)
+            {/* Template Selector */}
+            <div className="mb-4">
+              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3 block">
+                Pilih Template Desain
               </label>
-              <input 
-                type="text" 
-                placeholder={`Selamat Datang di ${storeName}`}
-                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all"
-                value={landingPageConfig?.heroTitle || ''}
-                onChange={(e) => setLandingPageConfig({ ...landingPageConfig, heroTitle: e.target.value })}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <label className={`flex flex-col gap-2 p-4 border-2 rounded-2xl cursor-pointer transition-all ${(!landingPageConfig?.template || landingPageConfig.template === 'retail') ? 'border-[var(--accent-primary)] bg-[var(--accent-primary-transparent)]' : 'border-[var(--border)] bg-[var(--bg-main)] hover:border-[var(--text-secondary)]'}`}>
+                  <input type="radio" name="lp_template" value="retail" checked={!landingPageConfig?.template || landingPageConfig.template === 'retail'} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, template: e.target.value })} className="hidden" />
+                  <div className="flex items-center gap-2 mb-1">
+                    <Store size={18} className={(!landingPageConfig?.template || landingPageConfig.template === 'retail') ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)]'} />
+                    <span className={`font-bold ${(!landingPageConfig?.template || landingPageConfig.template === 'retail') ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>Retail (Standar)</span>
+                  </div>
+                  <p className="text-xs font-medium text-[var(--text-secondary)]">Katalog grid biasa, cocok untuk minimarket/toko umum.</p>
+                </label>
+
+                <label className={`flex flex-col gap-2 p-4 border-2 rounded-2xl cursor-pointer transition-all ${landingPageConfig?.template === 'resto' ? 'border-[var(--accent-primary)] bg-[var(--accent-primary-transparent)]' : 'border-[var(--border)] bg-[var(--bg-main)] hover:border-[var(--text-secondary)]'}`}>
+                  <input type="radio" name="lp_template" value="resto" checked={landingPageConfig?.template === 'resto'} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, template: e.target.value })} className="hidden" />
+                  <div className="flex items-center gap-2 mb-1">
+                    <Coffee size={18} className={landingPageConfig?.template === 'resto' ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)]'} />
+                    <span className={`font-bold ${landingPageConfig?.template === 'resto' ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>Resto / F&B</span>
+                  </div>
+                  <p className="text-xs font-medium text-[var(--text-secondary)]">Tampilan layaknya buku menu, dikelompokkan per kategori.</p>
+                </label>
+
+                <label className={`flex flex-col gap-2 p-4 border-2 rounded-2xl cursor-pointer transition-all ${landingPageConfig?.template === 'lookbook' ? 'border-[var(--accent-primary)] bg-[var(--accent-primary-transparent)]' : 'border-[var(--border)] bg-[var(--bg-main)] hover:border-[var(--text-secondary)]'}`}>
+                  <input type="radio" name="lp_template" value="lookbook" checked={landingPageConfig?.template === 'lookbook'} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, template: e.target.value })} className="hidden" />
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles size={18} className={landingPageConfig?.template === 'lookbook' ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)]'} />
+                    <span className={`font-bold ${landingPageConfig?.template === 'lookbook' ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>Lookbook (Fashion)</span>
+                  </div>
+                  <p className="text-xs font-medium text-[var(--text-secondary)]">Elegan dengan gambar mendominasi ala majalah fesyen.</p>
+                </label>
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">
-                Subjudul (Deskripsi Singkat di Hero)
-              </label>
-              <textarea 
-                placeholder="Temukan berbagai produk terbaik kami di sini."
-                rows={2}
-                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all resize-none custom-scrollbar"
-                value={landingPageConfig?.heroSubtitle || ''}
-                onChange={(e) => setLandingPageConfig({ ...landingPageConfig, heroSubtitle: e.target.value })}
-              />
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex-1 space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">
+                    Judul Utama (Hero Title)
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder={`Selamat Datang di ${storeName}`}
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all"
+                    value={landingPageConfig?.heroTitle || ''}
+                    onChange={(e) => setLandingPageConfig({ ...landingPageConfig, heroTitle: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">
+                    Subjudul (Deskripsi Singkat di Hero)
+                  </label>
+                  <textarea 
+                    placeholder="Temukan berbagai produk terbaik kami di sini."
+                    rows={2}
+                    className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all resize-none custom-scrollbar"
+                    value={landingPageConfig?.heroSubtitle || ''}
+                    onChange={(e) => setLandingPageConfig({ ...landingPageConfig, heroSubtitle: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="md:w-1/3">
+                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">
+                  Gambar Hero Utama (+ Gambar)
+                </label>
+                <label className="block w-full h-[148px] border-2 border-dashed border-[var(--border)] rounded-xl flex items-center justify-center cursor-pointer hover:border-[var(--accent-primary)] transition-colors relative overflow-hidden group">
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setIsUploadingMedia(true);
+                      try {
+                        const url = await handleMediaUpload(e.target.files[0]);
+                        setLandingPageConfig({ ...landingPageConfig, heroImage: url });
+                      } catch(err) { toast.error('Gagal upload gambar hero'); }
+                      finally { setIsUploadingMedia(false); }
+                    }
+                  }} />
+                  {landingPageConfig?.heroImage ? (
+                    <img src={getMediaUrl(landingPageConfig.heroImage)} alt="Hero" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-bold text-[var(--text-secondary)]">{isUploadingMedia ? 'Mengunggah...' : 'Upload Gambar Hero'}</span>
+                  )}
+                </label>
+              </div>
             </div>
             <div>
               <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">
@@ -355,7 +416,7 @@ export function Settings() {
                 onChange={(e) => setLandingPageConfig({ ...landingPageConfig, introduction: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Jargon / Slogan</label>
                 <input type="text" placeholder="Harga pas, kualitas puas!" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.jargon || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, jargon: e.target.value })} />
@@ -364,38 +425,98 @@ export function Settings() {
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Link / Alamat Google Maps (iframe/URL)</label>
                 <input type="text" placeholder="https://maps.google.com/..." className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.mapLocation || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, mapLocation: e.target.value })} />
               </div>
+              <div>
+                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Alamat Lengkap (Teks)</label>
+                <input type="text" placeholder="Jl. Sudirman No. 1..." className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.address || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, address: e.target.value })} />
+              </div>
             </div>
 
             <div className="border-t border-[var(--border)] pt-4 pb-2 mt-2">
-              <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4">Pengumuman Toko (Promo / Info)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Judul Pengumuman</label>
-                  <input type="text" placeholder="Cth: Promo Ramadhan!" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all mb-4" value={landingPageConfig?.announcement?.title || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, announcement: { ...landingPageConfig.announcement, title: e.target.value } })} />
-                  
-                  <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Isi Pengumuman</label>
-                  <textarea rows={3} placeholder="Dapatkan diskon 50% untuk..." className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all resize-none custom-scrollbar" value={landingPageConfig?.announcement?.description || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, announcement: { ...landingPageConfig.announcement, description: e.target.value } })} />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Banner Pengumuman (Opsional)</label>
-                  <label className="w-full h-32 border-2 border-dashed border-[var(--border)] rounded-xl flex items-center justify-center cursor-pointer hover:border-[var(--accent-primary)] transition-colors relative overflow-hidden group">
-                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setIsUploadingMedia(true);
-                        try {
-                          const url = await handleMediaUpload(e.target.files[0]);
-                          setLandingPageConfig({ ...landingPageConfig, announcement: { ...landingPageConfig.announcement, bannerUrl: url } });
-                        } catch(err) { toast.error('Gagal upload banner'); }
-                        finally { setIsUploadingMedia(false); }
-                      }
-                    }} />
-                    {landingPageConfig?.announcement?.bannerUrl ? (
-                      <img src={getMediaUrl(landingPageConfig.announcement.bannerUrl)} alt="Banner" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xs font-bold text-[var(--text-secondary)]">{isUploadingMedia ? 'Mengunggah...' : 'Upload Banner'}</span>
-                    )}
-                  </label>
-                </div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-bold text-[var(--text-primary)]">Pengumuman Toko (Promo / Info)</h3>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    const currentAnnouncements = landingPageConfig?.announcements || (landingPageConfig?.announcement ? [landingPageConfig.announcement] : []);
+                    if (currentAnnouncements.length >= 3) {
+                      toast.error('Maksimal 3 pengumuman diperbolehkan');
+                      return;
+                    }
+                    setLandingPageConfig({ 
+                      ...landingPageConfig, 
+                      announcements: [...currentAnnouncements, { title: '', description: '' }] 
+                    });
+                  }}
+                  className="text-xs font-bold bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity flex items-center gap-1"
+                >
+                  <Plus size={14} /> Tambah Pengumuman
+                </button>
+              </div>
+              
+              <div className="flex flex-col gap-4">
+                {(landingPageConfig?.announcements || (landingPageConfig?.announcement ? [landingPageConfig.announcement] : [])).map((ann, idx) => (
+                  <div key={idx} className="bg-[var(--bg-main)] border border-[var(--border)] rounded-2xl p-4 relative group">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const newAnn = [...(landingPageConfig?.announcements || (landingPageConfig?.announcement ? [landingPageConfig.announcement] : []))];
+                        newAnn.splice(idx, 1);
+                        setLandingPageConfig({ ...landingPageConfig, announcements: newAnn });
+                      }}
+                      className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--danger)] transition-colors p-1"
+                      title="Hapus Pengumuman"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Judul Pengumuman {idx + 1}</label>
+                        <input type="text" placeholder="Cth: Promo Ramadhan!" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all mb-4" value={ann.title || ''} onChange={(e) => {
+                          const newAnn = [...(landingPageConfig?.announcements || (landingPageConfig?.announcement ? [landingPageConfig.announcement] : []))];
+                          newAnn[idx].title = e.target.value;
+                          setLandingPageConfig({ ...landingPageConfig, announcements: newAnn });
+                        }} />
+                        
+                        <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Isi Pengumuman</label>
+                        <RichTextEditor 
+                          value={ann.description || ''} 
+                          placeholder="Dapatkan diskon 50% untuk..." 
+                          onChange={(val) => {
+                            const newAnn = [...(landingPageConfig?.announcements || (landingPageConfig?.announcement ? [landingPageConfig.announcement] : []))];
+                            newAnn[idx].description = val;
+                            setLandingPageConfig({ ...landingPageConfig, announcements: newAnn });
+                          }} 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Banner Pengumuman (Opsional)</label>
+                        <label className="w-full h-40 md:h-full border-2 border-dashed border-[var(--border)] rounded-xl flex items-center justify-center cursor-pointer hover:border-[var(--accent-primary)] transition-colors relative overflow-hidden group">
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setIsUploadingMedia(true);
+                              try {
+                                const url = await handleMediaUpload(e.target.files[0]);
+                                const newAnn = [...(landingPageConfig?.announcements || (landingPageConfig?.announcement ? [landingPageConfig.announcement] : []))];
+                                newAnn[idx].bannerUrl = url;
+                                setLandingPageConfig({ ...landingPageConfig, announcements: newAnn });
+                              } catch(err) { toast.error('Gagal upload banner'); }
+                              finally { setIsUploadingMedia(false); }
+                            }
+                          }} />
+                          {ann.bannerUrl ? (
+                            <img src={getMediaUrl(ann.bannerUrl)} alt="Banner" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xs font-bold text-[var(--text-secondary)]">{isUploadingMedia ? 'Mengunggah...' : 'Upload Banner'}</span>
+                          )}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {(landingPageConfig?.announcements || (landingPageConfig?.announcement ? [landingPageConfig.announcement] : [])).length === 0 && (
+                  <div className="text-center py-6 text-xs font-bold text-[var(--text-secondary)] border-2 border-dashed border-[var(--border)] rounded-2xl">Belum ada pengumuman.</div>
+                )}
               </div>
             </div>
 
@@ -433,7 +554,7 @@ export function Settings() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[var(--border)] pt-4">
               <div>
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">WhatsApp</label>
                 <input type="text" placeholder="081234567890" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.whatsapp || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, whatsapp: e.target.value })} />
@@ -446,7 +567,271 @@ export function Settings() {
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">TikTok</label>
                 <input type="text" placeholder="tokosaya_tiktok" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.tiktok || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, tiktok: e.target.value })} />
               </div>
+              <div>
+                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Jam Operasional</label>
+                <input type="text" placeholder="Senin - Sabtu: 08:00 - 22:00" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.operationalHours || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, operationalHours: e.target.value })} />
+              </div>
             </div>
+
+            <div className="border-t border-[var(--border)] pt-4 pb-2">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">Keunggulan Toko (Features)</h3>
+                  <p className="text-[var(--text-secondary)] text-xs mt-1">Tampilkan hingga 3 keunggulan utama toko Anda.</p>
+                </div>
+                <button type="button" onClick={() => {
+                  const current = landingPageConfig?.features || [];
+                  if (current.length < 3) {
+                    setLandingPageConfig({ ...landingPageConfig, features: [...current, { title: '', description: '' }] });
+                  } else {
+                    toast.error('Maksimal 3 keunggulan');
+                  }
+                }} className="text-xs font-bold bg-[var(--bg-surface-elevated)] border border-[var(--border)] px-3 py-1.5 rounded-lg hover:border-[var(--accent-primary)] transition-all">
+                  + Tambah
+                </button>
+              </div>
+              <div className="flex flex-col gap-3">
+                {landingPageConfig?.features?.map((feat: any, idx: number) => (
+                  <div key={idx} className="flex gap-3 items-start bg-[var(--bg-main)] p-3 rounded-xl border border-[var(--border)]">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex gap-2">
+                        <select className="w-1/3 px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm transition-all" value={feat.icon || 'CheckCircle'} onChange={(e) => {
+                          const newFeat = [...landingPageConfig.features];
+                          newFeat[idx].icon = e.target.value;
+                          setLandingPageConfig({ ...landingPageConfig, features: newFeat });
+                        }}>
+                          <option value="CheckCircle">Check (Ceklis)</option>
+                          <option value="Star">Star (Bintang)</option>
+                          <option value="Shield">Shield (Keamanan)</option>
+                          <option value="Heart">Heart (Hati)</option>
+                          <option value="Truck">Truck (Pengiriman)</option>
+                          <option value="ThumbsUp">Thumbs (Jempol)</option>
+                          <option value="Coffee">Coffee (Kopi)</option>
+                          <option value="Utensils">Utensils (Alat Makan)</option>
+                        </select>
+                        <input type="text" placeholder="Cth: Kualitas Premium" className="w-2/3 px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-bold transition-all" value={feat.title} onChange={(e) => {
+                          const newFeat = [...landingPageConfig.features];
+                          newFeat[idx].title = e.target.value;
+                          setLandingPageConfig({ ...landingPageConfig, features: newFeat });
+                        }} />
+                      </div>
+                      <input type="text" placeholder="Deskripsi singkat..." className="w-full px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm transition-all" value={feat.description} onChange={(e) => {
+                        const newFeat = [...landingPageConfig.features];
+                        newFeat[idx].description = e.target.value;
+                        setLandingPageConfig({ ...landingPageConfig, features: newFeat });
+                      }} />
+                    </div>
+                    <button type="button" onClick={() => {
+                      const newFeat = [...landingPageConfig.features];
+                      newFeat.splice(idx, 1);
+                      setLandingPageConfig({ ...landingPageConfig, features: newFeat });
+                    }} className="text-[var(--danger)] p-2 hover:bg-[var(--danger)] hover:text-white rounded-lg transition-colors">
+                      <span className="text-xs font-bold">Hapus</span>
+                    </button>
+                  </div>
+                ))}
+                {(!landingPageConfig?.features || landingPageConfig.features.length === 0) && (
+                  <div className="text-center py-4 text-xs font-bold text-[var(--text-secondary)]">Belum ada fitur/keunggulan yang ditambahkan.</div>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-[var(--border)] pt-4 pb-2">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">Bagaimana Kami Melayani? (Opsional)</h3>
+                  <p className="text-[var(--text-secondary)] text-xs mt-1">Tambahkan alur langkah pemesanan atau pelayanan Anda (khususnya untuk Resto/Jasa).</p>
+                </div>
+                <button type="button" onClick={() => {
+                  const current = landingPageConfig?.howWeServe || [];
+                  setLandingPageConfig({ ...landingPageConfig, howWeServe: [...current, { title: '', description: '' }] });
+                }} className="text-xs font-bold bg-[var(--bg-surface-elevated)] border border-[var(--border)] px-3 py-1.5 rounded-lg hover:border-[var(--accent-primary)] transition-all">
+                  + Tambah Langkah
+                </button>
+              </div>
+              <div className="flex flex-col gap-3">
+                {landingPageConfig?.howWeServe?.map((step: any, idx: number) => (
+                  <div key={idx} className="flex gap-3 items-start bg-[var(--bg-main)] p-3 rounded-xl border border-[var(--border)]">
+                    <div className="w-8 h-8 shrink-0 bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] rounded-full flex items-center justify-center font-bold">{idx + 1}</div>
+                    <div className="flex-1 space-y-2">
+                      <input type="text" placeholder="Cth: Pesan & Bayar" className="w-full px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-bold transition-all" value={step.title} onChange={(e) => {
+                        const newSteps = [...landingPageConfig.howWeServe];
+                        newSteps[idx].title = e.target.value;
+                        setLandingPageConfig({ ...landingPageConfig, howWeServe: newSteps });
+                      }} />
+                      <input type="text" placeholder="Lakukan pemesanan di kasir atau via WhatsApp..." className="w-full px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm transition-all" value={step.description} onChange={(e) => {
+                        const newSteps = [...landingPageConfig.howWeServe];
+                        newSteps[idx].description = e.target.value;
+                        setLandingPageConfig({ ...landingPageConfig, howWeServe: newSteps });
+                      }} />
+                    </div>
+                    <button type="button" onClick={() => {
+                      const newSteps = [...landingPageConfig.howWeServe];
+                      newSteps.splice(idx, 1);
+                      setLandingPageConfig({ ...landingPageConfig, howWeServe: newSteps });
+                    }} className="text-[var(--danger)] p-2 hover:bg-[var(--danger)] hover:text-white rounded-lg transition-colors">
+                      <span className="text-xs font-bold">Hapus</span>
+                    </button>
+                  </div>
+                ))}
+                {(!landingPageConfig?.howWeServe || landingPageConfig.howWeServe.length === 0) && (
+                  <div className="text-center py-4 text-xs font-bold text-[var(--text-secondary)]">Belum ada langkah pelayanan yang ditambahkan.</div>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-[var(--border)] pt-4 pb-2 mt-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-bold text-[var(--text-primary)]">Testimoni Pelanggan (Rating & Ulasan)</h3>
+                <button 
+                  type="button" 
+                  onClick={() => setLandingPageConfig({ 
+                    ...landingPageConfig, 
+                    testimonials: [...(landingPageConfig.testimonials || []), { name: '', rating: 5, review: '' }] 
+                  })}
+                  className="text-xs font-bold bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity flex items-center gap-1"
+                >
+                  <Plus size={14} /> Tambah Ulasan
+                </button>
+              </div>
+              <div className="flex flex-col gap-3">
+                {landingPageConfig?.testimonials?.map((t: any, idx: number) => (
+                  <div key={idx} className="flex flex-col gap-3 bg-[var(--bg-main)] p-4 rounded-xl border border-[var(--border)] relative group">
+                    <button type="button" onClick={() => {
+                      const newTesti = [...landingPageConfig.testimonials];
+                      newTesti.splice(idx, 1);
+                      setLandingPageConfig({ ...landingPageConfig, testimonials: newTesti });
+                    }} className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--danger)] p-1 rounded-lg transition-colors z-10" title="Hapus Ulasan">
+                      <Trash2 size={16} />
+                    </button>
+                    
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="md:w-32 flex flex-col gap-2 shrink-0">
+                        <label className="text-xs font-bold text-[var(--text-secondary)] uppercase">Foto (Opsional)</label>
+                        <label className="w-full aspect-square border-2 border-dashed border-[var(--border)] rounded-full flex items-center justify-center cursor-pointer hover:border-[var(--accent-primary)] transition-colors relative overflow-hidden group/avatar">
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setIsUploadingMedia(true);
+                              try {
+                                const url = await handleMediaUpload(e.target.files[0]);
+                                const newTesti = [...landingPageConfig.testimonials];
+                                newTesti[idx].avatarUrl = url;
+                                setLandingPageConfig({ ...landingPageConfig, testimonials: newTesti });
+                              } catch(err) { toast.error('Gagal upload foto'); }
+                              finally { setIsUploadingMedia(false); }
+                            }
+                          }} />
+                          {t.avatarUrl ? (
+                            <img src={getMediaUrl(t.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[10px] text-center font-bold text-[var(--text-secondary)] p-2">{isUploadingMedia ? 'Mengunggah...' : 'Pilih Foto'}</span>
+                          )}
+                        </label>
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase mb-1 block">Nama Pelanggan</label>
+                            <input type="text" placeholder="Budi Santoso" className="w-full px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-bold transition-all" value={t.name} onChange={(e) => {
+                              const newTesti = [...landingPageConfig.testimonials];
+                              newTesti[idx].name = e.target.value;
+                              setLandingPageConfig({ ...landingPageConfig, testimonials: newTesti });
+                            }} />
+                          </div>
+                          <div>
+                            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase mb-1 block">Rating (1-5)</label>
+                            <select className="w-full px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm transition-all" value={t.rating} onChange={(e) => {
+                              const newTesti = [...landingPageConfig.testimonials];
+                              newTesti[idx].rating = parseInt(e.target.value);
+                              setLandingPageConfig({ ...landingPageConfig, testimonials: newTesti });
+                            }}>
+                              <option value={5}>5 Bintang (Sangat Bagus)</option>
+                              <option value={4}>4 Bintang (Bagus)</option>
+                              <option value={3}>3 Bintang (Cukup)</option>
+                              <option value={2}>2 Bintang (Kurang)</option>
+                              <option value={1}>1 Bintang (Sangat Kurang)</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-[var(--text-secondary)] uppercase mb-1 block">Isi Ulasan</label>
+                          <textarea rows={2} placeholder="Sangat puas dengan pelayanannya..." className="w-full px-3 py-2 rounded-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm transition-all resize-none custom-scrollbar" value={t.review} onChange={(e) => {
+                            const newTesti = [...landingPageConfig.testimonials];
+                            newTesti[idx].review = e.target.value;
+                            setLandingPageConfig({ ...landingPageConfig, testimonials: newTesti });
+                          }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {(!landingPageConfig?.testimonials || landingPageConfig.testimonials.length === 0) && (
+                  <div className="text-center py-4 text-xs font-bold text-[var(--text-secondary)] border-2 border-dashed border-[var(--border)] rounded-xl">Belum ada ulasan yang ditambahkan.</div>
+                )}
+              </div>
+            </div>
+            
+            {/* Kustomisasi Visibilitas & Judul Komponen */}
+            <div className="border-t border-[var(--border)] pt-4 pb-2 mt-4">
+              <div className="mb-4">
+                <h3 className="text-sm font-bold text-[var(--text-primary)]">Visibilitas & Judul Komponen</h3>
+                <p className="text-[var(--text-secondary)] text-xs mt-1">Tentukan komponen mana yang ingin ditampilkan dan sesuaikan judulnya.</p>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                {[
+                  { key: 'hero', label: 'Hero (Bagian Atas)', noTitle: true },
+                  { key: 'jargon', label: 'Tentang Kami / Jargon', noTitle: true },
+                  { key: 'announcement', label: 'Pengumuman Toko', defaultTitle: 'Pengumuman' },
+                  { key: 'features', label: 'Keunggulan Toko', defaultTitle: 'Keunggulan Toko' },
+                  { key: 'testimonials', label: 'Testimoni & Ulasan', defaultTitle: 'Ulasan Pelanggan' },
+                  { key: 'howWeServe', label: 'Bagaimana Kami Melayani?', defaultTitle: 'Bagaimana Kami Melayani?' },
+                  { key: 'catalog', label: 'Katalog Produk / Menu', defaultTitle: 'Katalog Produk' },
+                  { key: 'gallery', label: 'Galeri Foto', defaultTitle: 'Galeri Kami' },
+                  { key: 'contact', label: 'Kontak & Lokasi', defaultTitle: 'Kunjungi Kami' }
+                ].map((sec) => {
+                  const current = landingPageConfig?.sectionSettings?.[sec.key] || { show: true, title: '' };
+                  const updateSection = (field: 'show' | 'title', value: any) => {
+                    setLandingPageConfig({
+                      ...landingPageConfig,
+                      sectionSettings: {
+                        ...(landingPageConfig?.sectionSettings || {}),
+                        [sec.key]: { ...current, [field]: value }
+                      }
+                    });
+                  };
+                  
+                  return (
+                    <div key={sec.key} className="flex flex-col md:flex-row md:items-center gap-4 bg-[var(--bg-main)] p-3 rounded-xl border border-[var(--border)]">
+                      <div className="w-48 flex items-center gap-3 shrink-0">
+                        <button
+                          type="button"
+                          className={`w-10 h-6 rounded-full flex items-center transition-colors px-1 ${current.show !== false ? 'bg-[var(--success)]' : 'bg-[var(--border)]'}`}
+                          onClick={() => updateSection('show', current.show === false ? true : false)}
+                        >
+                          <div className={`w-4 h-4 rounded-full bg-white transition-transform ${current.show !== false ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </button>
+                        <span className="text-xs font-bold">{sec.label}</span>
+                      </div>
+                      
+                      {!sec.noTitle && (
+                        <div className="flex-1">
+                          <input 
+                            type="text" 
+                            disabled={current.show === false}
+                            placeholder={`Judul Default: ${sec.defaultTitle}`}
+                            className={`w-full px-3 py-2 rounded-lg border border-[var(--border)] text-sm font-semibold transition-all ${current.show === false ? 'bg-[var(--bg-main)] opacity-50' : 'bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none'}`}
+                            value={current.title || ''}
+                            onChange={(e) => updateSection('title', e.target.value)}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         </div>
 

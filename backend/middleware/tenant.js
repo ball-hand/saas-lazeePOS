@@ -1,5 +1,6 @@
 // backend/middleware/tenant.js
 import { PrismaClient } from '@prisma/client';
+import redis from '../utils/redis.js';
 
 const prisma = new PrismaClient();
 
@@ -34,20 +35,38 @@ export async function tenantIdentificator(req, res, next) {
    }
 
   try {
-    const tenant = await prisma.tenant.findUnique({
-      where: { subdomain: subdomain.toLowerCase() },
-      select: {
-        id: true,
-        name: true,
-        subdomain: true,
-        themeMode: true,
-        primaryColor: true,
-        logoUrl: true,
-        status: true,
-        planId: true,
-        trialEndsAt: true,
-      },
-    });
+    const redisKey = `tenant:${subdomain.toLowerCase()}`;
+    
+    // 1. Cek di Redis terlebih dahulu
+    const cachedTenant = await redis.get(redisKey);
+    let tenant = null;
+
+    if (cachedTenant) {
+      tenant = JSON.parse(cachedTenant);
+      console.log(`[Cache Hit] Redis: Memuat tenant ${subdomain}`);
+    } else {
+      // 2. Jika tidak ada di cache, query ke database
+      tenant = await prisma.tenant.findUnique({
+        where: { subdomain: subdomain.toLowerCase() },
+        select: {
+          id: true,
+          name: true,
+          subdomain: true,
+          themeMode: true,
+          primaryColor: true,
+          logoUrl: true,
+          status: true,
+          planId: true,
+          trialEndsAt: true,
+        },
+      });
+
+      if (tenant) {
+        // Simpan ke Redis (Expire 1 jam)
+        await redis.setex(redisKey, 3600, JSON.stringify(tenant));
+        console.log(`[Cache Miss] DB: Menyimpan tenant ${subdomain} ke Redis`);
+      }
+    }
 
     if (!tenant) {
       return res.status(404).json({
@@ -55,7 +74,7 @@ export async function tenantIdentificator(req, res, next) {
       });
     }
 
-    if (tenant.status === 'suspended') {
+    if (tenant.status === 'SUSPENDED' || tenant.status === 'suspended') {
       return res.status(403).json({
         message: 'Toko ini sedang ditangguhkan. Hubungi tim support untuk informasi lebih lanjut.',
       });

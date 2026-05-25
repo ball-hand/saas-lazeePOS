@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Search, Plus, Building2, Edit2, Ban, CheckCircle2, 
-  MoreVertical, ShieldAlert, Package, Users, ChevronRight
+  MoreVertical, ShieldAlert, Package, Users, ChevronRight, LogIn
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
@@ -114,6 +114,24 @@ export function CentralTenants() {
     }
   };
 
+  const handleImpersonate = async (tenantId: string) => {
+    try {
+      toast.loading('Menghasilkan token...', { id: 'impersonate' });
+      const res = await api.post(`/central/tenants/${tenantId}/impersonate`);
+      const { token, subdomain } = res.data;
+      
+      const domainSuffix = window.location.hostname.includes('localhost')
+        ? 'localhost:5173'
+        : window.location.hostname;
+        
+      const url = `http://${subdomain}.${domainSuffix}/login?token=${token}`;
+      toast.success('Membuka dashboard tenant...', { id: 'impersonate' });
+      window.open(url, '_blank');
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || 'Gagal login sebagai tenant', { id: 'impersonate' });
+    }
+  };
+
   const confirmKillSwitch = (t: Tenant) => {
     setTargetTenant(t);
     if (t.status === 'ACTIVE' || t.status === 'TRIAL') {
@@ -178,7 +196,7 @@ export function CentralTenants() {
           >
             <option value="">Semua Status</option>
             <option value="ACTIVE">Aktif</option>
-            <option value="TRIAL">Trial</option>
+            <option value="TRIAL">Trial (24 Jam)</option>
             <option value="SUSPENDED">Suspended</option>
           </select>
         </div>
@@ -222,6 +240,7 @@ export function CentralTenants() {
                     <td className="p-4 text-center">
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold border uppercase ${
                         t.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                        t.status === 'TRIAL' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                         t.status === 'SUSPENDED' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
                         'bg-amber-500/10 text-amber-400 border-amber-500/20'
                       }`}>
@@ -242,10 +261,28 @@ export function CentralTenants() {
                         <button onClick={() => openEditModal(t)} className="p-2 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)] rounded-lg transition-colors" title="Edit">
                           <Edit2 size={16} />
                         </button>
+                        {t.status === 'TRIAL' && (
+                          <button onClick={async () => {
+                            if(confirm(`Setujui dan aktifkan permanen tenant ${t.name}?`)) {
+                              try {
+                                await api.put(`/central/tenants/${t.id}`, { status: 'ACTIVE' });
+                                toast.success('Tenant berhasil diaktifkan secara permanen');
+                                fetchTenants();
+                              } catch(e) {
+                                toast.error('Gagal menyetujui tenant');
+                              }
+                            }
+                          }} className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors" title="Aktivasi Permanen (Approve)">
+                            <CheckCircle2 size={16} />
+                          </button>
+                        )}
                         <button onClick={() => confirmKillSwitch(t)} className={`p-2 rounded-lg transition-colors ${
                           t.status === 'ACTIVE' || t.status === 'TRIAL' ? 'text-[var(--danger)] hover:bg-[var(--danger)]/10' : 'text-[var(--success)] hover:bg-[var(--success)]/10'
                         }`} title={t.status === 'ACTIVE' || t.status === 'TRIAL' ? 'Suspend' : 'Restore'}>
                           {t.status === 'ACTIVE' || t.status === 'TRIAL' ? <Ban size={16} /> : <CheckCircle2 size={16} />}
+                        </button>
+                        <button onClick={() => handleImpersonate(t.id)} className="p-2 text-indigo-500 hover:bg-indigo-500/10 rounded-lg transition-colors" title="Login Sebagai Tenant">
+                          <LogIn size={16} />
                         </button>
                         <Link to={`/central/tenants/${t.id}`} className="p-2 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)] rounded-lg transition-colors flex items-center gap-1 font-semibold text-xs ml-2">
                           Detail <ChevronRight size={14} />

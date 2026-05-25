@@ -72,20 +72,18 @@ export function CentralTenantDetail() {
     setImpersonating(true);
     try {
       const res = await api.post(`/central/tenants/${id}/impersonate`);
-      const { token, user } = res.data;
+      const { token, subdomain } = res.data;
       
-      // Simpan token super admin saat ini sebelum di-swap
-      const superToken = localStorage.getItem('token');
-      if (superToken) localStorage.setItem('superToken_backup', superToken);
-
-      // Login sebagai tenant
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      // Hard reload to reset all app states and routing
-      window.location.href = '/dashboard';
+      const domainSuffix = window.location.hostname.includes('localhost')
+        ? 'localhost:5173'
+        : window.location.hostname;
+        
+      const url = `http://${subdomain}.${domainSuffix}/login?token=${token}`;
+      toast.success('Membuka dashboard tenant...', { id: 'impersonate' });
+      window.open(url, '_blank');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Gagal masuk sebagai tenant.');
+    } finally {
       setImpersonating(false);
     }
   };

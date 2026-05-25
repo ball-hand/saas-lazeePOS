@@ -6,7 +6,8 @@ import { getMediaUrl } from '../api/client';
 import { 
   LayoutDashboard, ShoppingCart, Package, ReceiptText, 
   Wallet, Tags, Settings as SettingsIcon, LogOut, X,
-  CreditCard, Warehouse, Building2, ChevronDown, ChevronRight
+  CreditCard, Warehouse, Building2, ChevronDown, ChevronRight, Receipt,
+  LifeBuoy, Rocket, ServerCrash, Server
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -39,6 +40,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { to: '/receipts',   icon: <ReceiptText size={20} />,   label: 'Riwayat Struk' },
         { to: '/cashflow',   icon: <Wallet size={20} />,        label: 'Arus Kas' },
+        { to: '/support',    icon: <LifeBuoy size={20} />,      label: 'Pusat Bantuan' }
       ]
     },
     ...(user?.role === 'admin' ? [{
@@ -56,8 +58,13 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { to: '/central', icon: <LayoutDashboard size={20} />, label: 'Platform Dashboard' },
         { to: '/central/tenants', icon: <Building2 size={20} />, label: 'Daftar Tenant' },
+        { to: '/central/billing', icon: <Receipt size={20} />, label: 'Tagihan SaaS' },
+        { to: '/central/tickets', icon: <LifeBuoy size={20} />, label: 'Sistem Tiket' },
+        { to: '/central/releases', icon: <Rocket size={20} />, label: 'Manajemen Versi' },
         { to: '/central/plans', icon: <CreditCard size={20} />, label: 'Paket Berlangganan' },
-        { to: '/central/platform', icon: <SettingsIcon size={20} />, label: 'Pengaturan Sistem' },
+        { to: '/central/platform', icon: <SettingsIcon size={20} />, label: 'Pengaturan' },
+        { to: '/central/server-status', icon: <Server size={20} />, label: 'Status Server' },
+        { to: '/central/system', icon: <ServerCrash size={20} />, label: 'Command Center' },
       ]
     }
   ];
@@ -122,12 +129,18 @@ export function Sidebar({ onClose }: SidebarProps) {
                 </button>
               )}
               
-              {isExpanded && (
-                <div className="flex flex-col gap-1.5 animate-fade-in">
+              <div 
+                className={`grid transition-all duration-300 ease-in-out ${
+                  isExpanded ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0'
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="flex flex-col gap-1.5">
                   {group.items.map((item) => (
                     <NavLink
                       key={item.to}
                       to={item.to}
+                      end={item.to === '/central' || item.to === '/'}
                       onClick={onClose}
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group ${
@@ -142,7 +155,8 @@ export function Sidebar({ onClose }: SidebarProps) {
                     </NavLink>
                   ))}
                 </div>
-              )}
+                </div>
+              </div>
             </div>
           );
         })}

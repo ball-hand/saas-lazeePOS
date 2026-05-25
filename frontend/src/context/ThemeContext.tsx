@@ -26,8 +26,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setThemeMode(user.tenant.themeMode as 'light' | 'dark');
       setPrimaryColor(user.tenant.primaryColor);
       setLogoUrl(user.tenant.logoUrl || null);
-      setLogoShape(user.tenant.logoShape as 'square' | 'circle' || 'square');
+      setLogoShape(((user.tenant as any).logoShape as 'square' | 'circle') || 'square');
       setStoreName(user.tenant.name);
+    } else if (user?.role === 'SUPERADMIN' || !user) {
+      // For Central Admin & Public Landing Page (Central), read from localStorage
+      const savedMode = localStorage.getItem('central_themeMode') as 'light' | 'dark';
+      const savedColor = localStorage.getItem('central_primaryColor');
+      if (savedMode) setThemeMode(savedMode);
+      if (savedColor) setPrimaryColor(savedColor);
+      setStoreName('Lazee POS Central');
     }
   }, [user]);
 
@@ -51,8 +58,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [themeMode, primaryColor]);
 
   const updateTheme = (updates: Partial<{ themeMode: 'light' | 'dark', primaryColor: string, logoUrl: string | null, logoShape: 'square' | 'circle', name: string }>) => {
-    if (updates.themeMode) setThemeMode(updates.themeMode);
-    if (updates.primaryColor) setPrimaryColor(updates.primaryColor);
+    if (updates.themeMode) {
+      setThemeMode(updates.themeMode);
+      if (user?.role === 'SUPERADMIN') localStorage.setItem('central_themeMode', updates.themeMode);
+    }
+    if (updates.primaryColor) {
+      setPrimaryColor(updates.primaryColor);
+      if (user?.role === 'SUPERADMIN') localStorage.setItem('central_primaryColor', updates.primaryColor);
+    }
     if (updates.logoUrl !== undefined) setLogoUrl(updates.logoUrl);
     if (updates.logoShape) setLogoShape(updates.logoShape);
     if (updates.name) setStoreName(updates.name);

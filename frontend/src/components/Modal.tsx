@@ -6,10 +6,19 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
 }
 
-export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
   if (!isOpen) return null;
+
+  const sizeClasses = {
+    sm: 'max-w-sm',
+    md: 'max-w-md',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+    full: 'max-w-[95vw]'
+  };
 
   return (
     <div className="fixed inset-0 z-40 flex items-start justify-center pt-10 sm:pt-16 p-4 sm:p-6 no-print">
@@ -18,7 +27,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         onClick={onClose}
       ></div>
       
-      <div className="relative w-full max-w-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col max-h-[90vh] animate-fade-in">
+      <div className={`relative w-full ${sizeClasses[size]} bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col max-h-[90vh] animate-fade-in`}>
         <div className="flex items-center justify-between p-5 border-b border-[var(--border)] bg-[var(--bg-main)]">
           <h2 className="text-lg font-bold text-[var(--text-primary)]">{title}</h2>
           <button 

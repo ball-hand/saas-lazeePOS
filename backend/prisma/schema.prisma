@@ -33,6 +33,7 @@ enum APStatus {
 }
 
 enum PlanStatus {
+  PENDING
   ACTIVE
   SUSPENDED
   TRIAL
@@ -71,6 +72,7 @@ model Tenant {
   plan          Plan?    @relation("TenantPlan", fields: [planId], references: [id])
   subscription  Subscription?
   paymentTransactions PaymentTransaction[] @relation("TenantPaymentTransactions")
+  tickets       Ticket[]
 }
 
 model User {
@@ -89,6 +91,8 @@ model User {
   lastLoginAt   DateTime?
   shifts        Shift[]  @relation("ShiftKasir")
   transactions  Transaction[] @relation("TxnKasir")
+  tickets       Ticket[]
+  ticketReplies TicketReply[]
 }
 
 // =======================
@@ -326,4 +330,79 @@ model PaymentTransaction {
   activeUntil     DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+// =======================
+//  Ticketing System
+// =======================
+model Ticket {
+  id          String   @id @default(uuid())
+  subject     String
+  description String
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  userAgent   String?  // Context of the user's browser/OS
+  
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  replies     TicketReply[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TicketReply {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  
+  // If replied by a tenant user
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  
+  // If replied by central admin
+  isCentral Boolean  @default(false)
+  
+  message   String
+  
+  createdAt DateTime @default(now())
+}
+
+// =======================
+//  Version Management
+// =======================
+model SystemRelease {
+  id           String   @id @default(uuid())
+  version      String   @unique
+  releaseNotes String   @db.Text
+  isMandatory  Boolean  @default(false)
+  publishedAt  DateTime @default(now())
+}
+
+
+
+// =======================
+//  System Logs & Monitoring
+// =======================
+model CentralAuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  actorId   String?  // Superadmin user ID
+  targetId  String?  // The ID of the affected resource (tenant, plan, etc)
+  details   String?  @db.Text // JSON string containing metadata
+  createdAt DateTime @default(now())
+}
+
+model SystemErrorLog {
+  id        String   @id @default(uuid())
+  message   String   @db.Text
+  stack     String?  @db.Text
+  path      String?
+  method    String?
+  tenantId  String?
+  createdAt DateTime @default(now())
 }

@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { verifyToken, requireRole } from '../../middleware/auth.js';
+import redis from '../../utils/redis.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -103,6 +104,7 @@ router.post('/tenants/:id/kill-switch', ...protect, async (req, res) => {
           suspendedReason: reason || 'Suspended by central kill-switch',
         },
       });
+      await redis.del(`tenant:${existing.subdomain}`);
       return res.json({ message: `Toko "${existing.name}" berhasil di-suspend.` });
     }
 
@@ -115,6 +117,7 @@ router.post('/tenants/:id/kill-switch', ...protect, async (req, res) => {
         suspendedReason: null,
       },
     });
+    await redis.del(`tenant:${existing.subdomain}`);
     return res.json({ message: `Toko "${existing.name}" berhasil diaktifkan kembali.` });
   } catch (err) {
     console.error('Kill switch error:', err);

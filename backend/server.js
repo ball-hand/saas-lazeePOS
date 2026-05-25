@@ -6,6 +6,8 @@ import morgan from 'morgan';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import redis from './utils/redis.js';
+import { PrismaClient } from '@prisma/client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,9 +31,14 @@ import centralTenantRoutes        from './routes/central/tenants.js';
 import centralPlanRoutes          from './routes/central/plans.js';
 import centralPlatformRoutes      from './routes/central/platform.js';
 import centralTenantActionsRoutes from './routes/central/tenant-actions.js';
+import centralBillingRoutes       from './routes/central/billing.js';
+import centralTicketsRoutes       from './routes/central/tickets.js';
+import centralReleasesRoutes      from './routes/central/releases.js';
 import centralAnalyticsRoutes     from './routes/central/analytics.js';
 import centralSystemRoutes        from './routes/central/system.js';
 import paymentRoutes          from './routes/payment.js';
+import ticketsRoutes          from './routes/tickets.js';
+import releasesRoutes         from './routes/releases.js';
 import transactionRoutes    from './routes/transactions.js';
 import accountsPayableRoutes from './routes/accountsPayable.js';
 import receiptRoutes         from './routes/receipts.js';
@@ -41,6 +48,7 @@ import publicRoutes          from './routes/public.js';
 dotenv.config();
 
 const app = express();
+const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({ origin: true, credentials: true }));
@@ -62,6 +70,17 @@ app.use(morgan('dev'));
 app.use(responseHandler);
 app.use(pagination);
 app.use(idempotency);
+
+// API Version Tracking Middleware
+app.use((req, res, next) => {
+  const match = req.url.match(/^\/api\/(v\d+)\//);
+  if (match) {
+    const version = match[1];
+    const dateStr = new Date().toISOString().split('T')[0];
+    redis.hincrby(`api:usage:${dateStr}`, version, 1).catch(console.error);
+  }
+  next();
+});
 
 // tenant subdomain detection — must run BEFORE any route handlers
 app.use(tenantIdentificator);
@@ -88,6 +107,9 @@ app.use('/api/v1/central/tenants',   centralTenantRoutes);
 app.use('/api/v1/central',           centralTenantActionsRoutes); 
 app.use('/api/v1/central/plans',     centralPlanRoutes);
 app.use('/api/v1/central/platform',  centralPlatformRoutes);
+app.use('/api/v1/central/billing',   centralBillingRoutes);
+app.use('/api/v1/central/tickets',   centralTicketsRoutes);
+app.use('/api/v1/central/releases',  centralReleasesRoutes);
 
 // Analytics, system logs, backup
 app.use('/api/v1/central/analytics', centralAnalyticsRoutes);
@@ -107,15 +129,34 @@ app.use('/api/v1/cashflow',   cashflowRoutes);
 app.use('/api/v1/dashboard',  dashboardRoutes);
 app.use('/api/v1/settings',   settingsRoutes);
 app.use('/api/v1/payment',    paymentRoutes);
+app.use('/api/v1/tickets',    ticketsRoutes);
+app.use('/api/v1/releases',   releasesRoutes);
 app.use('/api/v1/receipts',   receiptRoutes);
 app.use('/api/v1/upload',     uploadRoutes);
 
 /* ─────────────────────────────────────────────────────────
    Global error handler
 ───────────────────────────────────────────────────────── */
-app.use((err, _req, res, _next) => {
+app.use(async (err, req, res, _next) => {
   console.error('Unhandled error:', err);
   const status = err.statusCode || 500;
+  
+  // Track error in database
+  try {
+    const tenantId = req.tenant?.id || req.user?.tenantId || null;
+    await prisma.systemErrorLog.create({
+      data: {
+        message: err.message || 'Unknown Error',
+        stack: err.stack,
+        path: req.originalUrl,
+        method: req.method,
+        tenantId,
+      }
+    });
+  } catch (logErr) {
+    console.error('Failed to save error log:', logErr);
+  }
+
   res.status(status).json({
     message: err.message || 'Terjadi kesalahan server.',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),

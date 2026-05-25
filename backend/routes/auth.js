@@ -59,22 +59,21 @@ router.post('/register', async (req, res) => {
       // Lookup the plan if planId is provided
       let plan = null;
       if (planId) {
-        plan = await tx.plan.findUnique({ where: { id: parseInt(planId) } });
+        plan = await tx.plan.findUnique({ where: { id: planId } });
       }
 
-      // Subscription dates
+      // Subscription dates: 24 hours from now
       const now = new Date();
-      const trialEnds = new Date(now);
-      trialEnds.setDate(trialEnds.getDate() + 14); // 14-day trial
+      const trialEnds = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
       const tenant = await tx.tenant.create({
         data: {
           name: storeName,
           subdomain: cleanSub,
-          planId: planId ? parseInt(planId) : null,
+          planId: planId || null,
           themeMode: 'dark',
           primaryColor: '#8B5CF6',
-          status: 'trial',
+          status: 'TRIAL',
           trialEndsAt: trialEnds,
         },
       });
@@ -94,12 +93,11 @@ router.post('/register', async (req, res) => {
       await tx.subscription.create({
         data: {
           tenantId: tenant.id,
-          planId: plan ? plan.id : (planId ? parseInt(planId) : 1),
+          planId: plan ? plan.id : (planId || null),
           billingCycle: 'monthly',
-          status: 'trial',
+          status: 'TRIAL',
           currentPeriodStart: now,
           currentPeriodEnd: new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()),
-          trialEndsAt: trialEnds,
         },
       });
 
@@ -109,6 +107,7 @@ router.post('/register', async (req, res) => {
     const token = issueToken({ userId: result.user.id, role: 'admin', tenantId: result.user.tenantId });
 
     res.status(201).json({
+      message: 'Pendaftaran Berhasil! Mengalihkan ke toko Anda...',
       user: { ...result.user, tenant: result.tenant },
       token,
     });
@@ -144,6 +143,16 @@ router.post('/login', async (req, res) => {
     // Exclude central users from tenant login
     if (!user || user.role === 'central' || !user.tenantId) {
       return res.status(401).json({ message: 'Kredensial tidak valid.' });
+    }
+
+    if (user.tenant && user.tenant.status === 'PENDING') {
+      return res.status(403).json({ message: 'Toko Anda sedang menunggu persetujuan dari Admin Pusat.' });
+    }
+
+    if (user.tenant && user.tenant.status === 'TRIAL') {
+      if (user.tenant.trialEndsAt && new Date() > new Date(user.tenant.trialEndsAt)) {
+        return res.status(403).json({ message: 'Masa percobaan 24 Jam Anda telah habis. Silakan hubungi Admin Pusat untuk aktivasi pembayaran.' });
+      }
     }
 
     // Verify password

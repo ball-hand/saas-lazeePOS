@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import {
   Store, TrendingUp, ShieldCheck, Zap, ArrowRight, CheckCircle2, Star,
   Play, ChevronDown, Award, HelpCircle, DollarSign, RefreshCw, BarChart3,
-  Smartphone, Printer, Layers, Sparkles, X, Package
+  Smartphone, Printer, Layers, Sparkles, X, Package, ShoppingCart
 } from 'lucide-react';
 import { TenantLandingPage } from './TenantLandingPage';
+import api from '../api/client';
 
 const fmt = (val: number) =>
   'Rp ' + val.toLocaleString('id-ID');
@@ -16,8 +17,40 @@ export function LandingPage() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [storeId, setStoreId] = useState('');
   const [subdomain, setSubdomain] = useState<string | null>(null);
+  const [dynamicPlans, setDynamicPlans] = useState<any[]>([]);
+
+  // Interactive Demo State
+  const [cartCount, setCartCount] = useState(2);
+  const [cartTotal, setCartTotal] = useState(52000);
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+
+  // CMS Config State
+  const [cmsConfig, setCmsConfig] = useState<any>({
+    hero: { visible: true, headline: 'Platform Kasir Pintar untuk Semua Bisnis', subheadline: 'Tingkatkan efisiensi dan pantau bisnis Anda secara real-time dari mana saja. Bergabunglah dengan ribuan pemilik usaha yang sudah mempercayakan operasional harian mereka pada Lazee POS.' },
+    announcement: { visible: false, content: '' },
+    features: { visible: true },
+    demo: { visible: true },
+    pricing: { visible: true },
+    faq: { visible: true }
+  });
 
   useEffect(() => {
+    const savedCms = localStorage.getItem('central_cms_config');
+    if (savedCms) {
+      try {
+        setCmsConfig(JSON.parse(savedCms));
+      } catch (e) {}
+    }
+    const fetchPlans = async () => {
+      try {
+        const { data } = await api.get('/payment/plans');
+        if (data.plans) setDynamicPlans(data.plans);
+      } catch (e) {
+        console.error('Failed to fetch plans');
+      }
+    };
+    fetchPlans();
+
     const hostname = window.location.hostname;
     // Check if it's a tenant subdomain
     if (hostname !== 'localhost' && !hostname.startsWith('127.0') && !hostname.startsWith('192.168') && hostname !== 'lazeepos.local') {
@@ -173,33 +206,43 @@ export function LandingPage() {
               Masuk
             </button>
             <Link to="/register" className="px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5" style={{ background: 'var(--accent-gradient)' }}>
-              Coba Gratis
+              Daftar Sekarang
             </Link>
           </div>
         </div>
       </nav>
 
       {/* =========================================
+          ANNOUNCEMENT / RICH TEXT (CMS)
+      ========================================= */}
+      {cmsConfig?.announcement?.visible && cmsConfig?.announcement?.content && (
+        <div className="w-full bg-[var(--bg-surface-elevated)] border-b border-[var(--border)] pt-24 pb-8">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: cmsConfig.announcement.content }} />
+          </div>
+        </div>
+      )}
+
+      {/* =========================================
           HERO SECTION (HEADER UTAMA)
       ========================================= */}
+      {cmsConfig?.hero?.visible !== false && (
       <section className="pt-32 pb-16 px-6 max-w-7xl mx-auto animate-fade-in relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Left Column: Headline and CTA */}
           <div className="lg:col-span-7 text-left flex flex-col items-start">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] text-xs font-bold uppercase tracking-wider border border-[var(--accent-primary)]/20 mb-6 shadow-sm">
-              <Sparkles size={14} className="animate-pulse" /> POS Generasi Baru Berbasis Cloud
+              <Sparkles size={14} className="animate-pulse" /> Ekosistem POS Terlengkap
             </div>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6">
-              Kelola Ribuan Cabang dalam <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'var(--accent-gradient)' }}>Satu Dasbor Cerdas.</span>
-            </h1>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] mb-6" dangerouslySetInnerHTML={{ __html: cmsConfig?.hero?.headline || 'Ekspansi Bisnis Anda dalam <span class="text-transparent bg-clip-text" style="background-image: var(--accent-gradient)">Satu Dasbor Cerdas.</span>' }} />
             <p className="text-base md:text-lg text-[var(--text-secondary)] font-medium max-w-xl mb-8 leading-relaxed">
-              Sistem kasir pintar multi-tenant premium dengan arsitektur tangguh. Dibuat khusus untuk akselerasi UMKM hingga jaringan bisnis raksasa.
+              {cmsConfig?.hero?.subheadline || 'Sistem kasir cerdas multi-tenant dengan fitur pengelolaan kasir, inventaris gudang, diskon kondisional, hingga pembuatan Landing Page toko otomatis dalam satu platform.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-10">
-              <a href="#harga" className="px-8 py-4 rounded-2xl text-base font-bold text-white flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1" style={{ background: 'var(--accent-gradient)' }}>
+              <Link to="/register" className="px-8 py-4 rounded-2xl text-base font-bold text-white flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1" style={{ background: 'var(--accent-gradient)' }}>
                 Mulai Sekarang <ArrowRight size={20} />
-              </a>
+              </Link>
               <a href="#demo" className="px-8 py-4 rounded-2xl text-base font-bold text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] hover:bg-[var(--bg-main)] transition-all flex items-center justify-center shadow-sm gap-2">
                 <Play size={16} fill="currentColor" /> Lihat Preview POS
               </a>
@@ -313,10 +356,12 @@ export function LandingPage() {
 
         </div>
       </section>
+      )}
 
       {/* =========================================
           MOCK DEMO PREVIEW COMPONENT
       ========================================= */}
+      {cmsConfig?.demo?.visible !== false && (
       <section id="demo" className="py-16 max-w-6xl mx-auto px-6 relative">
         <div className="text-center mb-10">
           <span className="text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)]">Live Terminal Preview</span>
@@ -335,7 +380,7 @@ export function LandingPage() {
             <div className="lg:col-span-2 space-y-4">
               <div className="flex justify-between items-center bg-[var(--bg-main)] p-4 rounded-2xl border border-[var(--border)]">
                 <span className="font-bold text-sm">☕ Menu Kopi Pilihan</span>
-                <span className="text-xs font-semibold text-[var(--text-secondary)]">10 Item Tersedia</span>
+                <span className="text-xs font-semibold text-[var(--text-secondary)]">Klik Menu untuk Membeli</span>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -345,7 +390,14 @@ export function LandingPage() {
                   { name: "Croissant Almond", price: 24000, cat: "Makanan" },
                   { name: "Kopi Susu Gula Aren", price: 20000, cat: "Minuman" }
                 ].map((item, idx) => (
-                  <div key={idx} className="bg-[var(--bg-main)] border border-[var(--border)] hover:border-[var(--accent-primary)]/50 p-4 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between h-28">
+                  <div key={idx} 
+                    onClick={() => {
+                      setCartCount(prev => prev + 1);
+                      setCartTotal(prev => prev + item.price);
+                      setCheckoutSuccess(false);
+                    }}
+                    className="bg-[var(--bg-main)] border border-[var(--border)] hover:border-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)] p-4 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between h-28"
+                  >
                     <div>
                       <span className="text-[10px] uppercase font-bold text-[var(--text-secondary)] bg-[var(--border)] px-2 py-0.5 rounded-full">{item.cat}</span>
                       <p className="font-bold text-sm text-[var(--text-primary)] mt-2 group-hover:text-[var(--accent-primary)] transition-colors">{item.name}</p>
@@ -357,42 +409,62 @@ export function LandingPage() {
             </div>
 
             {/* Cart mock */}
-            <div className="bg-[var(--bg-main)] border border-[var(--border)] rounded-2xl p-5 flex flex-col justify-between h-[19.5rem] shadow-sm">
+            <div className="bg-[var(--bg-main)] border border-[var(--border)] rounded-2xl p-5 flex flex-col justify-between h-[19.5rem] shadow-sm relative overflow-hidden">
+              {checkoutSuccess && (
+                <div className="absolute inset-0 bg-[var(--success)]/10 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-4">
+                  <div className="w-12 h-12 bg-[var(--success)] rounded-full text-white flex items-center justify-center mb-3">
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <span className="font-bold text-[var(--success)]">Pembayaran Berhasil!</span>
+                </div>
+              )}
               <div className="space-y-3">
                 <div className="flex justify-between items-center border-b border-[var(--border)] pb-2.5">
-                  <span className="font-black text-sm">🛒 Keranjang Belanja</span>
-                  <span className="px-2 py-0.5 text-[10px] font-bold text-[var(--success)] bg-[var(--success)]/10 rounded">Aktif</span>
+                  <span className="font-black text-sm flex items-center gap-2"><ShoppingCart size={16} /> Keranjang ({cartCount})</span>
+                  <button 
+                    onClick={() => { setCartCount(0); setCartTotal(0); setCheckoutSuccess(false); }}
+                    className="px-2 py-0.5 text-[10px] font-bold text-[var(--danger)] bg-[var(--danger)]/10 rounded cursor-pointer hover:bg-[var(--danger)] hover:text-white transition-colors"
+                  >
+                    Kosongkan
+                  </button>
                 </div>
-                <div className="space-y-2 text-xs font-semibold">
-                  <div className="flex justify-between">
-                    <span>1x Caramel Macchiato</span>
-                    <span>Rp 28.000</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>1x Croissant Almond</span>
-                    <span>Rp 24.000</span>
-                  </div>
+                <div className="space-y-2 text-xs font-semibold h-24 overflow-y-auto custom-scrollbar">
+                  {cartCount === 0 ? (
+                    <div className="text-[var(--text-secondary)] text-center mt-6">Keranjang Kosong</div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Pilihan Anda ({cartCount}x)</span>
+                        <span>{fmt(cartTotal)}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-2.5 pt-4 border-t border-[var(--border)]">
                 <div className="flex justify-between text-xs text-[var(--text-secondary)] font-semibold">
                   <span>Subtotal</span>
-                  <span>Rp 52.000</span>
-                </div>
-                <div className="flex justify-between text-xs text-[var(--success)] font-bold">
-                  <span>Diskon Promo (5%)</span>
-                  <span>-Rp 2.600</span>
-                </div>
-                <div className="flex justify-between text-xs text-[var(--text-secondary)] font-semibold">
-                  <span>PPN Pajak (11%)</span>
-                  <span>Rp 5.434</span>
+                  <span>{fmt(cartTotal)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm font-black text-[var(--text-primary)] pt-1">
                   <span>Total Bayar</span>
-                  <span className="text-base font-mono font-black" style={{ color: 'var(--accent-primary)' }}>Rp 54.834</span>
+                  <span className="text-base font-mono font-black" style={{ color: 'var(--accent-primary)' }}>{fmt(cartTotal)}</span>
                 </div>
-                <button className="w-full py-2.5 rounded-xl font-bold text-xs text-white transition-all hover:scale-[1.02]" style={{ background: 'var(--accent-gradient)' }}>
+                <button 
+                  onClick={() => {
+                    if (cartCount > 0) {
+                      setCheckoutSuccess(true);
+                      setTimeout(() => {
+                        setCartCount(0);
+                        setCartTotal(0);
+                        setCheckoutSuccess(false);
+                      }, 2500);
+                    }
+                  }}
+                  className={`w-full py-2.5 rounded-xl font-bold text-xs text-white transition-all ${cartCount > 0 ? 'hover:scale-[1.02] cursor-pointer' : 'opacity-50 cursor-not-allowed'}`} 
+                  style={{ background: 'var(--accent-gradient)' }}
+                >
                   Selesaikan Transaksi
                 </button>
               </div>
@@ -400,10 +472,12 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================
           FITUR LENGKAP UTAMA
       ========================================= */}
+      {cmsConfig?.features?.visible !== false && (
       <section id="fitur" className="py-24 bg-[var(--bg-main)]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20 relative">
@@ -436,6 +510,7 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================
           ALUR LANGKAH OPERASIONAL (CARA KERJA)
@@ -468,6 +543,7 @@ export function LandingPage() {
       {/* =========================================
           PRICING (PAKET HARGA DENGAN TOGGLE CYCLE)
       ========================================= */}
+      {cmsConfig?.pricing?.visible !== false && (
       <section id="harga" className="py-24 bg-[var(--bg-surface-elevated)] border-y border-[var(--border)]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12">
@@ -501,28 +577,44 @@ export function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 items-center max-w-6xl mx-auto">
-            {pricingPlans.map((plan, idx) => {
-              const displayPrice = billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
+            {(dynamicPlans.length > 0 ? dynamicPlans : pricingPlans).map((plan, idx) => {
+              const displayPrice = billingCycle === 'yearly' ? (plan.yearlyPrice || plan.monthlyPrice * 12 * 0.85) : plan.monthlyPrice;
               const isFree = plan.monthlyPrice === 0;
+              
+              let planFeatures = [
+                `Maks. ${plan.maxUsers || 3} Pengguna`,
+                `Maks. ${plan.maxProducts || 100} Produk`,
+                `Maks. ${plan.maxBranches || 1} Cabang`
+              ];
+              if (Array.isArray(plan.features)) {
+                planFeatures = plan.features;
+              } else if (typeof plan.features === 'string' && plan.features.trim() !== '') {
+                try {
+                  const parsed = JSON.parse(plan.features);
+                  if (Array.isArray(parsed)) planFeatures = parsed;
+                } catch (e) {
+                  // Ignore JSON parse error, use fallback
+                }
+              }
 
               return (
                 <div 
                   key={idx} 
                   className={`relative p-8 rounded-[2.2rem] border transition-all duration-300 flex flex-col h-full
-                    ${plan.isPopular 
+                    ${idx === 1 
                       ? 'bg-[var(--bg-main)] border-[var(--accent-primary)] shadow-xl md:-translate-y-4' 
                       : 'bg-[var(--bg-main)] border-[var(--border)] hover:border-[var(--text-secondary)]'
                     }
                   `}
                 >
-                  {plan.isPopular && (
+                  {idx === 1 && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-[10px] font-black text-white flex items-center gap-1 shadow-lg tracking-wider uppercase" style={{ background: 'var(--accent-gradient)' }}>
                       <Star size={12} fill="currentColor" /> Paling Populer
                     </div>
                   )}
 
                   <h3 className="text-xl font-extrabold text-[var(--text-primary)] mb-2">{plan.name}</h3>
-                  <p className="text-xs font-semibold text-[var(--text-secondary)] mb-6 min-h-[35px]">{plan.subtitle}</p>
+                  <p className="text-xs font-semibold text-[var(--text-secondary)] mb-6 min-h-[35px]">{plan.description || plan.subtitle}</p>
                   
                   <div className="mb-8 flex items-baseline gap-1">
                     <span className="text-3xl font-black tracking-tight text-[var(--text-primary)] font-mono">
@@ -536,7 +628,7 @@ export function LandingPage() {
                   </div>
 
                   <ul className="flex-1 flex flex-col gap-4 mb-8">
-                    {plan.features.map((feat, fIdx) => (
+                    {planFeatures.map((feat: string, fIdx: number) => (
                       <li key={fIdx} className="flex items-start gap-2.5 text-xs font-bold text-[var(--text-secondary)]">
                         <CheckCircle2 size={16} className="text-[var(--accent-primary)] shrink-0 mt-0.5" />
                         <span>{feat}</span>
@@ -544,26 +636,28 @@ export function LandingPage() {
                     ))}
                   </ul>
 
-                  <button 
-                    className={`w-full py-3.5 rounded-xl font-bold transition-all text-xs ${
-                      plan.isPopular
+                  <Link to="/register"
+                    className={`w-full py-3.5 rounded-xl font-bold transition-all text-xs flex justify-center items-center ${
+                      idx === 1
                         ? 'text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5'
                         : 'text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] hover:bg-[var(--bg-main)]'
                     }`}
-                    style={plan.isPopular ? { background: 'var(--accent-gradient)' } : {}}
+                    style={idx === 1 ? { background: 'var(--accent-gradient)' } : {}}
                   >
-                    {plan.buttonText}
-                  </button>
+                    Daftar Sekarang
+                  </Link>
                 </div>
               );
             })}
           </div>
         </div>
       </section>
+      )}
 
       {/* =========================================
           FAQ SECTION (AKORDION INTERAKTIF)
       ========================================= */}
+      {cmsConfig?.faq?.visible !== false && (
       <section id="faq" className="py-24 max-w-4xl mx-auto px-6">
         <div className="text-center mb-16">
           <span className="text-xs font-bold uppercase tracking-widest text-[var(--accent-primary)]">Tanya Jawab</span>
@@ -602,6 +696,7 @@ export function LandingPage() {
           })}
         </div>
       </section>
+      )}
 
       {/* =========================================
           FOOTER

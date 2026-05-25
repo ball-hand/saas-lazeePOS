@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { Lock, Mail, Eye, EyeOff, Store } from 'lucide-react';
@@ -10,11 +10,29 @@ export function Login() {
   const { login } = useAuth();
   const { storeName } = useTheme();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      setIsSubmitting(true);
+      api.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => {
+          login(token, res.data.user);
+          toast.success(`Pendaftaran Berhasil! Selamat datang di dashboard Anda.`);
+          navigate('/dashboard');
+        })
+        .catch(err => {
+          toast.error(err.response?.data?.message || 'Token pendaftaran tidak valid.');
+          setIsSubmitting(false);
+        });
+    }
+  }, [searchParams, login, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
