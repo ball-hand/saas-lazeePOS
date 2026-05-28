@@ -1,4 +1,5 @@
-import { defineConfig } from 'vite'
+/// <reference types="vitest" />
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -11,5 +12,10 @@ export default defineConfig({
     ],
     host: true, // Wajib agar bisa diakses dari luar Docker (Nginx)
     port: 5173, // Port default Vite
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/setupTests.ts',
   },
 })
