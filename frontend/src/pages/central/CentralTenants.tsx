@@ -165,10 +165,10 @@ export function CentralTenants() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10">
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">Manajemen Tenant</h1>
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)]">Manajemen Tenant</h1>
           <p className="text-[var(--text-secondary)] text-sm mt-1">
             Kelola data toko, subdomain, dan status akun klien.
           </p>
@@ -219,11 +219,11 @@ export function CentralTenants() {
             <tbody className="divide-y divide-[var(--border)] text-sm">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-[var(--text-secondary)]">Memuat data...</td>
+                  <td colSpan={5} className="p-5 text-center text-[var(--text-secondary)]">Memuat data...</td>
                 </tr>
               ) : tenants.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-[var(--text-secondary)]">Tidak ada tenant ditemukan.</td>
+                  <td colSpan={5} className="p-5 text-center text-[var(--text-secondary)]">Tidak ada tenant ditemukan.</td>
                 </tr>
               ) : (
                 tenants.map((t) => (

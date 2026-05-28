@@ -139,10 +139,25 @@ router.post('/', authenticate, async (req, res) => {
           change,
           status: 'COMPLETED',
           isVoided: false,
+          tableId: req.body.tableId || null,
           items: { create: transactionItems }
         },
         include: { items: true }
       });
+
+      // 2b. Jika ada tableOrderId, tandai pesanan meja selesai
+      if (req.body.tableOrderId && req.body.tableId) {
+        await tx.tableOrder.update({
+          where: { id: req.body.tableOrderId },
+          data: { status: 'COMPLETED' }
+        });
+        
+        // Ubah meja jadi CLEANING, lepas activeOrderId
+        await tx.table.update({
+          where: { id: req.body.tableId },
+          data: { status: 'CLEANING', activeOrderId: null }
+        });
+      }
 
       // 3. Catat Pemasukan di Cash Flow
       await tx.cashFlow.create({

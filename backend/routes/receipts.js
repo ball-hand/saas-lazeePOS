@@ -103,6 +103,19 @@ router.post('/', authenticate, async (req, res) => {
         },
       });
 
+      // Update TableOrder and Table status if this is a table order checkout
+      if (req.body.tableOrderId && req.body.tableId) {
+        await tx.tableOrder.update({
+          where: { id: req.body.tableOrderId },
+          data: { status: 'COMPLETED' }
+        });
+        
+        await tx.table.update({
+          where: { id: req.body.tableId },
+          data: { status: 'CLEANING', activeOrderId: null }
+        });
+      }
+
       return r;
     });
 

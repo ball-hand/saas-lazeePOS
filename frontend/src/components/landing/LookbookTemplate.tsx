@@ -49,7 +49,7 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
               </p>
 
               {/* Contact Links */}
-              <div className={`flex flex-wrap gap-6 ${!heroImage ? 'justify-center' : ''}`}>
+              <div className={`flex flex-wrap gap-4 ${!heroImage ? 'justify-center' : ''}`}>
                 {waNumber && (
                   <a href={`https://wa.me/${waNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="pb-2 border-b border-[var(--text-primary)] text-[var(--text-primary)] font-bold text-sm hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] transition-all uppercase tracking-widest">
                     Chat WhatsApp
@@ -80,7 +80,7 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
           <div className="max-w-4xl mx-auto text-center">
             <Sparkles className="text-[var(--accent-primary)] mx-auto mb-8" size={32} />
             {config.jargon && (
-              <h2 className="text-3xl md:text-5xl font-light uppercase tracking-widest mb-8 leading-relaxed text-[var(--text-primary)]">
+              <h2 className="text-xl md:text-5xl font-light uppercase tracking-widest mb-8 leading-relaxed text-[var(--text-primary)]">
                 {config.jargon}
               </h2>
             )}
@@ -96,7 +96,7 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
       {/* Announcement Section */}
       {announcementSec.show && (config.announcements?.length > 0 || config.announcement) && (
         <section className="py-12 px-6 max-w-5xl mx-auto border-b border-[var(--border)]">
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-5">
             {(config.announcements || (config.announcement ? [config.announcement] : [])).map((ann: any, idx: number) => (
               <div key={idx} className="bg-[var(--bg-main)] border border-[var(--border)] rounded-none overflow-hidden flex flex-col md:flex-row">
                 {ann.bannerUrl && (
@@ -104,11 +104,11 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
                     <img src={getMediaUrl(ann.bannerUrl)} alt="Announcement" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
                   </div>
                 )}
-                <div className={`p-8 md:p-16 flex flex-col justify-center ${ann.bannerUrl ? 'md:w-1/2' : 'w-full text-center'}`}>
+                <div className={`p-5 md:p-16 flex flex-col justify-center ${ann.bannerUrl ? 'md:w-1/2' : 'w-full text-center'}`}>
                   <div className="inline-flex px-3 py-1 bg-[var(--text-primary)] text-[var(--bg-main)] text-[10px] font-bold uppercase tracking-widest mb-6 w-max mx-auto md:mx-0">
                     {announcementSec.title}
                   </div>
-                  <h2 className="text-2xl md:text-4xl font-light uppercase tracking-widest mb-6">{ann.title}</h2>
+                  <h2 className="text-xl md:text-4xl font-light uppercase tracking-widest mb-6">{ann.title}</h2>
                   <div 
                     className="text-[var(--text-secondary)] font-light leading-loose prose prose-sm prose-invert max-w-none prose-p:mb-4 prose-ul:my-4 prose-ol:my-4 uppercase tracking-wider"
                     dangerouslySetInnerHTML={{ __html: ann.description || '' }}
@@ -144,12 +144,12 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
       {catalogSec.show && (
         <section className="py-24 px-6 max-w-6xl mx-auto border-b border-[var(--border)]">
           <div className="text-center mb-20">
-            <h2 className="text-3xl md:text-4xl font-light uppercase tracking-[0.3em] mb-4 text-[var(--text-primary)]">{catalogSec.title}</h2>
+            <h2 className="text-xl md:text-4xl font-light uppercase tracking-[0.3em] mb-4 text-[var(--text-primary)]">{catalogSec.title}</h2>
             <div className="w-16 h-px bg-[var(--text-primary)] mx-auto"></div>
           </div>
 
           {tenant.products && tenant.products.length > 0 ? (
-            <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-5 space-y-8">
               {tenant.products.map((p: any) => (
                 <div key={p.id} className="break-inside-avoid relative group overflow-hidden bg-[var(--bg-surface-elevated)] rounded-none cursor-pointer">
                   <div className="aspect-[3/4] bg-[var(--bg-main)]">
@@ -160,9 +160,9 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
                     )}
                   </div>
                   {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col items-center justify-center p-5 text-center backdrop-blur-sm">
                     <span className="text-[10px] font-bold text-white/70 uppercase tracking-[0.3em] mb-4">{p.category || 'Koleksi'}</span>
-                    <h3 className="font-light text-2xl text-white mb-4 leading-tight uppercase tracking-wider">{p.name}</h3>
+                    <h3 className="font-light text-xl text-white mb-4 leading-tight uppercase tracking-wider">{p.name}</h3>
                     <div className="w-8 h-px bg-white/50 mb-4"></div>
                     <p className="font-mono font-light text-white tracking-widest">{fmt(p.price)}</p>
                   </div>
@@ -182,9 +182,9 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
       {testimonialsSec.show && config.testimonials && config.testimonials.length > 0 && (
         <section className="py-24 px-6 max-w-6xl mx-auto border-t border-[var(--border)]">
           <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-4xl font-light uppercase tracking-widest">{testimonialsSec.title}</h2>
+            <h2 className="text-xl md:text-4xl font-light uppercase tracking-widest">{testimonialsSec.title}</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {config.testimonials.map((t: any, idx: number) => (
               <div key={idx} className="bg-[var(--bg-main)] p-10 border border-[var(--border)] flex flex-col items-center text-center group hover:border-[var(--text-primary)] transition-colors duration-500">
                 <div className="w-16 h-16 rounded-full overflow-hidden mb-8 border border-[var(--border)]">
@@ -216,7 +216,7 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
       {contactSec.show && config.mapLocation && (
         <section className="py-24 px-6 max-w-5xl mx-auto border-b border-[var(--border)]">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-light uppercase tracking-[0.3em] mb-4 text-[var(--text-primary)]">{contactSec.title}</h2>
+            <h2 className="text-xl md:text-4xl font-light uppercase tracking-[0.3em] mb-4 text-[var(--text-primary)]">{contactSec.title}</h2>
             <div className="w-16 h-px bg-[var(--text-primary)] mx-auto"></div>
           </div>
           
@@ -226,7 +226,7 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
               {config.mapLocation.startsWith('<iframe') ? (
                 <div className="w-full h-[500px] overflow-hidden grayscale hover:grayscale-0 transition-all duration-700" dangerouslySetInnerHTML={{ __html: config.mapLocation }} />
               ) : (
-                <div className="w-full h-[500px] bg-[var(--bg-surface-elevated)] flex flex-col items-center justify-center border border-[var(--border)] text-center p-8 grayscale hover:grayscale-0 transition-all duration-700">
+                <div className="w-full h-[500px] bg-[var(--bg-surface-elevated)] flex flex-col items-center justify-center border border-[var(--border)] text-center p-5 grayscale hover:grayscale-0 transition-all duration-700">
                   <MapPin size={48} className="text-[var(--text-primary)] mb-6 stroke-1" />
                   <a href={config.mapLocation} target="_blank" rel="noreferrer" className="pb-2 border-b border-[var(--text-primary)] text-[var(--text-primary)] font-bold text-sm uppercase tracking-widest hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] transition-all">
                     Buka Google Maps

@@ -46,7 +46,7 @@ export function ReceiptModal({ isOpen, onClose, receipt }: ReceiptModalProps) {
       {/* Printable receipt */}
       <div
         id="printable-receipt"
-        className="bg-white text-gray-800 rounded-xl p-6 max-w-sm mx-auto text-sm font-mono shadow-sm border border-gray-100"
+        className="bg-white text-gray-800 rounded-xl p-5 max-w-sm mx-auto text-sm font-mono shadow-sm border border-gray-100"
       >
         {/* Store header */}
         <div className="text-center mb-5">
@@ -68,7 +68,7 @@ export function ReceiptModal({ isOpen, onClose, receipt }: ReceiptModalProps) {
         </div>
 
         {/* Items */}
-        <div className="border-t border-dashed border-gray-300 py-3 mb-3">
+        <div className="border-t border-dashed border-gray-300 py-2.5 mb-3">
           {(receipt.items || []).map((item: any) => (
             <div key={item.id} className="mb-2">
               <div className="flex justify-between">

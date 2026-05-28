@@ -84,10 +84,10 @@ export function CentralPlatform() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10 max-w-5xl mx-auto">
+    <div className="animate-fade-in flex flex-col gap-4 pb-6 max-w-5xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] pb-6 sticky top-0 bg-[var(--bg-main)] z-10 pt-2">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
             <Settings className="text-[var(--accent-primary)]" size={32} /> Pengaturan Platform
           </h1>
           <p className="text-[var(--text-secondary)] mt-1">
@@ -97,7 +97,7 @@ export function CentralPlatform() {
         <button
           onClick={handleSave}
           disabled={loading}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-hover)] transition-all font-bold shadow-lg shadow-[var(--accent-primary)]/20 hover:shadow-[var(--accent-primary)]/40 hover:-translate-y-0.5"
+          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-hover)] transition-all font-bold shadow-lg shadow-[var(--accent-primary)]/20 hover:shadow-[var(--accent-primary)]/40 hover:-translate-y-0.5"
         >
           <Save size={18} /> {loading ? 'Menyimpan...' : 'Simpan Semua Perubahan'}
         </button>
@@ -106,20 +106,20 @@ export function CentralPlatform() {
       <div className="space-y-8">
         
         {/* SECTION 1: Pengaturan Umum */}
-        <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
+        <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm">
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-3">
             <Globe className="text-blue-500" size={24} /> 1. Pengaturan Umum
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2 uppercase tracking-wider">Nama Platform / Merek</label>
-                <input type="text" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none transition-colors font-medium" 
+                <input type="text" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none transition-colors font-medium" 
                   value={formData.platformName} onChange={e => setFormData({...formData, platformName: e.target.value})} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2 uppercase tracking-wider">Email Dukungan (Support)</label>
-                <input type="email" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none transition-colors font-medium" 
+                <input type="email" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none transition-colors font-medium" 
                   value={formData.supportEmail} onChange={e => setFormData({...formData, supportEmail: e.target.value})} />
               </div>
             </div>
@@ -147,14 +147,14 @@ export function CentralPlatform() {
         </section>
 
         {/* SECTION 2: Tampilan & Visual */}
-        <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
+        <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm">
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-8 flex items-center gap-3">
             <Palette className="text-purple-500" size={24} /> 2. Tampilan & Visual
           </h2>
           
           <div className="space-y-10">
             {/* Logo Upload */}
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <div className="w-28 h-28 rounded-3xl bg-[var(--bg-main)] border-2 border-dashed border-[var(--border)] flex items-center justify-center overflow-hidden p-3 shadow-inner">
                 {logoUrl ? (
                   <img src={getMediaUrl(logoUrl)} alt="Logo" className="max-w-full max-h-full object-contain drop-shadow-md" />
@@ -232,7 +232,7 @@ export function CentralPlatform() {
         </section>
 
         {/* SECTION 3: CMS Landing Page */}
-        <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-6 md:p-8 shadow-sm">
+        <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-3">
               <LayoutTemplate className="text-emerald-500" size={24} /> 3. Konten Landing Page (CMS)
@@ -255,15 +255,15 @@ export function CentralPlatform() {
                 </button>
               </div>
               {cmsConfig.hero.visible && (
-                <div className="p-6 space-y-4">
+                <div className="p-5 space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase mb-2">Headline Utama</label>
-                    <input type="text" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none font-bold text-lg" 
+                    <input type="text" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none font-bold text-lg" 
                       value={cmsConfig.hero.headline} onChange={e => setCmsConfig({...cmsConfig, hero: {...cmsConfig.hero, headline: e.target.value}})} />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase mb-2">Sub-Headline</label>
-                    <textarea className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none resize-none" rows={2}
+                    <textarea className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none resize-none" rows={2}
                       value={cmsConfig.hero.subheadline} onChange={e => setCmsConfig({...cmsConfig, hero: {...cmsConfig.hero, subheadline: e.target.value}})} />
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export function CentralPlatform() {
                 </button>
               </div>
               {cmsConfig.announcement.visible && (
-                <div className="p-6">
+                <div className="p-5">
                   <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase mb-2">Konten HTML Rich Text</label>
                   <div className="bg-[var(--bg-main)] rounded-xl border border-[var(--border)] overflow-hidden">
                      <RichTextEditor 
@@ -296,7 +296,7 @@ export function CentralPlatform() {
             </div>
 
             {/* OTHER SECTIONS VISIBILITY */}
-            <div className="border border-[var(--border)] rounded-2xl p-6">
+            <div className="border border-[var(--border)] rounded-2xl p-5">
               <h3 className="font-bold text-[var(--text-primary)] mb-4">Pengaturan Visibilitas Segmen Lainnya</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 

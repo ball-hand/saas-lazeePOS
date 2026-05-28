@@ -59,18 +59,18 @@ export function CentralBilling() {
       {/* Header & Stats */}
       <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
             <Receipt className="text-blue-500" size={32} /> Log Tagihan SaaS
           </h1>
           <p className="text-[var(--text-secondary)] mt-1">Pantau seluruh pembayaran masuk dari semua tenant secara real-time.</p>
         </div>
-        <div className="bg-[var(--bg-surface-elevated)] border border-emerald-500/20 px-6 py-3 rounded-2xl flex items-center gap-4">
+        <div className="bg-[var(--bg-surface-elevated)] border border-emerald-500/20 px-6 py-2.5 rounded-2xl flex items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
             <DollarSign size={24} />
           </div>
           <div>
             <p className="text-sm font-bold text-[var(--text-secondary)]">Total Pendapatan Sukses</p>
-            <p className="text-2xl font-extrabold text-[var(--text-primary)]">
+            <p className="text-xl font-extrabold text-[var(--text-primary)]">
               Rp {totalRevenue.toLocaleString('id-ID')}
             </p>
           </div>
@@ -119,11 +119,11 @@ export function CentralBilling() {
             <tbody className="divide-y divide-[var(--border)]">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-[var(--text-secondary)]">Memuat data...</td>
+                  <td colSpan={5} className="p-5 text-center text-[var(--text-secondary)]">Memuat data...</td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center">
+                  <td colSpan={5} className="p-5 text-center">
                     <div className="flex flex-col items-center justify-center text-[var(--text-secondary)]">
                       <Receipt size={48} className="mb-4 opacity-20" />
                       <p>Tidak ada transaksi ditemukan.</p>

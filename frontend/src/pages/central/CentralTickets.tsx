@@ -118,7 +118,7 @@ export function CentralTickets() {
     <div className="animate-fade-in flex flex-col h-[calc(100vh-2rem)]">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
+        <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
           <LifeBuoy className="text-indigo-500" size={32} /> Support Ticketing
         </h1>
         <p className="text-[var(--text-secondary)] mt-1">Sistem manajemen resolusi komplain tenant.</p>
@@ -166,10 +166,10 @@ export function CentralTickets() {
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {loading ? (
-                <tr><td colSpan={5} className="p-8 text-center text-[var(--text-secondary)]">Memuat tiket...</td></tr>
+                <tr><td colSpan={5} className="p-5 text-center text-[var(--text-secondary)]">Memuat tiket...</td></tr>
               ) : tickets.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center">
+                  <td colSpan={5} className="p-5 text-center">
                     <div className="flex flex-col items-center text-[var(--text-secondary)]">
                       <CheckCircle2 size={48} className="mb-4 text-emerald-500/50" />
                       <p className="font-bold text-lg text-[var(--text-primary)]">Inbox Kosong!</p>
@@ -246,7 +246,7 @@ export function CentralTickets() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[var(--bg-surface-elevated)]">
               {/* Original Post */}
               <div className="flex flex-col items-start">
-                <div className="bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%]">
+                <div className="bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] rounded-2xl rounded-tl-none px-4 py-2.5 max-w-[85%]">
                   <p className="text-[10px] font-bold text-amber-500 mb-1 uppercase tracking-wider">Keluhan Awal</p>
                   <p className="text-sm whitespace-pre-wrap font-medium">{activeTicket.description}</p>
                 </div>
@@ -256,7 +256,7 @@ export function CentralTickets() {
               {/* Replies */}
               {activeTicket.replies.map(reply => (
                 <div key={reply.id} className={`flex flex-col ${reply.isCentral ? 'items-end' : 'items-start'}`}>
-                  <div className={`rounded-2xl px-4 py-3 max-w-[85%] ${
+                  <div className={`rounded-2xl px-4 py-2.5 max-w-[85%] ${
                     reply.isCentral 
                       ? 'bg-[var(--accent-primary)] text-white rounded-tr-none shadow-sm' 
                       : 'bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] rounded-tl-none shadow-sm'

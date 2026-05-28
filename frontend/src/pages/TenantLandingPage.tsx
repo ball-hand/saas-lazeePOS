@@ -60,7 +60,7 @@ export function TenantLandingPage({ subdomain }: { subdomain: string }) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-main)] text-[var(--text-primary)]">
         <Store size={64} className="text-[var(--text-secondary)] opacity-50 mb-4" />
-        <h1 className="text-3xl font-extrabold mb-2">Oops!</h1>
+        <h1 className="text-xl font-extrabold mb-2">Oops!</h1>
         <p className="text-[var(--text-secondary)] font-medium">{error}</p>
         <a href="/" className="mt-8 px-6 py-2.5 rounded-xl font-bold border border-[var(--border)] hover:bg-[var(--bg-surface-elevated)] transition-colors">
           Kembali ke LazeePOS

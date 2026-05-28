@@ -87,13 +87,13 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
       {featuresSec.show && config.features && config.features.length > 0 && (
         <section className="py-16 px-6 max-w-6xl mx-auto border-t border-[var(--border)]">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold">{featuresSec.title}</h2>
+            <h2 className="text-xl font-extrabold">{featuresSec.title}</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {config.features.map((feat: any, idx: number) => {
               const IconComponent = IconMap[feat.icon] || CheckCircle;
               return (
-                <div key={idx} className="bg-[var(--bg-surface-elevated)] p-8 rounded-[2rem] border border-[var(--border)] shadow-sm group hover:border-[var(--accent-primary)]/50 transition-all hover:shadow-md hover:-translate-y-1">
+                <div key={idx} className="bg-[var(--bg-surface-elevated)] p-5 rounded-[2rem] border border-[var(--border)] shadow-sm group hover:border-[var(--accent-primary)]/50 transition-all hover:shadow-md hover:-translate-y-1">
                   <div className="w-14 h-14 bg-[var(--accent-primary-transparent)] rounded-2xl flex items-center justify-center text-[var(--accent-primary)] mb-6 group-hover:scale-110 transition-transform duration-300">
                     <IconComponent size={28} />
                   </div>
@@ -112,7 +112,7 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
           <div className="max-w-4xl mx-auto text-center relative z-10">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--accent-primary)]/5 font-serif text-[200px] leading-none z-0">"</div>
             {config.jargon && (
-              <h2 className="text-3xl md:text-5xl font-serif font-bold mb-8 leading-tight relative z-10">
+              <h2 className="text-xl md:text-5xl font-serif font-bold mb-8 leading-tight relative z-10">
                 "{config.jargon}"
               </h2>
             )}
@@ -131,7 +131,7 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
       {/* Announcement Section */}
       {announcementSec.show && (config.announcements?.length > 0 || config.announcement) && (
         <section className="py-12 px-6 max-w-5xl mx-auto border-t border-[var(--border)]">
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-5">
             {(config.announcements || (config.announcement ? [config.announcement] : [])).map((ann: any, idx: number) => (
               <div key={idx} className="bg-[var(--accent-primary-transparent)] border border-[var(--accent-primary)]/20 rounded-[2rem] overflow-hidden flex flex-col md:flex-row">
                 {ann.bannerUrl && (
@@ -139,11 +139,11 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
                     <img src={getMediaUrl(ann.bannerUrl)} alt="Announcement" className="w-full h-full object-cover" />
                   </div>
                 )}
-                <div className={`p-8 md:p-12 flex flex-col justify-center ${ann.bannerUrl ? 'md:w-1/2' : 'w-full text-center'}`}>
+                <div className={`p-5 md:p-12 flex flex-col justify-center ${ann.bannerUrl ? 'md:w-1/2' : 'w-full text-center'}`}>
                   <div className="inline-flex px-3 py-1 bg-[var(--accent-primary)] text-white text-[10px] font-bold uppercase tracking-wider rounded-full mb-4 w-max mx-auto md:mx-0">
                     {announcementSec.title}
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-extrabold mb-4">{ann.title}</h2>
+                  <h2 className="text-xl md:text-xl font-extrabold mb-4">{ann.title}</h2>
                   <div 
                     className="text-[var(--text-secondary)] font-medium leading-relaxed prose prose-sm prose-invert max-w-none prose-p:mb-2 prose-ul:my-2 prose-ol:my-2"
                     dangerouslySetInnerHTML={{ __html: ann.description || '' }}
@@ -160,10 +160,10 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
         <section className="py-16 px-6 max-w-5xl mx-auto border-t border-[var(--border)]">
           <div className="flex items-center gap-2 mb-10">
             <Package className="text-[var(--accent-primary)]" />
-            <h2 className="text-2xl font-extrabold">{catalogSec.title}</h2>
+            <h2 className="text-xl font-extrabold">{catalogSec.title}</h2>
           </div>
           {tenant.products && tenant.products.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {tenant.products.map((p: any) => (
                 <div key={p.id} className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl overflow-hidden group hover:border-[var(--accent-primary)]/50 transition-all shadow-sm hover:shadow-md">
                   <div className="aspect-square bg-[var(--bg-main)] flex items-center justify-center p-4 border-b border-[var(--border)] relative overflow-hidden">
@@ -194,16 +194,16 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
       {testimonialsSec.show && config.testimonials && config.testimonials.length > 0 && (
         <section className="py-16 px-6 max-w-6xl mx-auto border-t border-[var(--border)]">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-extrabold">{testimonialsSec.title}</h2>
+            <h2 className="text-xl md:text-xl font-extrabold">{testimonialsSec.title}</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {config.testimonials.map((t: any, idx: number) => (
-              <div key={idx} className="bg-[var(--bg-main)] p-6 md:p-8 rounded-[2rem] border border-[var(--border)] shadow-sm hover:border-[var(--accent-primary)]/50 transition-colors flex flex-col items-center text-center">
+              <div key={idx} className="bg-[var(--bg-main)] p-5 md:p-5 rounded-[2rem] border border-[var(--border)] shadow-sm hover:border-[var(--accent-primary)]/50 transition-colors flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full overflow-hidden mb-4 bg-[var(--bg-surface-elevated)] border border-[var(--border)]">
                   {t.avatarUrl ? (
                     <img src={getMediaUrl(t.avatarUrl)} alt={t.name} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl text-[var(--text-secondary)] font-bold">
+                    <div className="w-full h-full flex items-center justify-center text-xl text-[var(--text-secondary)] font-bold">
                       {t.name?.charAt(0) || '?'}
                     </div>
                   )}
@@ -225,7 +225,7 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
       {gallerySec.show && config.gallery && config.gallery.length > 0 && (
         <section className="py-16 px-6 max-w-5xl mx-auto border-t border-[var(--border)]">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-extrabold">{gallerySec.title}</h2>
+            <h2 className="text-xl font-extrabold">{gallerySec.title}</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {config.gallery.map((img: string, idx: number) => (
@@ -246,11 +246,11 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
               {config.mapLocation.startsWith('<iframe') ? (
                 <div className="w-full h-[400px] rounded-[1.5rem] overflow-hidden" dangerouslySetInnerHTML={{ __html: config.mapLocation }} />
               ) : (
-                <div className="w-full h-[400px] rounded-[1.5rem] bg-[var(--bg-surface-elevated)] flex flex-col items-center justify-center border border-[var(--border)] text-center p-6">
+                <div className="w-full h-[400px] rounded-[1.5rem] bg-[var(--bg-surface-elevated)] flex flex-col items-center justify-center border border-[var(--border)] text-center p-5">
                   <MapPin size={48} className="text-[var(--accent-primary)] mb-4" />
                   <h3 className="text-xl font-bold mb-2">Lihat Lokasi di Google Maps</h3>
                   <p className="text-[var(--text-secondary)] text-sm mb-6 max-w-xs">Klik tombol di bawah untuk membuka peta di tab baru.</p>
-                  <a href={config.mapLocation} target="_blank" rel="noreferrer" className="px-6 py-3 rounded-full bg-[var(--accent-primary)] text-white font-bold text-sm hover:opacity-90 transition-opacity">
+                  <a href={config.mapLocation} target="_blank" rel="noreferrer" className="px-6 py-2.5 rounded-full bg-[var(--accent-primary)] text-white font-bold text-sm hover:opacity-90 transition-opacity">
                     Buka Google Maps
                   </a>
                 </div>
@@ -262,7 +262,7 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
               <div className="inline-flex w-12 h-12 rounded-full bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] items-center justify-center mb-6">
                 <MapPin size={24} />
               </div>
-              <h2 className="text-3xl font-extrabold mb-6">{contactSec.title}</h2>
+              <h2 className="text-xl font-extrabold mb-6">{contactSec.title}</h2>
               
               {address && (
                 <div className="mb-6">
@@ -284,7 +284,7 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
               {waNumber && (
                 <div className="mt-4 pt-6 border-t border-[var(--border)]">
                   <h4 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-3">Punya Pertanyaan?</h4>
-                  <a href={`https://wa.me/${waNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[var(--border)] font-bold text-sm hover:border-green-500 hover:text-green-500 transition-all">
+                  <a href={`https://wa.me/${waNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl border border-[var(--border)] font-bold text-sm hover:border-green-500 hover:text-green-500 transition-all">
                     <Phone size={16} /> Hubungi via WhatsApp
                   </a>
                 </div>

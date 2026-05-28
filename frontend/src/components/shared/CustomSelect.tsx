@@ -49,7 +49,7 @@ export function CustomSelect({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between text-left px-4 py-3 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl outline-none transition-all ${
+        className={`w-full flex items-center justify-between text-left px-4 py-2.5 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl outline-none transition-all ${
           isOpen ? 'border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary)]/20' : 'hover:border-[var(--text-secondary)]/50'
         } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
       >

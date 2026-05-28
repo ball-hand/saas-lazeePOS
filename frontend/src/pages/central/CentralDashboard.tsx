@@ -78,7 +78,7 @@ export function CentralDashboard() {
   const { metrics, tenants, churnRate, activeOutlets } = data;
 
   return (
-    <div className="animate-fade-in flex flex-col gap-8 pb-10">
+    <div className="animate-fade-in flex flex-col gap-5 pb-6">
 
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] pb-6">
@@ -86,7 +86,7 @@ export function CentralDashboard() {
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs font-bold uppercase tracking-wider mb-2 border border-red-500/20">
             <ShieldAlert size={14}/> Super Admin Central
           </span>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">SaaS Analytics</h1>
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">SaaS Analytics</h1>
           <p className="text-[var(--text-secondary)] mt-1 font-medium">
             Pantau pertumbuhan, pendapatan, dan retensi pelanggan.
           </p>
@@ -106,13 +106,13 @@ export function CentralDashboard() {
         <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 hover:border-[var(--accent-primary)]/30 transition-all relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10 text-[var(--accent-primary)]"><DollarSign size={80} className="-mr-4 -mt-4"/></div>
           <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Monthly Recurring Revenue</p>
-          <p className="text-3xl font-extrabold text-[var(--text-primary)]">{fmt(metrics.mrr.value)}</p>
+          <p className="text-xl font-extrabold text-[var(--text-primary)]">{fmt(metrics.mrr.value)}</p>
           <p className="text-xs text-[var(--text-secondary)] mt-2">Total pendapatan berlangganan</p>
         </div>
 
         <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 hover:border-[var(--accent-primary)]/30 transition-all">
           <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Pendapatan Bulan Ini</p>
-          <p className="text-3xl font-extrabold text-[var(--text-primary)]">{fmt(metrics.mtdRevenue.value)}</p>
+          <p className="text-xl font-extrabold text-[var(--text-primary)]">{fmt(metrics.mtdRevenue.value)}</p>
           <p className={`text-xs mt-2 font-bold ${metrics.mtdRevenue.momGrowth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
             {metrics.mtdRevenue.momGrowth >= 0 ? '+' : ''}{metrics.mtdRevenue.momGrowth}% dibanding bulan lalu
           </p>
@@ -120,18 +120,18 @@ export function CentralDashboard() {
 
         <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 hover:border-[var(--accent-primary)]/30 transition-all">
           <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Churn Rate</p>
-          <p className="text-3xl font-extrabold text-[var(--text-primary)]">{churnRate.value}%</p>
+          <p className="text-xl font-extrabold text-[var(--text-primary)]">{churnRate.value}%</p>
           <p className="text-xs text-[var(--text-secondary)] mt-2">{churnRate.churned} toko membatalkan bulan ini</p>
         </div>
 
         <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 hover:border-[var(--accent-primary)]/30 transition-all">
           <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Lifetime Revenue</p>
-          <p className="text-3xl font-extrabold text-[var(--text-primary)]">{fmt(metrics.lifetimeRevenue.value)}</p>
+          <p className="text-xl font-extrabold text-[var(--text-primary)]">{fmt(metrics.lifetimeRevenue.value)}</p>
           <p className="text-xs text-[var(--text-secondary)] mt-2">Total GMV seluruh tenant</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         
         {/* ── Tenant Stats ──────────────────────────────────────── */}
         <div className="lg:col-span-1 flex flex-col gap-4">
@@ -166,7 +166,7 @@ export function CentralDashboard() {
         </div>
 
         {/* ── MRR By Plan ──────────────────────────────────────── */}
-        <div className="lg:col-span-2 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6">
+        <div className="lg:col-span-2 bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5">
           <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-4 mb-4">
             <CreditCard size={18}/> Kontribusi MRR Berdasarkan Paket
           </h2>

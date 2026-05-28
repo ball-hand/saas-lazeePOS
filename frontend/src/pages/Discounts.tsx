@@ -3,6 +3,7 @@ import { Plus, Tags, Trash2, Edit2, Tag, Percent, ShoppingBag, Layers, AlertCirc
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { Modal } from '../components/Modal';
+import { Breadcrumb } from '../components/shared/Breadcrumb';
 import { CustomSelect } from '../components/shared/CustomSelect';
 import toast from 'react-hot-toast';
 
@@ -107,7 +108,7 @@ export function Discounts() {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-[var(--danger)] gap-3 bg-[var(--danger)]/5 rounded-2xl border border-[var(--danger)]/15 max-w-xl mx-auto my-10 p-8">
+      <div className="flex flex-col items-center justify-center py-20 text-[var(--danger)] gap-3 bg-[var(--danger)]/5 rounded-2xl border border-[var(--danger)]/15 max-w-xl mx-auto my-10 p-5">
         <AlertCircle size={44} />
         <h2 className="text-xl font-black">Akses Ditolak</h2>
         <p className="text-sm text-[var(--text-secondary)] text-center font-medium">Halaman ini hanya dapat diakses oleh Administrator toko.</p>
@@ -116,12 +117,10 @@ export function Discounts() {
   }
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10">
-      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Aturan Diskon</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Buat promo, diskon otomatis, dan paket menarik untuk pelanggan.</p>
-        </div>
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+        <Breadcrumb items={[{ label: 'Katalog & Gudang' }, { label: 'Aturan Diskon' }]} />
+        <div className="flex justify-end gap-2">
         <button 
           onClick={openAddModal}
           className="px-5 py-2.5 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
@@ -129,6 +128,7 @@ export function Discounts() {
         >
           <Plus size={18} /> Buat Aturan Baru
         </button>
+        </div>
       </div>
 
       {/* Main Content Grid */}

@@ -40,10 +40,10 @@ export function CentralServerStatus() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10 h-[calc(100vh-2rem)]">
+    <div className="animate-fade-in flex flex-col gap-4 pb-6 h-[calc(100vh-2rem)]">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
             <Server className="text-blue-500" size={32} /> Status Server
           </h1>
           <p className="text-[var(--text-secondary)] mt-1">Pemantauan infrastruktur dan kapasitas server.</p>
@@ -57,14 +57,14 @@ export function CentralServerStatus() {
         </button>
       </div>
 
-      <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+      <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
         {loadingSys ? (
-          <div className="p-8 text-center text-[var(--text-secondary)]">Memeriksa status server...</div>
+          <div className="p-5 text-center text-[var(--text-secondary)]">Memeriksa status server...</div>
         ) : sysInfo ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Node/OS Info */}
-              <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+              <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase mb-6 flex items-center gap-2">
                   <Server size={18}/> Informasi OS
                 </h3>
@@ -87,7 +87,7 @@ export function CentralServerStatus() {
               </div>
 
               {/* Resources */}
-              <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+              <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase mb-6 flex items-center gap-2">
                   <Database size={18}/> Kapasitas Server
                 </h3>
@@ -115,7 +115,7 @@ export function CentralServerStatus() {
             </div>
 
             {/* Logs Terminal */}
-            <div className="bg-[#0f111a] border border-[#1f2233] rounded-2xl p-6 shadow-lg flex-1 flex flex-col min-h-[400px]">
+            <div className="bg-[#0f111a] border border-[#1f2233] rounded-2xl p-5 shadow-lg flex-1 flex flex-col min-h-[400px]">
               <h3 className="text-sm font-bold text-gray-400 uppercase mb-4 flex items-center gap-2">
                 <Terminal size={18}/> Live Application Logs
               </h3>
@@ -133,7 +133,7 @@ export function CentralServerStatus() {
             </div>
           </>
         ) : (
-          <div className="p-8 text-center text-[var(--danger)]">Data server tidak tersedia.</div>
+          <div className="p-5 text-center text-[var(--danger)]">Data server tidak tersedia.</div>
         )}
       </div>
     </div>

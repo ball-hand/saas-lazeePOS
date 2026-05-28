@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { DollarSign, ShoppingBag, Package, TrendingUp, Wallet, RefreshCw, Crown } from 'lucide-react';
 import api from '../api/client';
 import { StatsCard } from '../components/StatsCard';
+import { Breadcrumb } from '../components/shared/Breadcrumb';
 import toast from 'react-hot-toast';
 
 const fmt = (val: number) =>
@@ -30,14 +31,14 @@ export function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-6 animate-pulse p-4">
+      <div className="flex flex-col gap-4 animate-pulse p-4">
         <div className="h-8 bg-[var(--bg-surface-elevated)] w-1/4 rounded-lg" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="h-32 bg-[var(--bg-surface-elevated)] rounded-2xl" />
           ))}
         </div>
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <div className="h-64 bg-[var(--bg-surface-elevated)] rounded-2xl" />
           <div className="h-64 bg-[var(--bg-surface-elevated)] rounded-2xl" />
         </div>
@@ -61,15 +62,12 @@ export function Dashboard() {
   }
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10">
-      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-2">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Ringkasan Dasbor</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Pantau performa dan aktivitas tokomu hari ini.</p>
-        </div>
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
+      <div className="flex justify-between items-center mb-2">
+        <Breadcrumb items={[{ label: 'Toko & Transaksi' }, { label: 'Dashboard' }]} />
         <button
           onClick={fetchStats}
-          className="p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)] transition-all border border-[var(--border)]"
+          className="p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)] transition-all border border-[var(--border)] bg-[var(--bg-surface-elevated)] shadow-sm"
           title="Refresh"
         >
           <RefreshCw size={18} />
@@ -77,7 +75,7 @@ export function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Penjualan Hari Ini"
           value={fmt(stats.todaySalesAmount || 0)}
@@ -109,10 +107,10 @@ export function Dashboard() {
       </div>
 
       {/* Bottom Tables */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
         {/* Popular Products */}
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm flex flex-col">
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col">
           <h2 className="text-lg font-extrabold text-[var(--text-primary)] mb-5 flex items-center gap-2">
             <Crown size={20} className="text-yellow-500" /> Produk Terlaris Bulan Ini
           </h2>
@@ -167,7 +165,7 @@ export function Dashboard() {
         </div>
 
         {/* Recent Transactions */}
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm flex flex-col">
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col">
           <h2 className="text-lg font-bold text-[var(--text-primary)] mb-5">🕐 Transaksi Terakhir</h2>
           <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar max-h-72 pr-1">
             {(stats.recentTransactions || []).map((t: any) => {

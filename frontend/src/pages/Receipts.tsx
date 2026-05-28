@@ -1,17 +1,29 @@
 import { useState, useEffect } from 'react';
-import { Search, Eye, Calendar } from 'lucide-react';
+import { Eye, Calendar } from 'lucide-react';
 import api from '../api/client';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 import { ReceiptModal } from '../components/ReceiptModal';
+import { Breadcrumb } from '../components/shared/Breadcrumb';
+import { Pagination } from '../components/shared/Pagination';
 
 export function Receipts() {
   const [receipts, setReceipts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [searchParams] = useSearchParams();
+  const search = searchParams.get('q') || '';
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
   const [selectedReceipt, setSelectedReceipt] = useState<any>(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(receipts.length / itemsPerPage);
+  const currentReceipts = receipts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => { setCurrentPage(1); }, [search, startDate, endDate]);
 
   const fetchReceipts = async () => {
     setIsLoading(true);
@@ -36,30 +48,19 @@ export function Receipts() {
   }, [search, startDate, endDate]);
 
   return (
-    <div className="animate-fade-in flex flex-col gap-8 pb-10">
-      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Riwayat Penjualan</h1>
-        <p className="text-[var(--text-secondary)] mt-1 font-medium">Cari, tinjau, dan cetak ulang nota invoice transaksi kasir.</p>
-      </div>
-
-      {/* Filter Bar */}
-      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between shadow-sm">
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
-          <input 
-            type="text" 
-            placeholder="Cari Nomor Nota atau Pelanggan..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all text-sm"
-          />
-        </div>
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+        <Breadcrumb items={[{ label: 'Keuangan & Laporan' }, { label: 'Riwayat Struk' }]} />
+        {/* Filter Bar */}
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-4 flex flex-col md:flex-row gap-4 items-center justify-end shadow-sm">
         <div className="flex items-center gap-2 bg-[var(--bg-main)] p-1.5 rounded-xl border border-[var(--border)] w-full md:w-auto justify-between md:justify-start">
           <Calendar size={16} className="text-[var(--text-secondary)] ml-2 hidden md:block" />
           <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-transparent text-[var(--text-primary)] text-sm px-2 py-0.5 outline-none" />
           <span className="text-[var(--text-secondary)] text-xs font-bold px-1">s/d</span>
+          <span className="text-[var(--text-secondary)] text-xs font-bold px-1">s/d</span>
           <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-transparent text-[var(--text-primary)] text-sm px-2 py-0.5 outline-none" />
         </div>
+      </div>
       </div>
 
       {/* List Invoice Card/Table */}
@@ -79,14 +80,14 @@ export function Receipts() {
             <tbody className="divide-y divide-[var(--border)] text-sm">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-[var(--text-secondary)] animate-pulse font-medium">Memuat data...</td>
+                  <td colSpan={6} className="p-5 text-center text-[var(--text-secondary)] animate-pulse font-medium">Memuat data...</td>
                 </tr>
-              ) : receipts.length === 0 ? (
+              ) : currentReceipts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-[var(--text-secondary)] font-medium">Belum ada riwayat transaksi yang ditemukan.</td>
+                  <td colSpan={6} className="p-5 text-center text-[var(--text-secondary)] font-medium">Belum ada riwayat transaksi yang ditemukan.</td>
                 </tr>
               ) : (
-                receipts.map((r) => (
+                currentReceipts.map((r) => (
                   <tr key={r.id} className="hover:bg-[var(--bg-main)]/40 transition-colors">
                     <td className="p-4 font-mono font-bold text-[var(--accent-primary)]">{r.receiptNumber}</td>
                     <td className="p-4 text-[var(--text-secondary)]">{new Date(r.createdAt).toLocaleString()}</td>
@@ -109,6 +110,13 @@ export function Receipts() {
             </tbody>
           </table>
         </div>
+        
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          onPageChange={setCurrentPage} 
+          totalItems={receipts.length} 
+        />
       </div>
       
       <ReceiptModal 

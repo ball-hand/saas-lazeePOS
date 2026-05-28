@@ -45,7 +45,7 @@ export function CentralSystemLogs() {
     <div className="animate-fade-in flex flex-col h-[calc(100vh-2rem)]">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
+        <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
           <ServerCrash className="text-rose-500" size={32} /> Command Center
         </h1>
         <p className="text-[var(--text-secondary)] mt-1">Sistem pelacakan intelijen, log error, dan pembersihan server.</p>
@@ -70,9 +70,9 @@ export function CentralSystemLogs() {
       {/* Content Area */}
       <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl flex-1 overflow-hidden flex flex-col shadow-sm">
         {loading ? (
-          <div className="p-8 text-center text-[var(--text-secondary)]">Menganalisis server...</div>
+          <div className="p-5 text-center text-[var(--text-secondary)]">Menganalisis server...</div>
         ) : (
-          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
             
             {/* Tab: API Metrics */}
             {activeTab === 'metrics' && (
@@ -83,9 +83,9 @@ export function CentralSystemLogs() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {Object.entries(data.apiMetrics).map(([version, count]) => (
-                      <div key={version} className="p-6 bg-[var(--bg-main)] border border-[var(--border)] rounded-2xl flex flex-col items-center">
+                      <div key={version} className="p-5 bg-[var(--bg-main)] border border-[var(--border)] rounded-2xl flex flex-col items-center">
                         <span className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2">API Version</span>
-                        <span className="text-3xl font-extrabold text-indigo-500 font-mono">{version}</span>
+                        <span className="text-xl font-extrabold text-indigo-500 font-mono">{version}</span>
                         <div className="mt-4 px-4 py-1 bg-indigo-500/10 text-indigo-500 rounded-full text-sm font-bold">
                           {count} Requests
                         </div>
@@ -111,14 +111,14 @@ export function CentralSystemLogs() {
                   <tbody className="divide-y divide-[var(--border)]">
                     {data.auditLogs.map((log: any) => (
                       <tr key={log.id} className="hover:bg-[var(--bg-main)] transition-colors">
-                        <td className="py-3 text-[var(--text-secondary)] flex items-center gap-1"><Clock size={12}/> {new Date(log.createdAt).toLocaleString('id-ID')}</td>
-                        <td className="py-3">
+                        <td className="py-2.5 text-[var(--text-secondary)] flex items-center gap-1"><Clock size={12}/> {new Date(log.createdAt).toLocaleString('id-ID')}</td>
+                        <td className="py-2.5">
                           <span className="px-2 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 font-bold rounded text-[10px]">
                             {log.action}
                           </span>
                         </td>
-                        <td className="py-3 text-[var(--text-primary)] font-mono text-xs">{log.actorId || 'SYSTEM'}</td>
-                        <td className="py-3 text-[var(--text-secondary)] truncate max-w-xs" title={log.details}>{log.details}</td>
+                        <td className="py-2.5 text-[var(--text-primary)] font-mono text-xs">{log.actorId || 'SYSTEM'}</td>
+                        <td className="py-2.5 text-[var(--text-secondary)] truncate max-w-xs" title={log.details}>{log.details}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -162,7 +162,7 @@ export function CentralSystemLogs() {
             {activeTab === 'purge' && (
               <div className="animate-fade-in flex flex-col items-center justify-center text-center py-10">
                 <Trash2 size={64} className="text-rose-500 mb-4 opacity-80" />
-                <h2 className="text-2xl font-extrabold text-[var(--text-primary)] mb-2">Database Optimizer</h2>
+                <h2 className="text-xl font-extrabold text-[var(--text-primary)] mb-2">Database Optimizer</h2>
                 <p className="text-[var(--text-secondary)] max-w-md mb-8">
                   Pembersihan ini akan menghapus secara permanen semua transaksi yang di-*void* (batal) dan *tenant* berstatus *TRIAL* mati yang telah usang melebihi **30 hari**. Proses ini membebaskan ruang _database_ (Archiving).
                 </p>

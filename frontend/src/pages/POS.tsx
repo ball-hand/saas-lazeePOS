@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  ShoppingCart, Search, Plus, Minus, CreditCard,
+  ShoppingCart, Plus, Minus, CreditCard,
   Package, Loader2, Tag, X, Settings, HelpCircle, Play, Pin
 } from 'lucide-react';
 import api, { getMediaUrl } from '../api/client';
 import { Modal } from '../components/Modal';
 import { ReceiptModal } from '../components/ReceiptModal';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 
 const fmt = (val: number) => 'Rp ' + Math.round(val).toLocaleString('id-ID');
 
@@ -67,7 +68,8 @@ export function POS() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
   const [barcodeInput, setBarcodeInput] = useState('');
   const [activeCategory, setActiveCategory] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -96,6 +98,51 @@ export function POS() {
     }
   });
   const [isQueueOpen, setIsQueueOpen] = useState(false);
+
+  /* ── Table Order Integration ── */
+  const [activeTableOrderId, setActiveTableOrderId] = useState<string | null>(null);
+  const [activeTableId, setActiveTableId] = useState<string | null>(null);
+  const [activeTableName, setActiveTableName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const orderId = searchParams.get('tableOrderId');
+    if (orderId && products.length > 0) {
+      const loadTableOrder = async () => {
+        try {
+          const { data } = await api.get(`/tables/orders/detail/${orderId}`);
+          const order = data.order;
+          
+          setActiveTableOrderId(order.id);
+          setActiveTableId(order.tableId);
+          setActiveTableName(order.tableName);
+          setCustomerName(order.customerName);
+          
+          // Map items
+          const mappedItems = order.items.map((i: any) => {
+            const product = products.find(p => p.id === i.productId);
+            if (!product) return null;
+            return {
+              ...product,
+              qty: i.qty,
+              discountApplied: 0
+            };
+          }).filter(Boolean);
+          
+          setCart(mappedItems);
+          
+          // Remove from URL
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete('tableOrderId');
+          setSearchParams(newParams);
+          
+          toast.success(`Pesanan dari Meja ${order.tableName} dimuat!`);
+        } catch (err) {
+          toast.error('Gagal memuat pesanan meja');
+        }
+      };
+      loadTableOrder();
+    }
+  }, [searchParams, products, setSearchParams]);
 
   /* ── Peripheral Setup State ── */
   const [peripheralConfig, setPeripheralConfig] = useState<PeripheralConfig>(() => {
@@ -453,6 +500,8 @@ export function POS() {
         paidAmount: paymentMethod === 'cash' ? paid : total,
         taxRate: currentTaxRate,
         notes: null,
+        tableOrderId: activeTableOrderId,
+        tableId: activeTableId
       });
       toast.success('Transaksi berhasil! 🎉');
       setReceipt(data.receipt);
@@ -461,6 +510,9 @@ export function POS() {
       clearCart();
       setCustomerName('');
       setPaidAmount('');
+      setActiveTableOrderId(null);
+      setActiveTableId(null);
+      setActiveTableName(null);
       fetchProducts(); // Refresh products stock level in POS Catalog
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Checkout gagal.');
@@ -470,17 +522,13 @@ export function POS() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full gap-6 relative">
+    <div className="flex flex-col lg:flex-row h-full gap-4 relative">
 
       {/* ── LEFT: Product Catalog ── */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
 
-        {/* Header + Search + Barcode */}
         <div className="mb-4 flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-bold text-[var(--text-primary)]">Terminal Kasir</h1>
-              
+          <div className="flex flex-wrap items-center gap-3">
               {/* Printer Status Badge */}
               <button
                 onClick={() => setShowPeripheralModal(true)}
@@ -522,20 +570,7 @@ export function POS() {
                 <Settings size={14} />
               </button>
             </div>
-            <p className="text-sm text-[var(--text-secondary)] mt-1">Pilih produk untuk ditambahkan ke keranjang</p>
-          </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
-            {/* Search Input */}
-            <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
-              <input
-                type="text"
-                placeholder="Cari nama..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all text-sm shadow-sm"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-            </div>
             {/* Manual Barcode Input */}
             <form onSubmit={handleManualBarcodeSubmit} className="relative flex-1 sm:w-60">
               <input
@@ -650,28 +685,35 @@ export function POS() {
       {/* ── Mobile overlay ── */}
       {isCartOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setIsCartOpen(false)}
         />
       )}
 
       {/* ── RIGHT: Cart ── */}
       <div className={`
-        fixed inset-y-0 right-0 z-50 w-full sm:w-[400px] bg-[var(--bg-surface-elevated)] border-l border-[var(--border)] shadow-2xl flex flex-col transition-transform duration-300
-        lg:relative lg:translate-x-0 lg:w-[380px] lg:shadow-none lg:rounded-2xl lg:border lg:h-[calc(100vh-8rem)] lg:sticky lg:top-6
+        fixed inset-y-0 right-0 z-50 w-full sm:w-[400px] bg-[var(--bg-surface-elevated)] border border-[var(--border)] shadow-2xl flex flex-col transition-transform duration-300
+        lg:relative lg:translate-x-0 lg:w-[380px] lg:shadow-sm lg:rounded-3xl lg:h-full overflow-hidden
         ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
         {/* Cart Header */}
-        <div className="p-5 border-b border-[var(--border)] flex justify-between items-center">
-          <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
-            <ShoppingCart size={20} className="text-[var(--accent-primary)]" />
-            Keranjang
-            {cart.length > 0 && (
-              <span className="ml-1 bg-[var(--accent-primary)] text-white text-xs font-black px-2 py-0.5 rounded-full">
-                {cart.reduce((s, i) => s + i.qty, 0)}
-              </span>
+        <div className="p-5 border-b border-[var(--border)] flex justify-between items-start">
+          <div>
+            <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
+              <ShoppingCart size={20} className="text-[var(--accent-primary)]" />
+              Keranjang
+              {cart.length > 0 && (
+                <span className="ml-1 bg-[var(--accent-primary)] text-white text-xs font-black px-2 py-0.5 rounded-full">
+                  {cart.reduce((s, i) => s + i.qty, 0)}
+                </span>
+              )}
+            </h2>
+            {activeTableName && (
+              <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-600 rounded-md text-[10px] font-black uppercase tracking-wider">
+                Meja: {activeTableName}
+              </div>
             )}
-          </h2>
+          </div>
           <div className="flex items-center gap-2">
             {cart.length > 0 && (
               <button
@@ -781,7 +823,7 @@ export function POS() {
           )}
           <div className="flex justify-between items-center mb-4">
             <span className="text-[var(--text-secondary)] font-semibold text-sm">Total Tagihan</span>
-            <span className="text-2xl font-black text-[var(--text-primary)]">{fmt(total)}</span>
+            <span className="text-xl font-black text-[var(--text-primary)]">{fmt(total)}</span>
           </div>
           
           <div className="flex gap-2">
@@ -824,8 +866,8 @@ export function POS() {
       {/* ── Held Transactions (Antrean) Drawer/Modal ── */}
       {isQueueOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsQueueOpen(false)} />
-          <div className="relative w-full max-w-md bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 animate-fade-in flex flex-col max-h-[85vh]">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsQueueOpen(false)} />
+          <div className="relative w-full max-w-md bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-2xl p-5 animate-fade-in flex flex-col max-h-[85vh]">
             <button
               onClick={() => setIsQueueOpen(false)}
               className="absolute top-4 right-4 p-1.5 text-[var(--text-secondary)] hover:text-white hover:bg-[rgba(255,255,255,0.1)] rounded-lg transition-colors"
@@ -882,8 +924,8 @@ export function POS() {
       {/* ── Peripheral Setup Modal ── */}
       {showPeripheralModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPeripheralModal(false)} />
-          <div className="relative w-full max-w-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 animate-fade-in flex flex-col max-h-[90vh] overflow-y-auto custom-scrollbar">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPeripheralModal(false)} />
+          <div className="relative w-full max-w-lg bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-2xl p-5 animate-fade-in flex flex-col max-h-[90vh] overflow-y-auto custom-scrollbar">
             <button
               onClick={() => setShowPeripheralModal(false)}
               className="absolute top-4 right-4 p-1.5 text-[var(--text-secondary)] hover:text-white hover:bg-[rgba(255,255,255,0.1)] rounded-lg transition-colors"
@@ -1028,8 +1070,8 @@ export function POS() {
       {/* ── Payment Modal ── */}
       {showPaymentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPaymentModal(false)} />
-          <div className="relative w-full max-w-sm bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 animate-fade-in">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPaymentModal(false)} />
+          <div className="relative w-full max-w-sm bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl shadow-2xl p-5 animate-fade-in">
             <button
               onClick={() => setShowPaymentModal(false)}
               className="absolute top-4 right-4 p-1.5 text-[var(--text-secondary)] hover:text-white hover:bg-[rgba(255,255,255,0.1)] rounded-lg transition-colors"
@@ -1152,7 +1194,7 @@ export function POS() {
       <Modal isOpen={showDiscountModal} onClose={() => setShowDiscountModal(false)} title="Pilih Kupon / Promo Aktif">
         <div className="flex flex-col gap-3">
           {activeDiscounts.length === 0 ? (
-            <div className="text-center p-6 text-[var(--text-secondary)] flex flex-col items-center gap-2">
+            <div className="text-center p-5 text-[var(--text-secondary)] flex flex-col items-center gap-2">
               <Tag size={32} className="opacity-20" />
               <p className="text-sm font-medium">Tidak ada promo yang sedang aktif saat ini.</p>
             </div>

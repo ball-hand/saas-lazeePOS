@@ -24,6 +24,8 @@ router.get('/tenant/:subdomain', async (req, res) => {
         themeMode: true,
         primaryColor: true,
         logoUrl: true,
+        qrisUrl: true,
+        isQrisActive: true,
         logoShape: true,
         landingPageConfig: true,
       }
@@ -75,6 +77,8 @@ router.get('/table/:tenantId/:tableId', async (req, res) => {
         name: true,
         primaryColor: true,
         logoUrl: true,
+        qrisUrl: true,
+        isQrisActive: true,
         logoShape: true,
       }
     });
@@ -167,6 +171,34 @@ router.post('/order', async (req, res) => {
   } catch (error) {
     console.error('Submit table order error:', error);
     res.status(500).json({ message: 'Gagal mengirim pesanan' });
+  }
+});
+
+/* ═══════════════════════════════════════════════════════
+   POST  /api/v1/public/orders/:orderId/proof
+   Upload payment proof for an order
+═══════════════════════════════════════════════════════ */
+router.post('/orders/:orderId/proof', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { paymentProofUrl } = req.body;
+    
+    if (!paymentProofUrl) {
+      return res.status(400).json({ message: 'Bukti pembayaran wajib diisi.' });
+    }
+
+    const order = await prisma.tableOrder.update({
+      where: { id: orderId },
+      data: {
+        paymentProofUrl,
+        paymentStatus: 'VERIFYING'
+      }
+    });
+
+    res.json({ status: 'success', message: 'Bukti pembayaran berhasil diunggah.', order });
+  } catch (error) {
+    console.error('Upload payment proof error:', error);
+    res.status(500).json({ message: 'Gagal mengunggah bukti pembayaran' });
   }
 });
 

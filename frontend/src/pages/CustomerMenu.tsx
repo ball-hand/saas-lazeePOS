@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ShoppingCart, Plus, Minus, Search, ChefHat } from 'lucide-react';
 import toast from 'react-hot-toast';
+import api, { getMediaUrl } from '../api/client';
 
 const fmt = (val: number) => 'Rp ' + Math.round(val).toLocaleString('id-ID');
 
@@ -21,6 +22,10 @@ export function CustomerMenu() {
   const [customerName, setCustomerName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [createdOrder, setCreatedOrder] = useState<any>(null);
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const [paymentFinished, setPaymentFinished] = useState(false);
 
   useEffect(() => {
     fetchCatalog();
@@ -28,22 +33,20 @@ export function CustomerMenu() {
 
   const fetchCatalog = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/public/table/${tenantId}/${tableId}`);
-      if (!res.ok) throw new Error('Failed to fetch');
-      const json = await res.json();
+      const { data } = await api.get(`/public/table/${tenantId}/${tableId}`);
       
-      setTenant(json.data.tenant);
-      setTable(json.data.table);
-      setProducts(json.data.products);
-      setCategories(json.data.categories);
+      setTenant(data.tenant);
+      setTable(data.table);
+      setProducts(data.products);
+      setCategories(data.categories);
       
-      if (json.data.categories.length > 0) {
-        setActiveCategory(json.data.categories[0]);
+      if (data.categories.length > 0) {
+        setActiveCategory(data.categories[0]);
       }
       
       // Update theme variables based on tenant
-      if (json.data.tenant?.primaryColor) {
-        document.documentElement.style.setProperty('--accent-primary', json.data.tenant.primaryColor);
+      if (data.tenant?.primaryColor) {
+        document.documentElement.style.setProperty('--accent-primary', data.tenant.primaryColor);
       }
     } catch (err) {
       toast.error('Gagal memuat menu. Silakan scan ulang QR Code.');
@@ -93,20 +96,15 @@ export function CustomerMenu() {
     try {
       const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
       
-      const res = await fetch(`http://localhost:3000/api/v1/public/order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenantId,
-          tableId,
-          customerName,
-          items: cart,
-          totalAmount
-        })
+      const { data } = await api.post(`/public/order`, {
+        tenantId,
+        tableId,
+        customerName,
+        items: cart,
+        totalAmount
       });
-
-      if (!res.ok) throw new Error('Order failed');
       
+      setCreatedOrder(data.order);
       setOrderSuccess(true);
       setCart([]);
     } catch (err) {
@@ -116,24 +114,103 @@ export function CustomerMenu() {
     }
   };
 
+  const handleUploadProof = async () => {
+    if (!paymentProofFile || !createdOrder) return;
+    setIsUploadingProof(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', paymentProofFile);
+      const res = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const proofUrl = res.data.url;
+
+      await api.post(`/public/orders/${createdOrder.id}/proof`, {
+        paymentProofUrl: proofUrl
+      });
+      
+      setPaymentFinished(true);
+    } catch (err) {
+      toast.error('Gagal mengunggah bukti pembayaran');
+    } finally {
+      setIsUploadingProof(false);
+    }
+  };
+
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50">Memuat Menu...</div>;
+    return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="w-full max-w-md min-h-screen bg-gray-50 flex items-center justify-center text-sm font-bold text-gray-400 shadow-2xl">Memuat Menu...</div></div>;
   }
 
   if (orderSuccess) {
+    if (tenant?.qrisUrl && tenant?.isQrisActive && !paymentFinished) {
+      return (
+        <div className="min-h-screen bg-gray-900 flex justify-center">
+          <div className="w-full max-w-md min-h-screen bg-gray-50 flex flex-col items-center p-5 text-center pt-10 relative shadow-2xl">
+          <h1 className="text-xl font-black text-gray-800 mb-2">Selesaikan Pembayaran</h1>
+          <p className="text-gray-500 mb-6 text-sm">Scan QRIS di bawah ini untuk membayar pesanan Anda sejumlah <strong className="text-[var(--accent-primary)]">{fmt(createdOrder?.totalAmount || 0)}</strong></p>
+          
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 w-full max-w-sm">
+            <img src={getMediaUrl(tenant.qrisUrl)} alt="QRIS" className="w-full h-auto object-contain rounded-xl" />
+          </div>
+
+          <div className="w-full max-w-sm bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6">
+            <h3 className="font-bold text-gray-800 mb-3 text-sm">Upload Bukti Transfer</h3>
+            <label className="w-full border-2 border-dashed border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-all">
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={e => {
+                  if (e.target.files && e.target.files[0]) setPaymentProofFile(e.target.files[0]);
+                }} 
+              />
+              {paymentProofFile ? (
+                <span className="text-sm font-bold text-[var(--accent-primary)]">{paymentProofFile.name}</span>
+              ) : (
+                <span className="text-xs text-gray-500 font-bold">Pilih Gambar / Foto</span>
+              )}
+            </label>
+          </div>
+
+          <button 
+            onClick={handleUploadProof}
+            disabled={!paymentProofFile || isUploadingProof}
+            className="w-full max-w-sm py-3.5 bg-[var(--accent-primary)] text-white rounded-xl font-black shadow-lg disabled:opacity-50 transition-all"
+          >
+            {isUploadingProof ? 'Mengunggah...' : 'Konfirmasi Pembayaran'}
+          </button>
+          
+          <button 
+            onClick={() => setPaymentFinished(true)}
+            className="mt-4 text-xs font-bold text-gray-400 hover:text-gray-600"
+          >
+            Nanti saja / Bayar di Kasir
+          </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+      <div className="min-h-screen bg-gray-900 flex justify-center">
+        <div className="w-full max-w-md min-h-screen flex flex-col items-center justify-center bg-gray-50 p-5 text-center shadow-2xl">
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
           <ChefHat size={40} className="text-green-600" />
         </div>
-        <h1 className="text-2xl font-black text-gray-800 mb-2">Pesanan Diterima!</h1>
-        <p className="text-gray-500 mb-8">Pesanan Anda sedang disiapkan oleh dapur. Silakan tunggu di {table?.name}.</p>
+        <h1 className="text-xl font-black text-gray-800 mb-2">Pesanan Diterima!</h1>
+        <p className="text-gray-500 mb-8 text-sm">Pesanan Anda sedang disiapkan oleh dapur. Silakan tunggu di {table?.name}.</p>
         <button 
-          onClick={() => setOrderSuccess(false)}
-          className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold"
+          onClick={() => {
+            setOrderSuccess(false);
+            setPaymentFinished(false);
+            setCreatedOrder(null);
+            setPaymentProofFile(null);
+          }}
+          className="px-6 py-2.5 bg-gray-200 text-gray-700 rounded-xl font-bold"
         >
           Pesan Lagi
         </button>
+        </div>
       </div>
     );
   }
@@ -147,14 +224,30 @@ export function CustomerMenu() {
   const cartItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32">
+    <div className="min-h-screen bg-gray-900 flex justify-center">
+      <div className="w-full max-w-md min-h-screen bg-gray-50 pb-32 relative shadow-2xl overflow-hidden">
       {/* Header */}
-      <header className="bg-white shadow-sm p-4 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          {tenant?.logoUrl && <img src={getProductMediaUrl(tenant.logoUrl)} alt="Logo" className="w-10 h-10 object-cover rounded-lg" />}
-          <div>
-            <h1 className="font-black text-gray-900">{tenant?.name || 'Toko'}</h1>
-            <p className="text-xs text-gray-500 font-medium">Anda berada di {table?.name} ({table?.zone?.name})</p>
+      <header className="bg-white shadow-sm p-4 sticky top-0 z-10 rounded-b-3xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {tenant?.logoUrl ? (
+              <img src={getMediaUrl(tenant.logoUrl)} alt="Logo" className="w-12 h-12 object-cover rounded-xl shadow-sm border border-gray-100" />
+            ) : (
+              <div className="w-12 h-12 rounded-xl bg-[var(--accent-primary)] text-white flex items-center justify-center font-black text-xl shadow-sm">
+                {tenant?.name?.charAt(0) || 'T'}
+              </div>
+            )}
+            <div>
+              <h1 className="font-black text-gray-900 text-lg leading-tight">{tenant?.name || 'Toko'}</h1>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{tenant?.subdomain || 'Digital Menu'}</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Meja</span>
+            <div className="px-3 py-1.5 bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 text-[var(--accent-primary)] rounded-xl font-black text-sm text-center shadow-sm whitespace-nowrap">
+              {table?.name}
+            </div>
           </div>
         </div>
       </header>
@@ -203,7 +296,7 @@ export function CustomerMenu() {
             <div key={product.id} className="bg-white rounded-2xl p-3 flex gap-3 shadow-sm border border-gray-100">
               <div className="w-24 h-24 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
                 {product.imageUrl ? (
-                  <img src={getProductMediaUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
+                  <img src={getMediaUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <ChefHat size={24} className="text-gray-300" />
@@ -245,14 +338,14 @@ export function CustomerMenu() {
 
       {/* Floating Cart / Checkout */}
       {cart.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 p-4 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-50">
+        <div className="fixed bottom-0 w-full max-w-md left-1/2 -translate-x-1/2 bg-white border-t border-gray-200 p-4 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.05)] z-50">
           <div className="mb-3">
             <input 
               type="text" 
               placeholder="Nama Anda (Cth: Budi)"
               value={customerName}
               onChange={e => setCustomerName(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm outline-none focus:border-[var(--accent-primary)] font-bold"
+              className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2.5 px-4 text-sm outline-none focus:border-[var(--accent-primary)] font-bold"
             />
           </div>
           <button 
@@ -268,6 +361,7 @@ export function CustomerMenu() {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }

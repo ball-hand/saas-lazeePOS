@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Save, Store, Moon, Sun, Receipt, Percent, FileText, Coffee, Sparkles, Plus, Trash2, Star, MessageSquare } from 'lucide-react';
+import { Save, Store, Moon, Sun, Receipt, Percent, FileText, Coffee, Sparkles, Plus, Trash2, Star, MessageSquare, Bell } from 'lucide-react';
 import api, { getMediaUrl } from '../api/client';
 import toast from 'react-hot-toast';
 import { RichTextEditor } from '../components/shared/RichTextEditor';
 import { CustomSelect } from '../components/shared/CustomSelect';
+import { Breadcrumb } from '../components/shared/Breadcrumb';
 
 export function Settings() {
   const { themeMode, primaryColor, storeName: contextStoreName, logoUrl: contextLogoUrl, logoShape: contextLogoShape, updateTheme } = useTheme();
@@ -16,11 +17,20 @@ export function Settings() {
   const [logoUrl, setLogoUrl] = useState(contextLogoUrl);
   const [logoShape, setLogoShape] = useState(contextLogoShape || 'square');
   const [logoFile, setLogoFile] = useState<File | null>(null);
+
+  // QRIS state
+  const { qrisUrl: contextQrisUrl, isQrisActive: contextIsQrisActive } = useTheme();
+  const [qrisUrl, setQrisUrl] = useState(contextQrisUrl);
+  const [qrisFile, setQrisFile] = useState<File | null>(null);
+  const [isQrisActive, setIsQrisActive] = useState(contextIsQrisActive || false);
   
   // Custom Receipt & Tax state
   const [receiptSubtitle, setReceiptSubtitle] = useState('Sistem Kasir Digital');
   const [receiptFooter, setReceiptFooter] = useState('Terima kasih atas kunjungan Anda!');
   const [taxRate, setTaxRate] = useState('0');
+
+  // Notification & System State
+  const [enableSound, setEnableSound] = useState(true);
 
   // Landing Page state
   const [landingPageConfig, setLandingPageConfig] = useState<any>({});
@@ -47,6 +57,8 @@ export function Settings() {
     setColor(primaryColor);
     setMode(themeMode);
     setLogoUrl(contextLogoUrl);
+    setQrisUrl(contextQrisUrl);
+    setIsQrisActive(contextIsQrisActive || false);
     setLogoShape(contextLogoShape || 'square');
 
     const storedConfig = localStorage.getItem('pos_receipt_config');
@@ -60,7 +72,12 @@ export function Settings() {
         console.error('Error parsing pos_receipt_config:', e);
       }
     }
-  }, [contextStoreName, primaryColor, themeMode, contextLogoUrl]);
+
+    const storedSound = localStorage.getItem('pos_notification_sound');
+    if (storedSound !== null) {
+      setEnableSound(storedSound === 'true');
+    }
+  }, [contextStoreName, primaryColor, themeMode, contextLogoUrl, contextQrisUrl, contextIsQrisActive]);
 
   const handleMediaUpload = async (file: File) => {
     const formData = new FormData();
@@ -77,6 +94,7 @@ export function Settings() {
     const loadingToast = toast.loading('Menyimpan pengaturan...');
     try {
       let uploadedLogoUrl = logoUrl;
+      let uploadedQrisUrl = qrisUrl;
       let configPayload = { ...landingPageConfig };
 
       // 1. Upload logo if new file selected
@@ -85,12 +103,19 @@ export function Settings() {
         setLogoUrl(uploadedLogoUrl);
       }
 
+      if (qrisFile) {
+        uploadedQrisUrl = await handleMediaUpload(qrisFile);
+        setQrisUrl(uploadedQrisUrl);
+      }
+
       // 2. Persist branding changes to backend DB
       const { data } = await api.put('/settings/tenant', {
         name: storeName,
         primaryColor: color,
         themeMode: mode,
         logoUrl: uploadedLogoUrl,
+        qrisUrl: uploadedQrisUrl,
+        isQrisActive,
         logoShape,
         landingPageConfig: configPayload
       });
@@ -102,6 +127,8 @@ export function Settings() {
           primaryColor: data.tenant.primaryColor,
           themeMode: data.tenant.themeMode,
           logoUrl: data.tenant.logoUrl,
+          qrisUrl: data.tenant.qrisUrl,
+          isQrisActive: data.tenant.isQrisActive,
           logoShape: data.tenant.logoShape
         });
       }
@@ -113,6 +140,7 @@ export function Settings() {
         taxRate: parseFloat(taxRate) || 0
       };
       localStorage.setItem('pos_receipt_config', JSON.stringify(receiptConfig));
+      localStorage.setItem('pos_notification_sound', String(enableSound));
 
       toast.success('Pengaturan toko & personalisasi berhasil disimpan!', { id: loadingToast });
     } catch (err: any) {
@@ -122,23 +150,20 @@ export function Settings() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10">
-      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Pengaturan Toko</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Atur profil, tema, pajak, dan cetak struk kasir Anda.</p>
-        </div>
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
+      <div className="flex mb-2">
+        <Breadcrumb items={[{ label: 'Toko & Transaksi' }, { label: 'Pengaturan' }]} />
       </div>
 
-      <form onSubmit={handleSave} className="flex flex-col gap-6">
+      <form onSubmit={handleSave} className="flex flex-col gap-4">
         
         {/* Section 1: Branding Identitas Tenant */}
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm flex flex-col gap-6">
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
           <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
             <Store size={18} className="text-[var(--accent-primary)]" /> Branding & Tema Aplikasi
           </h2>
 
-          <div className="flex flex-col sm:flex-row gap-6">
+          <div className="flex flex-col sm:flex-row gap-4">
             {/* Logo Upload */}
             <div className="flex flex-col gap-2 items-start">
               <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Logo Toko</label>
@@ -170,6 +195,56 @@ export function Settings() {
               </label>
             </div>
 
+            {/* QRIS Upload */}
+            <div className="flex flex-col gap-2 items-start">
+              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">QRIS Toko (Opsional)</label>
+              <div className="flex items-center gap-4">
+                <label className="w-24 h-24 border-2 border-dashed border-[var(--border)] flex items-center justify-center cursor-pointer hover:border-[var(--accent-primary)] hover:bg-[var(--bg-main)] transition-all overflow-hidden group relative rounded-2xl bg-[var(--bg-main)]">
+                  <input 
+                    type="file" 
+                    accept="image/png, image/jpeg, image/webp" 
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setQrisFile(e.target.files[0]);
+                        setQrisUrl(URL.createObjectURL(e.target.files[0]));
+                      }
+                    }}
+                  />
+                  {qrisUrl ? (
+                    <>
+                      <img src={getMediaUrl(qrisUrl)} alt="QRIS" className="w-full h-full object-contain p-1 bg-white" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <span className="text-white text-xs font-bold">Ubah</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-[var(--text-secondary)] flex flex-col items-center">
+                      <Receipt size={24} className="mb-1 opacity-50" />
+                      <span className="text-[10px] font-bold">Upload</span>
+                    </div>
+                  )}
+                </label>
+                
+                <div className="flex flex-col gap-1 justify-center">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div className="relative">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only" 
+                        checked={isQrisActive}
+                        onChange={() => setIsQrisActive(!isQrisActive)}
+                      />
+                      <div className={`block w-10 h-6 rounded-full transition-colors ${isQrisActive ? 'bg-[var(--accent-primary)]' : 'bg-gray-300'}`}></div>
+                      <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${isQrisActive ? 'transform translate-x-4' : ''}`}></div>
+                    </div>
+                    <span className="text-xs font-bold text-[var(--text-primary)] cursor-pointer">Wajib QRIS di Meja</span>
+                  </label>
+                  <p className="text-[10px] text-[var(--text-secondary)] max-w-[150px] leading-tight mt-1">Aktifkan untuk memunculkan pembayaran setelah pelanggan memesan dari meja.</p>
+                </div>
+              </div>
+            </div>
+
             {/* Nama Toko & Bentuk Logo */}
             <div className="flex-1 flex flex-col gap-4">
               <div>
@@ -179,7 +254,7 @@ export function Settings() {
                 <input 
                   type="text" 
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all font-semibold text-sm"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all font-semibold text-sm"
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
                 />
@@ -261,7 +336,7 @@ export function Settings() {
         </div>
 
         {/* Section 2: Personalisasi Struk & Pajak */}
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm flex flex-col gap-6">
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
           <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
             <Receipt size={18} className="text-[var(--accent-primary)]" /> Pengaturan Struk Belanja & Pajak
           </h2>
@@ -275,7 +350,7 @@ export function Settings() {
               <input 
                 type="text"
                 placeholder="Cth: Sistem Kasir Digital"
-                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all"
                 value={receiptSubtitle}
                 onChange={(e) => setReceiptSubtitle(e.target.value)}
               />
@@ -292,7 +367,7 @@ export function Settings() {
                 max="100"
                 step="any"
                 placeholder="Cth: 11"
-                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-bold transition-all"
+                className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-bold transition-all"
                 value={taxRate}
                 onChange={(e) => setTaxRate(e.target.value)}
               />
@@ -307,15 +382,32 @@ export function Settings() {
             <textarea
               rows={2}
               placeholder="Cth: Terima kasih atas kunjungan Anda!"
-              className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all resize-none"
+              className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all resize-none"
               value={receiptFooter}
               onChange={(e) => setReceiptFooter(e.target.value)}
             />
           </div>
         </div>
 
+        {/* Section 2.5: Notifikasi & Sistem */}
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+          <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
+            <Bell size={18} className="text-[var(--accent-primary)]" /> Pengaturan Notifikasi & Sistem
+          </h2>
+          <div className="flex items-center justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-main)]">
+            <div className="flex flex-col">
+              <span className="font-bold text-sm text-[var(--text-primary)]">Suara Notifikasi Pesanan Baru</span>
+              <span className="text-[10px] text-[var(--text-secondary)] mt-0.5">Mainkan suara 'ding' saat ada pesanan meja baru masuk ke kasir</span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={enableSound} onChange={() => setEnableSound(!enableSound)} />
+              <div className="w-11 h-6 bg-[var(--border)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--accent-primary)]"></div>
+            </label>
+          </div>
+        </div>
+
         {/* Section 3: Landing Page Publik */}
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm flex flex-col gap-6">
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
           <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
             <Store size={18} className="text-[var(--accent-primary)]" /> Pengaturan Halaman Publik (Landing Page)
           </h2>
@@ -355,7 +447,7 @@ export function Settings() {
                 </label>
               </div>
             </div>
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 space-y-4">
                 <div>
                   <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">
@@ -364,7 +456,7 @@ export function Settings() {
                   <input 
                     type="text" 
                     placeholder={`Selamat Datang di ${storeName}`}
-                    className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all"
                     value={landingPageConfig?.heroTitle || ''}
                     onChange={(e) => setLandingPageConfig({ ...landingPageConfig, heroTitle: e.target.value })}
                   />
@@ -376,7 +468,7 @@ export function Settings() {
                   <textarea 
                     placeholder="Temukan berbagai produk terbaik kami di sini."
                     rows={2}
-                    className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all resize-none custom-scrollbar"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all resize-none custom-scrollbar"
                     value={landingPageConfig?.heroSubtitle || ''}
                     onChange={(e) => setLandingPageConfig({ ...landingPageConfig, heroSubtitle: e.target.value })}
                   />
@@ -412,7 +504,7 @@ export function Settings() {
               <textarea 
                 placeholder="Toko kami berdiri sejak tahun... Kami selalu menyajikan kualitas..."
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all resize-none custom-scrollbar"
+                className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all resize-none custom-scrollbar"
                 value={landingPageConfig?.introduction || ''}
                 onChange={(e) => setLandingPageConfig({ ...landingPageConfig, introduction: e.target.value })}
               />
@@ -420,15 +512,15 @@ export function Settings() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Jargon / Slogan</label>
-                <input type="text" placeholder="Harga pas, kualitas puas!" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.jargon || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, jargon: e.target.value })} />
+                <input type="text" placeholder="Harga pas, kualitas puas!" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.jargon || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, jargon: e.target.value })} />
               </div>
               <div>
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Link / Alamat Google Maps (iframe/URL)</label>
-                <input type="text" placeholder="https://maps.google.com/..." className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.mapLocation || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, mapLocation: e.target.value })} />
+                <input type="text" placeholder="https://maps.google.com/..." className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.mapLocation || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, mapLocation: e.target.value })} />
               </div>
               <div>
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Alamat Lengkap (Teks)</label>
-                <input type="text" placeholder="Jl. Sudirman No. 1..." className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.address || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, address: e.target.value })} />
+                <input type="text" placeholder="Jl. Sudirman No. 1..." className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.address || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, address: e.target.value })} />
               </div>
             </div>
 
@@ -473,7 +565,7 @@ export function Settings() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Judul Pengumuman {idx + 1}</label>
-                        <input type="text" placeholder="Cth: Promo Ramadhan!" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all mb-4" value={ann.title || ''} onChange={(e) => {
+                        <input type="text" placeholder="Cth: Promo Ramadhan!" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all mb-4" value={ann.title || ''} onChange={(e) => {
                           const newAnn = [...(landingPageConfig?.announcements || (landingPageConfig?.announcement ? [landingPageConfig.announcement] : []))];
                           newAnn[idx].title = e.target.value;
                           setLandingPageConfig({ ...landingPageConfig, announcements: newAnn });
@@ -558,19 +650,19 @@ export function Settings() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[var(--border)] pt-4">
               <div>
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">WhatsApp</label>
-                <input type="text" placeholder="081234567890" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.whatsapp || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, whatsapp: e.target.value })} />
+                <input type="text" placeholder="081234567890" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.whatsapp || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, whatsapp: e.target.value })} />
               </div>
               <div>
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Instagram</label>
-                <input type="text" placeholder="tokosaya" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.instagram || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, instagram: e.target.value })} />
+                <input type="text" placeholder="tokosaya" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.instagram || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, instagram: e.target.value })} />
               </div>
               <div>
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">TikTok</label>
-                <input type="text" placeholder="tokosaya_tiktok" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.tiktok || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, tiktok: e.target.value })} />
+                <input type="text" placeholder="tokosaya_tiktok" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.tiktok || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, tiktok: e.target.value })} />
               </div>
               <div>
                 <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Jam Operasional</label>
-                <input type="text" placeholder="Senin - Sabtu: 08:00 - 22:00" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.operationalHours || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, operationalHours: e.target.value })} />
+                <input type="text" placeholder="Senin - Sabtu: 08:00 - 22:00" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-semibold transition-all" value={landingPageConfig?.operationalHours || ''} onChange={(e) => setLandingPageConfig({ ...landingPageConfig, operationalHours: e.target.value })} />
               </div>
             </div>
 

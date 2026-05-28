@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit3, Trash2, Package, Loader2, RefreshCw, Pin } from 'lucide-react';
+import { Plus, Edit3, Trash2, Package, Loader2, RefreshCw, Pin } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { Breadcrumb } from '../components/shared/Breadcrumb';
+import { Pagination } from '../components/shared/Pagination';
 import api, { getMediaUrl } from '../api/client';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 
 const fmt = (val: number) => 'Rp ' + Math.round(val).toLocaleString('id-ID');
 
@@ -11,8 +14,18 @@ export function Products() {
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
   const [activeCategory, setActiveCategory] = useState('');
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const currentProducts = products.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, activeCategory]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<any>({
@@ -116,26 +129,18 @@ export function Products() {
   const labelCls = "block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="animate-fade-in flex flex-col gap-8 pb-10">
-      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Katalog Produk</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola daftar barang jualanmu.</p>
-        </div>
-        <button 
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+        <Breadcrumb items={[{ label: 'Katalog & Gudang' }, { label: 'Katalog Produk' }]} />
+        <button
           onClick={() => { resetForm(); setIsModalOpen(true); }}
-          className="px-5 py-2.5 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+          className="px-4 py-2 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 shadow-sm hover:opacity-90 transition-all"
           style={{ background: 'var(--accent-gradient)' }}
         >
-          <Plus size={18} /> Tambah Produk Baru
+          <Plus size={18} /> Tambah Produk
         </button>
       </div>
-
-      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center justify-between shadow-sm">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
-          <input type="text" placeholder="Cari nama atau SKU..." className={inputCls + " pl-10"} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-        </div>
+      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center justify-end shadow-sm">
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => setActiveCategory('')} className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${!activeCategory ? 'text-white border-transparent' : 'bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-secondary)]'}`} style={!activeCategory ? { background: 'var(--accent-gradient)' } : {}}>Semua</button>
           {categories.map(cat => (
@@ -159,11 +164,11 @@ export function Products() {
             </thead>
             <tbody className="divide-y divide-[var(--border)] text-sm">
               {isLoading ? (
-                <tr><td colSpan={5} className="text-center p-8"><Loader2 size={24} className="animate-spin mx-auto text-[var(--accent-primary)]" /></td></tr>
-              ) : products.length === 0 ? (
-                <tr><td colSpan={5} className="text-center p-8 text-[var(--text-secondary)]">Tidak ada produk ditemukan.</td></tr>
+                <tr><td colSpan={5} className="text-center p-5"><Loader2 size={24} className="animate-spin mx-auto text-[var(--accent-primary)]" /></td></tr>
+              ) : currentProducts.length === 0 ? (
+                <tr><td colSpan={5} className="text-center p-5 text-[var(--text-secondary)]">Tidak ada produk ditemukan.</td></tr>
               ) : (
-                products.map((p: any) => {
+                currentProducts.map((p: any) => {
                   const stock = p.warehouse?.quantity ?? 0;
                   return (
                     <tr key={p.id} className="hover:bg-[var(--bg-main)]/40 transition-colors">
@@ -205,6 +210,13 @@ export function Products() {
             </tbody>
           </table>
         </div>
+        
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          onPageChange={setCurrentPage} 
+          totalItems={products.length} 
+        />
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={formData.id ? "Edit Produk" : "Tambah Produk Baru"}>

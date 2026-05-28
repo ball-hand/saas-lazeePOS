@@ -62,7 +62,7 @@ export function CentralReleases() {
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
             <Rocket className="text-indigo-500" size={32} /> Pengumuman Rilis
           </h1>
           <p className="text-[var(--text-secondary)] mt-1">Publikasikan fitur baru dan paksa update aplikasi di perangkat kasir.</p>
@@ -76,7 +76,7 @@ export function CentralReleases() {
       </div>
 
       {/* Timeline List */}
-      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl flex-1 overflow-hidden flex flex-col shadow-sm p-6">
+      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl flex-1 overflow-hidden flex flex-col shadow-sm p-5">
         <h2 className="font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2"><Megaphone size={20}/> Riwayat Publikasi</h2>
         
         <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-6">

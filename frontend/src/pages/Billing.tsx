@@ -147,10 +147,10 @@ export function Billing() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-8 pb-10">
+    <div className="animate-fade-in flex flex-col gap-5 pb-6">
       <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Langganan & Penagihan</h1>
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">Langganan & Penagihan</h1>
           <p className="text-[var(--text-secondary)] mt-1 font-medium">Kelola paket aktif Anda dan riwayat tagihan.</p>
         </div>
         <button onClick={fetchData} className="p-2 rounded-xl border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] transition-all" title="Refresh">
@@ -175,12 +175,12 @@ export function Billing() {
 
       {/* Current subscription card */}
       {data?.subscription && (
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
-          <div className="flex flex-col md:flex-row justify-between gap-6">
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm">
+          <div className="flex flex-col md:flex-row justify-between gap-4">
             <div className="flex-1">
               <p className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Paket Aktif Saat Ini</p>
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-black text-[var(--text-primary)]">
+                <h2 className="text-xl font-black text-[var(--text-primary)]">
                   {data.subscription.plan?.name || 'Starter'}
                 </h2>
                 {STATUS_BADGE[subStatus] && (
@@ -335,7 +335,7 @@ export function Billing() {
           return (
             <div
               key={plan.id}
-              className={`relative flex flex-col rounded-2xl border p-6 shadow-sm transition-all ${
+              className={`relative flex flex-col rounded-2xl border p-5 shadow-sm transition-all ${
                 isPro
                   ? 'border-[var(--accent-primary)]/65 bg-[var(--bg-surface-elevated)] shadow-[0_0_30px_rgba(139,92,246,0.08)]'
                   : 'border-[var(--border)] bg-[var(--bg-surface-elevated)]'
@@ -363,10 +363,10 @@ export function Billing() {
               {/* Price */}
               <div className="mb-5">
                 {isFree ? (
-                  <p className="text-3xl font-black text-[var(--text-primary)]">Gratis</p>
+                  <p className="text-xl font-black text-[var(--text-primary)]">Gratis</p>
                 ) : (
                   <>
-                    <p className="text-3xl font-black text-[var(--text-primary)]">
+                    <p className="text-xl font-black text-[var(--text-primary)]">
                       {fmt(displayPrice)}
                     </p>
                     <p className="text-xs text-[var(--text-secondary)] mt-0.5 font-medium">
@@ -407,7 +407,7 @@ export function Billing() {
               {plan.name === 'Enterprise' ? (
                 <a
                   href="mailto:support@lazeepos.com?subject=Enterprise Plan Inquiry"
-                  className="w-full py-3 rounded-xl font-black text-sm text-center border border-[var(--accent-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)] transition-all flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl font-black text-sm text-center border border-[var(--accent-primary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)] transition-all flex items-center justify-center gap-2"
                 >
                   <ExternalLink size={15} /> Hubungi Kami
                 </a>
@@ -415,7 +415,7 @@ export function Billing() {
                 <button
                   onClick={() => isFree ? null : handleUpgrade(plan.id)}
                   disabled={isUpgrading !== null || isFree}
-                  className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all ${
+                  className={`w-full py-2.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all ${
                     isFree 
                       ? 'text-white opacity-60 cursor-not-allowed shadow-none' 
                       : 'text-[var(--accent-primary)] border border-[var(--accent-primary)] hover:bg-[var(--accent-primary-transparent)]'
@@ -434,7 +434,7 @@ export function Billing() {
                 <button
                   onClick={() => handleUpgrade(plan.id)}
                   disabled={isUpgrading !== null}
-                  className="w-full py-3 rounded-xl font-black text-sm text-white flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-2.5 rounded-xl font-black text-sm text-white flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: 'var(--accent-gradient)' }}
                 >
                   {isUpgrading === plan.id ? (
@@ -471,7 +471,7 @@ export function Billing() {
 
       {/* Transaction history */}
       {data?.recentTransactions?.length > 0 && (
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm">
           <h2 className="text-lg font-black text-[var(--text-primary)] mb-5">🧾 Riwayat Transaksi Pembayaran</h2>
           <div className="overflow-x-auto -mx-6 px-6">
             <table className="w-full text-sm text-left min-w-[540px]">
@@ -494,16 +494,16 @@ export function Billing() {
                       className="hover:bg-[var(--bg-main)] transition-colors cursor-pointer"
                       onClick={() => setSelectedTx(tx)}
                     >
-                      <td className="py-3 font-mono text-xs text-[var(--text-secondary)]">{tx.orderId}</td>
-                      <td className="py-3 font-semibold text-[var(--text-primary)]">{tx.plan?.name || '—'}</td>
-                      <td className="py-3 font-bold text-[var(--text-primary)]">{fmt(tx.amount)}</td>
-                      <td className="py-3 text-[var(--text-secondary)]">{tx.paymentType || '—'}</td>
-                      <td className="py-3">
+                      <td className="py-2.5 font-mono text-xs text-[var(--text-secondary)]">{tx.orderId}</td>
+                      <td className="py-2.5 font-semibold text-[var(--text-primary)]">{tx.plan?.name || '—'}</td>
+                      <td className="py-2.5 font-bold text-[var(--text-primary)]">{fmt(tx.amount)}</td>
+                      <td className="py-2.5 text-[var(--text-secondary)]">{tx.paymentType || '—'}</td>
+                      <td className="py-2.5">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${badge.cls}`}>
                           {badge.label}
                         </span>
                       </td>
-                      <td className="py-3 text-right text-[var(--text-secondary)] text-xs">
+                      <td className="py-2.5 text-right text-[var(--text-secondary)] text-xs">
                         {new Date(tx.createdAt).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </td>
                     </tr>

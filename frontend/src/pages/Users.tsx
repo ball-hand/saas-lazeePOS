@@ -3,6 +3,7 @@ import { Users as UsersIcon, UserPlus, Shield, CheckCircle2, XCircle, Trash2, Ed
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import { Modal } from '../components/Modal';
+import { Breadcrumb } from '../components/shared/Breadcrumb';
 import { CustomSelect } from '../components/shared/CustomSelect';
 import { useAuth } from '../context/AuthContext';
 
@@ -102,15 +103,8 @@ export function Users() {
   return (
     <div className="animate-fade-in flex flex-col h-[calc(100vh-2rem)]">
       {/* Header */}
-      <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
-            <UsersIcon className="text-[var(--accent-primary)]" size={32} /> Manajemen Staf
-          </h1>
-          <p className="text-[var(--text-secondary)] mt-1">
-            Kelola akses karyawan, kasir, dan administrator toko Anda.
-          </p>
-        </div>
+      <div className="mb-4 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+        <Breadcrumb items={[{ label: 'Toko & Transaksi' }, { label: 'Manajemen Staf' }]} />
         <button
           onClick={openAddModal}
           className="flex items-center gap-2 px-5 py-2.5 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
@@ -135,11 +129,11 @@ export function Users() {
             <tbody className="divide-y divide-[var(--border)]">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-[var(--text-secondary)]">Memuat data...</td>
+                  <td colSpan={5} className="p-5 text-center text-[var(--text-secondary)]">Memuat data...</td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-[var(--text-secondary)]">Tidak ada pengguna ditemukan.</td>
+                  <td colSpan={5} className="p-5 text-center text-[var(--text-secondary)]">Tidak ada pengguna ditemukan.</td>
                 </tr>
               ) : (
                 users.map(u => (

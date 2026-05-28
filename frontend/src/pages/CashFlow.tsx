@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Wallet, TrendingUp, TrendingDown, Plus, Archive } from 'lucide-react';
 import { Modal } from "../components/Modal";
+import { Breadcrumb } from "../components/shared/Breadcrumb";
 import api from "../api/client";
 import toast from 'react-hot-toast';
 
@@ -70,21 +71,20 @@ export function CashFlow() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-8 pb-10">
-      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Arus Kas</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Pantau pemasukan, pengeluaran, dan kesehatan finansial bisnismu.</p>
-        </div>
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+        <Breadcrumb items={[{ label: 'Keuangan & Laporan' }, { label: 'Arus Kas' }]} />
+        <div className="flex justify-end gap-2">
         
         <button onClick={() => setIsModalOpen(true)} className="px-5 py-2.5 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5" style={{ background: 'var(--accent-gradient)' }}>
           <Plus size={18} /> Catat Transaksi
         </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm">
           <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4">Ringkasan Hari Ini</h3>
           <div className="flex justify-between items-end">
             <div className="space-y-1">
@@ -97,14 +97,14 @@ export function CashFlow() {
             </div>
             <div className="text-right">
               <p className="text-xs text-[var(--text-secondary)] font-medium mb-1">Kas Bersih</p>
-              <p className={`text-3xl font-extrabold tracking-tight ${summary.today.net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+              <p className={`text-xl font-extrabold tracking-tight ${summary.today.net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                 {summary.today.net >= 0 ? '+' : ''}Rp{parseFloat(summary.today.net.toString()).toLocaleString()}
               </p>
             </div>
           </div>
         </div>
         
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm">
           <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4">Ringkasan Bulan Ini</h3>
           <div className="flex justify-between items-end">
             <div className="space-y-1">
@@ -117,7 +117,7 @@ export function CashFlow() {
             </div>
             <div className="text-right">
               <p className="text-xs text-[var(--text-secondary)] font-medium mb-1">Kas Bersih</p>
-              <p className={`text-3xl font-extrabold tracking-tight ${summary.thisMonth.net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+              <p className={`text-xl font-extrabold tracking-tight ${summary.thisMonth.net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                 {summary.thisMonth.net >= 0 ? '+' : ''}Rp{parseFloat(summary.thisMonth.net.toString()).toLocaleString()}
               </p>
             </div>
@@ -126,7 +126,7 @@ export function CashFlow() {
       </div>
 
       {/* Transactions List */}
-      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 shadow-sm">
+      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm">
         <div className="flex flex-col xl:flex-row gap-4 mb-6 justify-between border-b border-[var(--border)] pb-5">
           <div className="flex flex-wrap gap-2">
             {[
@@ -239,12 +239,12 @@ export function CashFlow() {
 
           <div>
             <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-2">Jumlah (Rp) *</label>
-            <input required type="number" step="0.01" min="0.01" className="w-full px-4 py-3 text-lg font-bold rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all" placeholder="0" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />
+            <input required type="number" step="0.01" min="0.01" className="w-full px-4 py-2.5 text-lg font-bold rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all" placeholder="0" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} />
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-2">Deskripsi *</label>
-            <input required type="text" className="w-full px-4 py-3 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all" placeholder={formData.type === 'expense' ? 'Cth: Beli ATK, Bayar WiFi' : 'Cth: Modal awal kasir'} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+            <input required type="text" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all" placeholder={formData.type === 'expense' ? 'Cth: Beli ATK, Bayar WiFi' : 'Cth: Modal awal kasir'} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
           </div>
 
           <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-[var(--border)]">

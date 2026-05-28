@@ -60,7 +60,7 @@ export function ReleaseManager() {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-xl p-4 animate-fade-in">
       <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col">
         {/* Header Art */}
-        <div className={`p-6 text-center ${release.isMandatory ? 'bg-red-500/10' : 'bg-indigo-500/10'} relative`}>
+        <div className={`p-5 text-center ${release.isMandatory ? 'bg-red-500/10' : 'bg-indigo-500/10'} relative`}>
           {!release.isMandatory && (
             <button onClick={handleDismiss} className="absolute top-4 right-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
               <X size={20}/>
@@ -69,12 +69,12 @@ export function ReleaseManager() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--bg-surface-elevated)] shadow-lg mb-4">
             <Rocket size={32} className={release.isMandatory ? 'text-red-500' : 'text-indigo-500'}/>
           </div>
-          <h2 className="text-2xl font-extrabold text-[var(--text-primary)]">Versi Baru Tersedia!</h2>
+          <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Versi Baru Tersedia!</h2>
           <p className="text-sm font-bold text-[var(--text-secondary)] mt-1">LazeePOS {release.version}</p>
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-5">
           <p className="text-sm font-bold text-[var(--text-primary)] mb-3">Yang baru di versi ini:</p>
           <div className="bg-[var(--bg-main)] p-4 rounded-xl text-sm text-[var(--text-secondary)] max-h-48 overflow-y-auto whitespace-pre-wrap custom-scrollbar border border-[var(--border)] mb-6">
             {release.releaseNotes}
@@ -85,16 +85,16 @@ export function ReleaseManager() {
               <p className="text-xs text-red-500 font-bold text-center mb-3">
                 Pembaruan ini bersifat Wajib (Mandatory). Anda harus memuat ulang aplikasi untuk melanjutkan pekerjaan.
               </p>
-              <button onClick={handleReload} className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
+              <button onClick={handleReload} className="w-full py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
                 <RefreshCw size={18}/> Muat Ulang Aplikasi Sekarang
               </button>
             </div>
           ) : (
             <div className="flex gap-3">
-              <button onClick={handleDismiss} className="flex-1 py-3 text-[var(--text-secondary)] font-bold rounded-xl border border-[var(--border)] hover:bg-[var(--bg-main)] transition-colors">
+              <button onClick={handleDismiss} className="flex-1 py-2.5 text-[var(--text-secondary)] font-bold rounded-xl border border-[var(--border)] hover:bg-[var(--bg-main)] transition-colors">
                 Nanti Saja
               </button>
-              <button onClick={handleReload} className="flex-1 py-3 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
+              <button onClick={handleReload} className="flex-1 py-2.5 bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
                 <RefreshCw size={18}/> Update
               </button>
             </div>

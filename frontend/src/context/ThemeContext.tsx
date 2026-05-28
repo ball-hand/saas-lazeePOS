@@ -6,9 +6,11 @@ interface ThemeContextType {
   themeMode: 'light' | 'dark';
   primaryColor: string;
   logoUrl: string | null;
+  qrisUrl: string | null;
+  isQrisActive: boolean;
   logoShape: 'square' | 'circle';
   storeName: string;
-  updateTheme: (theme: Partial<{ themeMode: 'light' | 'dark', primaryColor: string, logoUrl: string | null, logoShape: 'square' | 'circle', name: string }>) => void;
+  updateTheme: (theme: Partial<{ themeMode: 'light' | 'dark', primaryColor: string, logoUrl: string | null, qrisUrl: string | null, isQrisActive: boolean, logoShape: 'square' | 'circle', name: string }>) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -18,6 +20,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>('dark');
   const [primaryColor, setPrimaryColor] = useState('#8B5CF6');
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [qrisUrl, setQrisUrl] = useState<string | null>(null);
+  const [isQrisActive, setIsQrisActive] = useState<boolean>(false);
   const [logoShape, setLogoShape] = useState<'square' | 'circle'>('square');
   const [storeName, setStoreName] = useState('Demo Store');
 
@@ -26,6 +30,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setThemeMode(user.tenant.themeMode as 'light' | 'dark');
       setPrimaryColor(user.tenant.primaryColor);
       setLogoUrl(user.tenant.logoUrl || null);
+      setQrisUrl((user.tenant as any).qrisUrl || null);
+      setIsQrisActive((user.tenant as any).isQrisActive || false);
       setLogoShape(((user.tenant as any).logoShape as 'square' | 'circle') || 'square');
       setStoreName(user.tenant.name);
     } else if (user?.role === 'SUPERADMIN' || !user) {
@@ -57,7 +63,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     
   }, [themeMode, primaryColor]);
 
-  const updateTheme = (updates: Partial<{ themeMode: 'light' | 'dark', primaryColor: string, logoUrl: string | null, logoShape: 'square' | 'circle', name: string }>) => {
+  const updateTheme = (updates: Partial<{ themeMode: 'light' | 'dark', primaryColor: string, logoUrl: string | null, qrisUrl: string | null, isQrisActive: boolean, logoShape: 'square' | 'circle', name: string }>) => {
     if (updates.themeMode) {
       setThemeMode(updates.themeMode);
       if (user?.role === 'SUPERADMIN') localStorage.setItem('central_themeMode', updates.themeMode);
@@ -67,12 +73,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (user?.role === 'SUPERADMIN') localStorage.setItem('central_primaryColor', updates.primaryColor);
     }
     if (updates.logoUrl !== undefined) setLogoUrl(updates.logoUrl);
+    if (updates.qrisUrl !== undefined) setQrisUrl(updates.qrisUrl);
+    if (updates.isQrisActive !== undefined) setIsQrisActive(updates.isQrisActive);
     if (updates.logoShape) setLogoShape(updates.logoShape);
     if (updates.name) setStoreName(updates.name);
   };
 
   return (
-    <ThemeContext.Provider value={{ themeMode, primaryColor, logoUrl, logoShape, storeName, updateTheme }}>
+    <ThemeContext.Provider value={{ themeMode, primaryColor, logoUrl, qrisUrl, isQrisActive, logoShape, storeName, updateTheme }}>
       {children}
     </ThemeContext.Provider>
   );

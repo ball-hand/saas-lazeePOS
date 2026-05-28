@@ -101,7 +101,7 @@ export function CentralTenantDetail() {
   const { tenant, subscription, activeUsers, productCount, lifetimeRevenue, totalTransactions, recentPayments } = data;
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10">
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
       
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="flex items-center gap-4 border-b border-[var(--border)] pb-6">
@@ -109,7 +109,7 @@ export function CentralTenantDetail() {
           <ArrowLeft size={20} />
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
             {tenant.name}
             <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${
               tenant.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
@@ -130,10 +130,10 @@ export function CentralTenantDetail() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         
         {/* ── Left Column: Usage & Storage ───────────────────── */}
-        <div className="lg:col-span-1 flex flex-col gap-6">
+        <div className="lg:col-span-1 flex flex-col gap-4">
           
           {/* Subscription Info */}
           <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5">
@@ -141,7 +141,7 @@ export function CentralTenantDetail() {
               <CreditCard size={16}/> Paket Langganan
             </h2>
             <div className="mb-4">
-              <p className="text-2xl font-extrabold text-[var(--text-primary)]">{subscription?.plan?.name || 'Free / Trial'}</p>
+              <p className="text-xl font-extrabold text-[var(--text-primary)]">{subscription?.plan?.name || 'Free / Trial'}</p>
               <p className="text-sm text-[var(--text-secondary)] mt-1">
                 Rp {subscription?.plan?.monthlyPrice.toLocaleString('id-ID') || '0'} / bulan
               </p>
@@ -196,12 +196,12 @@ export function CentralTenantDetail() {
         </div>
 
         {/* ── Right Column: Lifetime Revenue & Billing History ── */}
-        <div className="lg:col-span-2 flex flex-col gap-6">
+        <div className="lg:col-span-2 flex flex-col gap-4">
           
-          <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-6 flex items-center justify-between">
+          <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 flex items-center justify-between">
             <div>
               <p className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1">Lifetime GMV (Pendapatan Kotor Tenant)</p>
-              <p className="text-3xl font-extrabold text-[var(--text-primary)]">Rp {lifetimeRevenue.toLocaleString('id-ID')}</p>
+              <p className="text-xl font-extrabold text-[var(--text-primary)]">Rp {lifetimeRevenue.toLocaleString('id-ID')}</p>
             </div>
             <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
               <DollarSign size={28} />
@@ -228,7 +228,7 @@ export function CentralTenantDetail() {
                 <tbody className="divide-y divide-[var(--border)] text-sm">
                   {recentPayments.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="p-8 text-center text-[var(--text-secondary)]">Belum ada riwayat pembayaran.</td>
+                      <td colSpan={4} className="p-5 text-center text-[var(--text-secondary)]">Belum ada riwayat pembayaran.</td>
                     </tr>
                   ) : (
                     recentPayments.map((p) => (

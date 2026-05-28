@@ -1,18 +1,30 @@
 import { useState, useEffect } from 'react';
-import { Package, RefreshCw, ArrowUpRight, ArrowDownLeft, Search, Loader2 } from 'lucide-react';
+import { Package, RefreshCw, ArrowUpRight, ArrowDownLeft, Loader2 } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { Breadcrumb } from '../components/shared/Breadcrumb';
+import { Pagination } from '../components/shared/Pagination';
 import api from '../api/client';
 import { CustomSelect } from '../components/shared/CustomSelect';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'react-router-dom';
 
 export function Warehouse() {
   const [inventory, setInventory] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
   const [activeCategory, setActiveCategory] = useState('');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(inventory.length / itemsPerPage);
+  const currentInventory = inventory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, activeCategory, showLowStockOnly]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -109,38 +121,35 @@ export function Warehouse() {
   const labelCls = "block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10">
-      <div className="sticky top-[-16px] md:top-[-24px] lg:top-[-32px] z-20 bg-[var(--bg-main)] pt-4 md:pt-6 lg:pt-8 pb-4 -mt-4 md:-mt-6 lg:-mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] mb-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Stok Gudang</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">Pantau dan kelola persediaan barang jualan Anda.</p>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <button 
-            onClick={() => openAdjustModal('add')}
-            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-bold text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] hover:bg-[var(--bg-main)] transition-all text-sm flex items-center justify-center gap-2 shadow-sm"
-          >
-            <ArrowDownLeft size={16} className="text-[var(--success)]" /> Restock Gudang
-          </button>
-          <button 
-            onClick={() => openAdjustModal('sub')}
-            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 shadow-sm hover:opacity-90 transition-all" 
-            style={{ background: 'var(--accent-gradient)' }}
-          >
-            <ArrowUpRight size={16} /> Transfer ke Rak
-          </button>
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+        <Breadcrumb items={[{ label: 'Katalog & Gudang' }, { label: 'Stok Gudang' }]} />
+        <div className="flex justify-end gap-2">
+        <button 
+          onClick={() => openAdjustModal('add')}
+          className="px-4 py-2 rounded-xl font-bold text-[var(--text-primary)] bg-[var(--bg-surface-elevated)] border border-[var(--border)] hover:bg-[var(--bg-main)] transition-all text-sm flex items-center justify-center gap-2 shadow-sm"
+        >
+          <ArrowDownLeft size={16} className="text-[var(--success)]" /> Restock Gudang
+        </button>
+        <button 
+          onClick={() => openAdjustModal('sub')}
+          className="px-4 py-2 rounded-xl font-bold text-white text-sm flex items-center justify-center gap-2 shadow-sm hover:opacity-90 transition-all" 
+          style={{ background: 'var(--accent-gradient)' }}
+        >
+          <ArrowUpRight size={16} /> Transfer ke Rak
+        </button>
         </div>
       </div>
 
       {/* Grid Informasi Utama */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 flex items-center gap-4 shadow-sm">
           <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">
             <Package size={24} />
           </div>
           <div>
             <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Total Item Terdaftar</p>
-            <p className="text-2xl font-extrabold text-[var(--text-primary)] mt-0.5">{inventory.length} Barang</p>
+            <p className="text-xl font-extrabold text-[var(--text-primary)] mt-0.5">{inventory.length} Barang</p>
           </div>
         </div>
         <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 flex items-center gap-4 shadow-sm">
@@ -149,24 +158,14 @@ export function Warehouse() {
           </div>
           <div>
             <p className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">Perlu Segera Diorder</p>
-            <p className="text-2xl font-extrabold text-[var(--text-primary)] mt-0.5">{lowStockCount} Item Low</p>
+            <p className="text-xl font-extrabold text-[var(--text-primary)] mt-0.5">{lowStockCount} Item Low</p>
           </div>
         </div>
       </div>
 
-      {/* Search + Filter */}
-      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-4 flex flex-col lg:flex-row gap-3 items-center justify-between shadow-sm">
-        <div className="relative w-full lg:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={18} />
-          <input
-            type="text"
-            placeholder="Cari nama barang atau SKU..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all text-sm"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2 flex-wrap w-full lg:w-auto lg:justify-end">
+      {/* Filter */}
+      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-4 flex flex-col lg:flex-row gap-3 items-center justify-end shadow-sm">
+        <div className="flex gap-2 flex-wrap w-full lg:w-auto justify-end">
           <button
             onClick={() => setActiveCategory('')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${!activeCategory ? 'text-white border-transparent' : 'bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-secondary)]'}`}
@@ -219,7 +218,7 @@ export function Warehouse() {
                     <Loader2 size={24} className="animate-spin mx-auto text-[var(--accent-primary)]" />
                   </td>
                 </tr>
-              ) : inventory.length === 0 ? (
+              ) : currentInventory.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-10 text-center text-[var(--text-secondary)]">
                     <Package size={32} className="mx-auto mb-2 opacity-20" />
@@ -227,7 +226,7 @@ export function Warehouse() {
                   </td>
                 </tr>
               ) : (
-                inventory.map((item) => {
+                currentInventory.map((item) => {
                   const isLow = item.quantity <= item.reorderLevel;
                   return (
                     <tr key={item.id} className="hover:bg-[var(--bg-main)]/40 transition-colors">
@@ -276,6 +275,13 @@ export function Warehouse() {
             </tbody>
           </table>
         </div>
+        
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          onPageChange={setCurrentPage} 
+          totalItems={inventory.length} 
+        />
       </div>
 
       {/* Modal Penyesuaian Stok */}

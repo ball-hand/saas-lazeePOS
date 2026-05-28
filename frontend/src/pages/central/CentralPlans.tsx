@@ -119,10 +119,10 @@ export function CentralPlans() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-6 pb-10">
+    <div className="animate-fade-in flex flex-col gap-4 pb-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">Paket Langganan</h1>
+          <h1 className="text-xl font-extrabold text-[var(--text-primary)]">Paket Langganan</h1>
           <p className="text-[var(--text-secondary)] text-sm mt-1">
             Kelola harga dan batasan fitur untuk tenant SaaS Anda.
           </p>
@@ -135,7 +135,7 @@ export function CentralPlans() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading ? (
           <p className="text-[var(--text-secondary)] p-4">Memuat data...</p>
         ) : plans.length === 0 ? (
@@ -143,7 +143,7 @@ export function CentralPlans() {
         ) : (
           plans.map((p) => (
             <div key={p.id} className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl overflow-hidden hover:border-[var(--accent-primary)]/30 transition-all flex flex-col">
-              <div className="p-6 flex-1">
+              <div className="p-5 flex-1">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-xl font-bold text-[var(--text-primary)]">{p.name}</h3>
@@ -157,7 +157,7 @@ export function CentralPlans() {
                 </div>
                 
                 <div className="mb-6 flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold text-[var(--accent-primary)]">
+                  <span className="text-xl font-extrabold text-[var(--accent-primary)]">
                     Rp {p.monthlyPrice.toLocaleString('id-ID')}
                   </span>
                   <span className="text-sm font-medium text-[var(--text-secondary)]">/ bulan</span>
