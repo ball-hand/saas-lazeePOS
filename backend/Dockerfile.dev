@@ -4,6 +4,7 @@ COPY package*.json ./
 RUN npm install -g nodemon
 RUN npm install
 COPY . .
+RUN npx prisma generate
 EXPOSE 5000
 # Jika file utama backend-mu bernama index.js, ganti "server.js" di bawah menjadi "index.js"
 CMD ["nodemon", "server.js"] 

@@ -41,7 +41,7 @@ services:
     expose:
       - "5173"
     environment:
-      - VITE_API_URL=http://lazeepos.local/api
+      - VITE_API_URL=http://lazeepos.local/api/v1
     networks:
       - lazee_network
 
