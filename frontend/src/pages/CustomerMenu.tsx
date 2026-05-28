@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Plus, Minus, Search, Send, ChefHat } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { ShoppingCart, Plus, Minus, Search, ChefHat } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { fmt } from '../utils/format';
+
+const fmt = (val: number) => 'Rp ' + Math.round(val).toLocaleString('id-ID');
 
 export function CustomerMenu() {
   const { tenantId, tableId } = useParams();
-  const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(true);
   const [tenant, setTenant] = useState<any>(null);

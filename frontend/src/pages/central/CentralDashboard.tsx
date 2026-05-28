@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  Building2, CreditCard, Users, TrendingUp, RefreshCw,
-  ShieldAlert, CheckCircle2, DollarSign, Activity, AlertCircle
+  Building2, CreditCard, RefreshCw,
+  ShieldAlert, DollarSign, Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
