@@ -17,6 +17,8 @@ import { verifyToken } from './middleware/auth.js';
 import { pagination } from './middleware/pagination.js';
 import { idempotency } from './middleware/idempotency.js';
 import { responseHandler } from './middleware/responseHandler.js';
+import { globalLimiter } from './middleware/rateLimiter.js';
+import { responseTimeout } from './middleware/timeout.js';
 
 import authRoutes           from './routes/auth.js';
 import productRoutes        from './routes/products.js';
@@ -53,7 +55,16 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+
+// Payload Size Limiting (2MB JSON & URL-encoded)
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ limit: '2mb', extended: true }));
+
+// Global Response Timeout (30 seconds)
+app.use(responseTimeout(30000));
+
+// Global API Rate Limiter
+app.use('/api', globalLimiter);
 
 // Serve public static files (for image uploads)
 app.use('/public', express.static(path.join(__dirname, 'public')));

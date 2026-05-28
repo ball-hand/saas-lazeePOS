@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { verifyToken, requireRole, requireTenant } from '../middleware/auth.js';
+import { authLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -22,7 +23,7 @@ function issueToken(payload) {
    Creates a new tenant + admin user in one transaction.
    Called from the landing / register page (central domain).
 ═══════════════════════════════════════════════════════ */
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { email, password, name, storeName, subdomain, planId } = req.body;
 
@@ -121,7 +122,7 @@ router.post('/register', async (req, res) => {
    TENANT — LOGIN (via tenant subdomain)
    Rejects access from the central domain.
 ═══════════════════════════════════════════════════════ */
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     // ── Central domain: reject tenant login, point to /api/central/login ──
     if (req.isCentral) {

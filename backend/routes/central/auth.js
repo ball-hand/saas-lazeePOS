@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { verifyToken, requireRole } from '../../middleware/auth.js';
+import { authLimiter } from '../../middleware/rateLimiter.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -17,7 +18,7 @@ function signToken(payload) {
 /* ═══════════════════════════════════════════════════════
    POST /api/central/login  — central login
 ═══════════════════════════════════════════════════════ */
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
