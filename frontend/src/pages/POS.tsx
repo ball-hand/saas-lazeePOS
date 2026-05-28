@@ -3,7 +3,7 @@ import {
   ShoppingCart, Search, Plus, Minus, CreditCard,
   Package, Loader2, Tag, X, Settings, HelpCircle, Play, Pin
 } from 'lucide-react';
-import api from '../api/client';
+import api, { getMediaUrl } from '../api/client';
 import { Modal } from '../components/Modal';
 import { ReceiptModal } from '../components/ReceiptModal';
 import toast from 'react-hot-toast';
@@ -614,8 +614,12 @@ export function POS() {
                         : 'hover:border-[var(--accent-primary)] hover:-translate-y-0.5 hover:shadow-md'
                     }`}
                   >
-                    <div className="w-full h-24 bg-[var(--bg-main)] rounded-xl mb-3 flex items-center justify-center text-[var(--text-secondary)] group-hover:bg-[var(--accent-primary-transparent)] transition-colors relative">
-                      <Package size={28} className="opacity-30 group-hover:opacity-80 group-hover:text-[var(--accent-primary)] transition-all" />
+                    <div className="w-full h-24 bg-[var(--bg-main)] rounded-xl mb-3 flex items-center justify-center text-[var(--text-secondary)] group-hover:bg-[var(--accent-primary-transparent)] transition-colors relative overflow-hidden">
+                      {product.imageUrl ? (
+                        <img src={getMediaUrl(product.imageUrl)} alt={product.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                      ) : (
+                        <Package size={28} className="opacity-30 group-hover:opacity-80 group-hover:text-[var(--accent-primary)] transition-all" />
+                      )}
                       {product.isPinned && (
                         <div className="absolute top-2 right-2 bg-amber-500/10 text-amber-500 p-1 rounded-md shadow-sm border border-amber-500/20" title="Produk Pilihan (Di-pin)">
                           <Pin size={12} fill="currentColor" />
