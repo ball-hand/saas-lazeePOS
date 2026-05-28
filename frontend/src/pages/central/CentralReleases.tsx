@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Rocket, Plus, CheckCircle2, Megaphone, Calendar } from 'lucide-react';
+import { Rocket, Plus, Megaphone, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
 import { Modal } from '../../components/Modal';
+import { Breadcrumb } from '../../components/shared/Breadcrumb';
 
 interface Release {
   id: string;
@@ -58,14 +59,18 @@ export function CentralReleases() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col h-[calc(100vh-2rem)]">
+    <div className="relative bg-[var(--bg-surface-elevated)] rounded-2xl border border-[var(--border)] shadow-sm min-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+      {/* Subtle Dot Pattern Background */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+      
       {/* Header */}
-      <div className="mb-6 flex justify-between items-center">
+      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[var(--border)] p-6 bg-[var(--bg-surface-elevated)]">
         <div>
-          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
-            <Rocket className="text-indigo-500" size={32} /> Pengumuman Rilis
-          </h1>
-          <p className="text-[var(--text-secondary)] mt-1">Publikasikan fitur baru dan paksa update aplikasi di perangkat kasir.</p>
+          <div className="flex items-center gap-3">
+            <Rocket className="text-indigo-500" size={24} />
+            <Breadcrumb items={[{ label: 'Central Admin' }, { label: 'Pengumuman Rilis' }]} />
+          </div>
+          <p className="text-[var(--text-secondary)] mt-2 text-sm font-medium">Publikasikan fitur baru dan paksa update aplikasi di perangkat kasir.</p>
         </div>
         <button
           onClick={() => setIsCreateOpen(true)}
@@ -75,8 +80,9 @@ export function CentralReleases() {
         </button>
       </div>
 
+      <div className="relative z-10 p-6 flex-1 flex flex-col">
       {/* Timeline List */}
-      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl flex-1 overflow-hidden flex flex-col shadow-sm p-5">
+      <div className="bg-[var(--bg-main)] border border-[var(--border)] rounded-2xl flex-1 overflow-hidden flex flex-col shadow-sm p-5">
         <h2 className="font-bold text-[var(--text-primary)] mb-6 flex items-center gap-2"><Megaphone size={20}/> Riwayat Publikasi</h2>
         
         <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-6">
@@ -160,6 +166,7 @@ export function CentralReleases() {
           </div>
         </form>
       </Modal>
+      </div>
     </div>
   );
 }

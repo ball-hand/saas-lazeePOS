@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import api from '../../api/client';
 import { Link } from 'react-router-dom';
 import { CustomSelect } from '../../components/shared/CustomSelect';
+import { Breadcrumb } from '../../components/shared/Breadcrumb';
+import { Pagination } from '../../components/shared/Pagination';
 
 interface Transaction {
   id: string;
@@ -55,14 +57,18 @@ export function CentralBilling() {
   }, [search, statusFilter, page]);
 
   return (
-    <div className="animate-fade-in flex flex-col h-[calc(100vh-2rem)]">
-      {/* Header & Stats */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="relative bg-[var(--bg-surface-elevated)] rounded-2xl border border-[var(--border)] shadow-sm min-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+      {/* Subtle Dot Pattern Background */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+      
+      {/* Card Header with Title */}
+      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[var(--border)] p-6 bg-[var(--bg-surface-elevated)]">
         <div>
-          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
-            <Receipt className="text-blue-500" size={32} /> Log Tagihan SaaS
-          </h1>
-          <p className="text-[var(--text-secondary)] mt-1">Pantau seluruh pembayaran masuk dari semua tenant secara real-time.</p>
+          <div className="flex items-center gap-3">
+            <Receipt className="text-blue-500" size={24} />
+            <Breadcrumb items={[{ label: 'Central Admin' }, { label: 'Log Tagihan SaaS' }]} />
+          </div>
+          <p className="text-[var(--text-secondary)] mt-2 text-sm font-medium">Pantau seluruh pembayaran masuk dari semua tenant secara real-time.</p>
         </div>
         <div className="bg-[var(--bg-surface-elevated)] border border-emerald-500/20 px-6 py-2.5 rounded-2xl flex items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -77,6 +83,8 @@ export function CentralBilling() {
         </div>
       </div>
 
+      {/* Card Content */}
+      <div className="relative z-10 p-6 flex-1 flex flex-col">
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-3 mb-4">
         <div className="relative flex-1">
@@ -179,25 +187,14 @@ export function CentralBilling() {
           </table>
         </div>
 
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-[var(--border)] flex justify-between items-center bg-[var(--bg-main)]/50">
-            <button 
-              disabled={page === 1} 
-              onClick={() => setPage(p => p - 1)} 
-              className="px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-surface-elevated)] text-sm font-medium hover:bg-[var(--border)] disabled:opacity-50 transition-colors"
-            >
-              Sebelumnya
-            </button>
-            <span className="text-sm text-[var(--text-secondary)] font-medium">Halaman {page} dari {totalPages}</span>
-            <button 
-              disabled={page === totalPages} 
-              onClick={() => setPage(p => p + 1)} 
-              className="px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg-surface-elevated)] text-sm font-medium hover:bg-[var(--border)] disabled:opacity-50 transition-colors"
-            >
-              Selanjutnya
-            </button>
-          </div>
-        )}
+        <div className="mt-auto pt-6">
+          <Pagination 
+            currentPage={page} 
+            totalPages={totalPages} 
+            onPageChange={setPage} 
+          />
+        </div>
+      </div>
       </div>
     </div>
   );

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CustomSelect } from '../../components/shared/CustomSelect';
+import { Breadcrumb } from '../../components/shared/Breadcrumb';
+import { Pagination } from '../../components/shared/Pagination';
 import { 
   Search, Plus, Building2, Edit2, Ban, CheckCircle2, 
-  MoreVertical, ShieldAlert, Package, Users, ChevronRight, LogIn
+  ShieldAlert, Package, Users, ChevronRight, LogIn
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
@@ -165,11 +167,15 @@ export function CentralTenants() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-4 pb-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="relative bg-[var(--bg-surface-elevated)] rounded-2xl border border-[var(--border)] shadow-sm min-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+      {/* Subtle Dot Pattern Background */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+      
+      {/* Card Header with Title */}
+      <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] p-6 bg-[var(--bg-surface-elevated)]">
         <div>
-          <h1 className="text-xl font-extrabold text-[var(--text-primary)]">Manajemen Tenant</h1>
-          <p className="text-[var(--text-secondary)] text-sm mt-1">
+          <Breadcrumb items={[{ label: 'Central Admin' }, { label: 'Manajemen Tenant' }]} />
+          <p className="text-[var(--text-secondary)] text-sm mt-2 font-medium">
             Kelola data toko, subdomain, dan status akun klien.
           </p>
         </div>
@@ -181,7 +187,9 @@ export function CentralTenants() {
         </button>
       </div>
 
-      <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl flex flex-col">
+      {/* Card Content */}
+      <div className="relative z-10 p-6 flex-1 flex flex-col">
+        <div className="bg-[var(--bg-main)] border border-[var(--border)] rounded-2xl flex flex-col overflow-hidden mb-auto">
         <div className="p-4 border-b border-[var(--border)] flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" size={16} />
@@ -300,13 +308,14 @@ export function CentralTenants() {
           </table>
         </div>
 
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-[var(--border)] flex justify-between items-center">
-            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-sm disabled:opacity-50">Sebelumnnya</button>
-            <span className="text-sm text-[var(--text-secondary)]">Halaman {page} dari {totalPages}</span>
-            <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-sm disabled:opacity-50">Selanjutnya</button>
-          </div>
-        )}
+        <div className="mt-auto pt-6">
+          <Pagination 
+            currentPage={page} 
+            totalPages={totalPages} 
+            onPageChange={setPage} 
+          />
+        </div>
+      </div>
       </div>
 
       {/* Edit/Create Tenant Modal */}

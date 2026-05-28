@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+
 import { QRCodeSVG } from 'qrcode.react';
-import { Plus, X, GripVertical, CheckCircle2, Clock, Trash2, Edit2, Coffee, Map, UtensilsCrossed, Bath, DoorOpen, MonitorSmartphone, Square, Printer, Minus } from 'lucide-react';
+import { Plus, X, GripVertical, CheckCircle2, Clock, Trash2, Edit2, Coffee, Map, UtensilsCrossed, Bath, DoorOpen, MonitorSmartphone, Square, Printer, Minus, ChefHat } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api, { getMediaUrl } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -51,6 +52,7 @@ export function TableManagement() {
 
   const [showAddZoneModal, setShowAddZoneModal] = useState(false);
   const [newZoneName, setNewZoneName] = useState('');
+  const [showVerificationSuccessModal, setShowVerificationSuccessModal] = useState(false);
 
   const [showAddTableModal, setShowAddTableModal] = useState(false);
   const [newTableName, setNewTableName] = useState('');
@@ -104,6 +106,7 @@ export function TableManagement() {
     try {
       const { data } = await api.get('/tables/zones');
       setZones(data.zones || []);
+      
       if (data.zones.length > 0 && !activeZoneId) {
         setActiveZoneId(data.zones[0].id);
       }
@@ -190,7 +193,7 @@ export function TableManagement() {
   const handleVerifyPayment = async (orderId: string) => {
     try {
       await api.put(`/tables/orders/${orderId}/verify`);
-      toast.success('Pembayaran berhasil diverifikasi');
+      setShowVerificationSuccessModal(true);
       // Refresh orders
       if (selectedTable) {
         api.get(`/tables/${selectedTable.id}/orders`)
@@ -287,7 +290,7 @@ export function TableManagement() {
     } : z));
   };
 
-  const handlePointerUp = (e: React.PointerEvent, id: string, type: 'table' | 'layout') => {
+  const handlePointerUp = (e: React.PointerEvent, _id: string, type: 'table' | 'layout') => {
     if (type === 'table') setDraggingTable(null);
     else setDraggingLayout(null);
     e.currentTarget.releasePointerCapture(e.pointerId);
@@ -442,7 +445,7 @@ export function TableManagement() {
                   <Coffee size={24} className="mb-1 opacity-80" />
                   <span className="font-black text-sm tracking-tight">{table.name}</span>
                   {/* Status Indicator Icon */}
-                  <div className="absolute -top-2 -right-2 bg-[var(--bg-main)] rounded-full p-0.5 shadow-sm">
+                  <div className="absolute top-0 right-0 p-4 space-y-3 pointer-events-none" style={{ zIndex: 50 }}>    
                     {table.status === 'AVAILABLE' && <CheckCircle2 size={14} className="fill-[var(--success)] text-white" />}
                     {table.status === 'OCCUPIED' && <Clock size={14} className="fill-[var(--danger)] text-white" />}
                     {table.status === 'CLEANING' && <Edit2 size={14} className="fill-amber-500 text-white" />}
@@ -880,6 +883,24 @@ export function TableManagement() {
         </div>
       </Modal>
 
+      {/* Success Modal */}
+      <Modal isOpen={showVerificationSuccessModal} onClose={() => setShowVerificationSuccessModal(false)} title="Verifikasi Berhasil" size="sm">
+        <div className="flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+            <ChefHat size={40} className="text-green-600" />
+          </div>
+          <h2 className="text-xl font-black text-[var(--text-primary)] mb-2">Pembayaran Sah!</h2>
+          <p className="text-[var(--text-secondary)] font-bold text-sm mb-8">
+            Pesanan telah dilunasi dan otomatis diteruskan ke <strong>Antrean Dapur</strong> untuk segera diproses.
+          </p>
+          <button
+            onClick={() => setShowVerificationSuccessModal(false)}
+            className="w-full py-3 bg-[var(--accent-primary)] text-white font-black rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all"
+          >
+            Selesai
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

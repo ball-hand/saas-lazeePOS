@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
+import { VerifyPaymentModal } from './VerifyPaymentModal';
 import { Menu, Search, Mail, Bell, LogOut, Coffee } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,6 +13,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [activeTableOrders, setActiveTableOrders] = useState<any[]>([]);
+  const [verifyOrderId, setVerifyOrderId] = useState<string | null>(null);
   const previousOrderCount = useRef(0);
   const { storeName } = useTheme();
   const { user, logout } = useAuth();
@@ -90,6 +92,7 @@ export function Layout({ children }: { children: ReactNode }) {
     if (path.includes('/settings')) return { title: 'Pengaturan Toko', desc: 'Konfigurasi Sistem' };
     if (path.includes('/users')) return { title: 'Staf & Kasir', desc: 'Manajemen Akses' };
     if (path.includes('/dashboard') || path === '/') return { title: 'Dashboard', desc: 'Ringkasan Aktivitas Toko' };
+    if (path.includes('/queue')) return { title: 'Antrean Dapur', desc: 'Kelola dan proses pesanan yang masuk' };
     return { title: 'LazeePOS', desc: 'Manajemen Bisnis' };
   };
 
@@ -177,16 +180,25 @@ export function Layout({ children }: { children: ReactNode }) {
                               key={order.id}
                               onClick={() => {
                                 setIsNotificationOpen(false);
-                                navigate(`/pos?tableOrderId=${order.id}`);
+                                if (order.paymentStatus === 'VERIFYING') {
+                                  setVerifyOrderId(order.id);
+                                } else {
+                                  navigate(`/pos?tableOrderId=${order.id}`);
+                                }
                               }}
-                              className="w-full text-left p-3 hover:bg-[var(--bg-main)] rounded-xl transition-all border border-transparent hover:border-[var(--border)] flex gap-3 group"
+                              className="w-full text-left p-3 hover:bg-[var(--bg-main)] rounded-xl transition-all border border-transparent hover:border-[var(--border)] flex gap-3 group relative"
                             >
                               <div className="w-10 h-10 rounded-full bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                                 <Coffee size={18} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-[var(--text-primary)] truncate">{order.tableName} <span className="font-medium text-[var(--text-secondary)] text-[10px] ml-1">({order.zoneName})</span></p>
-                                <p className="text-[11px] text-[var(--text-secondary)] truncate mt-0.5">{order.customerName} • Rp {order.totalAmount.toLocaleString('id-ID')}</p>
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <p className="text-sm font-bold text-[var(--text-primary)] truncate">{order.tableName} <span className="font-medium text-[var(--text-secondary)] text-[10px] ml-1">({order.zoneName})</span></p>
+                                  {order.paymentStatus === 'VERIFYING' && (
+                                    <span className="text-[10px] font-black bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full whitespace-nowrap">Cek Bayar</span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-[var(--text-secondary)] truncate">{order.customerName} • Rp {order.totalAmount.toLocaleString('id-ID')}</p>
                               </div>
                             </button>
                           ))
@@ -287,6 +299,21 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
+
+      <VerifyPaymentModal 
+        orderId={verifyOrderId} 
+        onClose={() => setVerifyOrderId(null)} 
+        onSuccess={() => {
+          setVerifyOrderId(null);
+          const fetchOrders = async () => {
+            try {
+              const res = await api.get('/tables/orders/active');
+              setActiveTableOrders(res.data.orders || []);
+            } catch (err) {}
+          };
+          fetchOrders();
+        }}
+      />
     </div>
   );
 }

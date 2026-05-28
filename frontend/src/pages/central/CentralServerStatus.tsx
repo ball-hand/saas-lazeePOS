@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Database, Server, Terminal, Activity } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
+import { Breadcrumb } from '../../components/shared/Breadcrumb';
 
 export function CentralServerStatus() {
   const [sysInfo, setSysInfo] = useState<any>(null);
@@ -40,24 +41,28 @@ export function CentralServerStatus() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-4 pb-6 h-[calc(100vh-2rem)]">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] pb-6">
+    <div className="relative bg-[var(--bg-surface-elevated)] rounded-2xl border border-[var(--border)] shadow-sm min-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+      {/* Subtle Dot Pattern Background */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+      
+      <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] p-6 bg-[var(--bg-surface-elevated)]">
         <div>
-          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
-            <Server className="text-blue-500" size={32} /> Status Server
-          </h1>
-          <p className="text-[var(--text-secondary)] mt-1">Pemantauan infrastruktur dan kapasitas server.</p>
+          <div className="flex items-center gap-3">
+            <Server className="text-blue-500" size={24} />
+            <Breadcrumb items={[{ label: 'Central Admin' }, { label: 'Status Server' }]} />
+          </div>
+          <p className="text-[var(--text-secondary)] mt-2 text-sm font-medium">Pemantauan infrastruktur dan kapasitas server.</p>
         </div>
         <button
           onClick={fetchSysInfo}
           disabled={loadingSys}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition-colors font-semibold"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[var(--accent-primary)] transition-colors font-semibold shadow-sm"
         >
           <Activity size={18} /> Segarkan Data
         </button>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+      <div className="relative z-10 p-6 flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
         {loadingSys ? (
           <div className="p-5 text-center text-[var(--text-secondary)]">Memeriksa status server...</div>
         ) : sysInfo ? (

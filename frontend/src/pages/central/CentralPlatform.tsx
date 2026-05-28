@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { 
-  Settings, Save, Globe, Palette, Moon, Sun, Check, LayoutTemplate, Type, Eye, EyeOff, Plus, Bell
+  Settings, Save, Globe, Palette, Moon, Sun, Check, LayoutTemplate, Type, Eye, EyeOff, Bell
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api, { getMediaUrl } from '../../api/client';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { RichTextEditor } from '../../components/shared/RichTextEditor';
+import { Breadcrumb } from '../../components/shared/Breadcrumb';
 
 export function CentralPlatform() {
   const { user } = useAuth();
@@ -84,13 +85,17 @@ export function CentralPlatform() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col gap-4 pb-6 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] pb-6 sticky top-0 bg-[var(--bg-main)] z-10 pt-2">
+    <div className="relative bg-[var(--bg-surface-elevated)] rounded-2xl border border-[var(--border)] shadow-sm min-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+      {/* Subtle Dot Pattern Background */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+      
+      <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] p-6 bg-[var(--bg-surface-elevated)]">
         <div>
-          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
-            <Settings className="text-[var(--accent-primary)]" size={32} /> Pengaturan Platform
-          </h1>
-          <p className="text-[var(--text-secondary)] mt-1">
+          <div className="flex items-center gap-3">
+            <Settings className="text-[var(--accent-primary)]" size={24} />
+            <Breadcrumb items={[{ label: 'Central Admin' }, { label: 'Pengaturan Platform' }]} />
+          </div>
+          <p className="text-[var(--text-secondary)] mt-2 text-sm font-medium">
             Konfigurasi global platform, tampilan UI, dan CMS Landing Page.
           </p>
         </div>
@@ -103,7 +108,7 @@ export function CentralPlatform() {
         </button>
       </div>
 
-      <div className="space-y-8">
+      <div className="relative z-10 p-6 flex-1 space-y-8">
         
         {/* SECTION 1: Pengaturan Umum */}
         <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm">

@@ -79,6 +79,9 @@ export function POS() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [paidAmount, setPaidAmount] = useState('');
   const [customerName, setCustomerName] = useState('');
+  const [orderType, setOrderType] = useState<'takeaway' | 'dine-in'>('takeaway');
+  const [selectedTableId, setSelectedTableId] = useState('');
+  const [availableTables, setAvailableTables] = useState<any[]>([]);
   const [discountMap, setDiscountMap] = useState<Record<string, number>>({});
   const [receipt, setReceipt] = useState<any>(null);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -196,7 +199,16 @@ export function POS() {
   useEffect(() => {
     fetchProducts();
     fetchActiveDiscounts();
+    fetchTables();
   }, []);
+
+  const fetchTables = async () => {
+    try {
+      const { data } = await api.get('/tables/zones');
+      const allTables = data.zones.flatMap((z: any) => z.tables).filter((t: any) => t.status === 'AVAILABLE');
+      setAvailableTables(allTables);
+    } catch {}
+  };
 
   const fetchActiveDiscounts = async () => {
     try {
@@ -501,7 +513,8 @@ export function POS() {
         taxRate: currentTaxRate,
         notes: null,
         tableOrderId: activeTableOrderId,
-        tableId: activeTableId
+        tableId: activeTableId || selectedTableId || undefined,
+        orderType: activeTableOrderId ? 'dine-in' : orderType
       });
       toast.success('Transaksi berhasil! 🎉');
       setReceipt(data.receipt);
@@ -1094,6 +1107,57 @@ export function POS() {
                   onChange={e => setCustomerName(e.target.value)}
                 />
               </div>
+
+              {/* Tipe Pesanan & Meja (Hanya jika bukan pesanan QR meja aktif) */}
+              {!activeTableOrderId && (
+                <div className="bg-[var(--bg-main)] border border-[var(--border)] rounded-xl p-3 space-y-3">
+                  <div>
+                    <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5 block">
+                      Tipe Pesanan
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setOrderType('takeaway')}
+                        className={`py-2 rounded-lg text-xs font-black border transition-all ${
+                          orderType === 'takeaway'
+                            ? 'bg-[var(--accent-primary)] text-white border-transparent'
+                            : 'bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]'
+                        }`}
+                      >
+                        Bawa Pulang
+                      </button>
+                      <button
+                        onClick={() => setOrderType('dine-in')}
+                        className={`py-2 rounded-lg text-xs font-black border transition-all ${
+                          orderType === 'dine-in'
+                            ? 'bg-[var(--accent-primary)] text-white border-transparent'
+                            : 'bg-transparent border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]'
+                        }`}
+                      >
+                        Makan di Tempat
+                      </button>
+                    </div>
+                  </div>
+
+                  {orderType === 'dine-in' && (
+                    <div>
+                      <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5 block">
+                        Pilih Meja (Opsional)
+                      </label>
+                      <select
+                        value={selectedTableId}
+                        onChange={(e) => setSelectedTableId(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm font-medium"
+                      >
+                        <option value="">Pilih meja yang kosong...</option>
+                        {availableTables.map(t => (
+                          <option key={t.id} value={t.id}>{t.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Payment method */}
               <div>

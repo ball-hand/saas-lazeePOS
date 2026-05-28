@@ -263,6 +263,9 @@ router.put('/orders/:orderId/verify', authenticate, async (req, res) => {
     const short = uuidv4().slice(0, 6).toUpperCase();
     const receiptNumber = `RCP-${date}-${short}`;
 
+    const table = await prisma.table.findUnique({ where: { id: order.tableId } });
+    const tableName = table ? table.name : null;
+
     // Start a transaction to ensure atomic operation
     const result = await prisma.$transaction(async (tx) => {
       // 1. Potong Stok Gudang
@@ -294,6 +297,9 @@ router.put('/orders/:orderId/verify', authenticate, async (req, res) => {
           paidAmount: order.totalAmount,
           changeGiven: 0,
           paymentMethod: 'qris',
+          queueStatus: 'PROCESSING',
+          orderType: 'dine-in',
+          tableName,
           items: { create: receiptItems }
         }
       });

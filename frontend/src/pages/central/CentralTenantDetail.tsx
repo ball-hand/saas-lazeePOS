@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
-  ArrowLeft, Building2, CreditCard, Users, Package,
-  DollarSign, Clock, ShieldAlert, CheckCircle2, History,
+  ArrowLeft, CreditCard, Users, Package,
+  DollarSign, Clock, ShieldAlert, History,
   LogOut, Activity, Database
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
-import { useAuth } from '../../context/AuthContext';
+import { Breadcrumb } from '../../components/shared/Breadcrumb';
 
 /* ───────────────────────────────────────────── Types */
 interface TenantBilling {
@@ -45,7 +45,6 @@ interface TenantBilling {
 export function CentralTenantDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { login } = useAuth(); // We might need a direct way to swap tokens if we implement impersonate properly
   
   const [data, setData] = useState<TenantBilling | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,25 +100,29 @@ export function CentralTenantDetail() {
   const { tenant, subscription, activeUsers, productCount, lifetimeRevenue, totalTransactions, recentPayments } = data;
 
   return (
-    <div className="animate-fade-in flex flex-col gap-4 pb-6">
+    <div className="relative bg-[var(--bg-surface-elevated)] rounded-2xl border border-[var(--border)] shadow-sm min-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+      {/* Subtle Dot Pattern Background */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
       
       {/* ── Header ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-4 border-b border-[var(--border)] pb-6">
-        <Link to="/central/tenants" className="p-2 rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
-          <ArrowLeft size={20} />
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
-            {tenant.name}
-            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${
-              tenant.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-              tenant.status === 'SUSPENDED' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
-              'bg-amber-500/10 text-amber-400 border-amber-500/20'
-            }`}>
-              {tenant.status}
-            </span>
-          </h1>
-          <p className="text-[var(--text-secondary)] text-sm font-mono mt-1">{tenant.subdomain}.lazeepos.com</p>
+      <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] p-6 bg-[var(--bg-surface-elevated)]">
+        <div className="flex items-center gap-4">
+          <Link to="/central/tenants" className="p-2 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+            <ArrowLeft size={20} />
+          </Link>
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <Breadcrumb items={[{ label: 'Central Admin' }, { label: 'Manajemen Tenant' }, { label: tenant.name }]} />
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border ${
+                tenant.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                tenant.status === 'SUSPENDED' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                'bg-amber-500/10 text-amber-400 border-amber-500/20'
+              }`}>
+                {tenant.status}
+              </span>
+            </div>
+            <p className="text-[var(--text-secondary)] text-sm font-mono mt-1">{tenant.subdomain}.lazeepos.com</p>
+          </div>
         </div>
         <button
           onClick={handleImpersonate}
@@ -130,6 +133,7 @@ export function CentralTenantDetail() {
         </button>
       </div>
 
+      <div className="relative z-10 p-6 flex-1 flex flex-col">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         
         {/* ── Left Column: Usage & Storage ───────────────────── */}
@@ -256,7 +260,7 @@ export function CentralTenantDetail() {
             </div>
           </div>
         </div>
-
+        </div>
       </div>
     </div>
   );

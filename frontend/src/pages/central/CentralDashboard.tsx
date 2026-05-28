@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
   Building2, CreditCard, RefreshCw,
-  ShieldAlert, DollarSign, Activity
+  DollarSign, Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
+import { Breadcrumb } from '../../components/shared/Breadcrumb';
 
 /* ───────────────────────────────────────────── Types */
 interface AnalyticsData {
@@ -78,16 +79,15 @@ export function CentralDashboard() {
   const { metrics, tenants, churnRate, activeOutlets } = data;
 
   return (
-    <div className="animate-fade-in flex flex-col gap-5 pb-6">
-
+    <div className="relative bg-[var(--bg-surface-elevated)] rounded-2xl border border-[var(--border)] shadow-sm min-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+      {/* Subtle Dot Pattern Background */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+      
       {/* ── Header ─────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] pb-6">
+      <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] p-6 bg-[var(--bg-surface-elevated)]">
         <div>
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs font-bold uppercase tracking-wider mb-2 border border-red-500/20">
-            <ShieldAlert size={14}/> Super Admin Central
-          </span>
-          <h1 className="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">SaaS Analytics</h1>
-          <p className="text-[var(--text-secondary)] mt-1 font-medium">
+          <Breadcrumb items={[{ label: 'Central Admin' }, { label: 'SaaS Analytics' }]} />
+          <p className="text-[var(--text-secondary)] mt-2 font-medium text-sm">
             Pantau pertumbuhan, pendapatan, dan retensi pelanggan.
           </p>
         </div>
@@ -100,6 +100,9 @@ export function CentralDashboard() {
           Segarkan
         </button>
       </div>
+
+      {/* ── Content ─────────────────────────────────────────── */}
+      <div className="relative z-10 p-6 flex-1 flex flex-col gap-5">
 
       {/* ── Primary Financial KPIs ──────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -196,6 +199,8 @@ export function CentralDashboard() {
               <p className="text-sm text-[var(--text-secondary)] text-center py-4">Belum ada paket langganan berbayar yang aktif.</p>
             )}
           </div>
+        </div>
+
         </div>
 
       </div>

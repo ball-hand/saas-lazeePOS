@@ -202,4 +202,30 @@ router.post('/orders/:orderId/proof', async (req, res) => {
   }
 });
 
+/* ═══════════════════════════════════════════════════════
+   POST /api/v1/public/table/:tenantId/:tableId/finish
+   Customer marks the table as finished (clears OCCUPIED status)
+═══════════════════════════════════════════════════════ */
+router.post('/table/:tenantId/:tableId/finish', async (req, res) => {
+  try {
+    const { tenantId, tableId } = req.params;
+
+    const table = await prisma.table.findUnique({
+      where: { id: tableId, tenantId }
+    });
+
+    if (!table) return res.status(404).json({ message: 'Meja tidak ditemukan' });
+
+    await prisma.table.update({
+      where: { id: tableId },
+      data: { status: 'CLEANING', activeOrderId: null }
+    });
+
+    res.json({ status: 'success', message: 'Meja telah selesai digunakan' });
+  } catch (error) {
+    console.error('Finish table error:', error);
+    res.status(500).json({ message: 'Gagal memproses penyelesaian meja' });
+  }
+});
+
 export default router;

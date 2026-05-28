@@ -29,6 +29,7 @@ import { Warehouse } from './pages/Warehouse';
 import { Receipts } from './pages/Receipts';
 import { CashFlow } from './pages/CashFlow';
 import { Discounts } from './pages/Discounts';
+import { Queue } from './pages/Queue';
 import { Settings } from './pages/Settings';
 import { Billing } from './pages/Billing';
 import { Support } from './pages/Support';
@@ -55,6 +56,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/pos"        element={<POS />} />
             <Route path="/tables"     element={<TableManagement />} />
+            <Route path="/queue"      element={<Queue />} />
             <Route path="/products"   element={<Products />} />
             <Route path="/warehouse"  element={<Warehouse />} />
             <Route path="/receipts"   element={<Receipts />} />

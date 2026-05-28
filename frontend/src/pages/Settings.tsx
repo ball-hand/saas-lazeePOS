@@ -31,6 +31,7 @@ export function Settings() {
 
   // Notification & System State
   const [enableSound, setEnableSound] = useState(true);
+  const [autoClearTableMinutes, setAutoClearTableMinutes] = useState('45');
 
   // Landing Page state
   const [landingPageConfig, setLandingPageConfig] = useState<any>({});
@@ -43,6 +44,9 @@ export function Settings() {
         const { data } = await api.get('/settings/tenant');
         if (data?.tenant?.landingPageConfig) {
           setLandingPageConfig(data.tenant.landingPageConfig);
+        }
+        if (data?.tenant?.autoClearTableMinutes !== undefined) {
+          setAutoClearTableMinutes(String(data.tenant.autoClearTableMinutes));
         }
       } catch (err) {
         console.error(err);
@@ -117,6 +121,7 @@ export function Settings() {
         qrisUrl: uploadedQrisUrl,
         isQrisActive,
         logoShape,
+        autoClearTableMinutes,
         landingPageConfig: configPayload
       });
 
@@ -242,6 +247,21 @@ export function Settings() {
                   </label>
                   <p className="text-[10px] text-[var(--text-secondary)] max-w-[150px] leading-tight mt-1">Aktifkan untuk memunculkan pembayaran setelah pelanggan memesan dari meja.</p>
                 </div>
+              </div>
+
+              <div className="pt-4 border-t border-[var(--border)]">
+                <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-2 block">Otomatis Kosongkan Meja (Menit)</label>
+                <input 
+                  type="number" 
+                  min="5"
+                  value={autoClearTableMinutes} 
+                  onChange={e => setAutoClearTableMinutes(e.target.value)} 
+                  className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)] outline-none transition-all"
+                  placeholder="Cth: 45"
+                />
+                <p className="text-[var(--text-secondary)] text-[10px] mt-1.5 font-medium">
+                  Sistem akan otomatis mengubah status meja kembali menjadi kosong jika pesanan dibiarkan menggantung melebihi waktu ini (default: 45 menit).
+                </p>
               </div>
             </div>
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ServerCrash, ShieldAlert, Activity, Trash2, Clock, CheckCircle2, Search } from 'lucide-react';
+import { ServerCrash, ShieldAlert, Activity, Trash2, Clock, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
+import { Breadcrumb } from '../../components/shared/Breadcrumb';
 
 export function CentralSystemLogs() {
   const [activeTab, setActiveTab] = useState<'metrics'|'audit'|'error'|'purge'>('metrics');
@@ -42,14 +43,22 @@ export function CentralSystemLogs() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col h-[calc(100vh-2rem)]">
+    <div className="relative bg-[var(--bg-surface-elevated)] rounded-2xl border border-[var(--border)] shadow-sm min-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+      {/* Subtle Dot Pattern Background */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+      
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
-          <ServerCrash className="text-rose-500" size={32} /> Command Center
-        </h1>
-        <p className="text-[var(--text-secondary)] mt-1">Sistem pelacakan intelijen, log error, dan pembersihan server.</p>
+      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[var(--border)] p-6 bg-[var(--bg-surface-elevated)]">
+        <div>
+          <div className="flex items-center gap-3">
+            <ServerCrash className="text-rose-500" size={24} />
+            <Breadcrumb items={[{ label: 'Central Admin' }, { label: 'Command Center' }]} />
+          </div>
+          <p className="text-[var(--text-secondary)] mt-2 text-sm font-medium">Sistem pelacakan intelijen, log error, dan pembersihan server.</p>
+        </div>
       </div>
+
+      <div className="relative z-10 p-6 flex-1 flex flex-col">
 
       {/* Tabs */}
       <div className="flex gap-2 mb-4 bg-[var(--bg-surface-elevated)] p-2 rounded-2xl border border-[var(--border)] overflow-x-auto custom-scrollbar">
@@ -178,6 +187,7 @@ export function CentralSystemLogs() {
 
           </div>
         )}
+      </div>
       </div>
     </div>
   );

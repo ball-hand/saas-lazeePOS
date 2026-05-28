@@ -26,6 +26,7 @@ import warehouseRoutes      from './routes/warehouse.js';
 import discountRoutes       from './routes/discounts.js';
 import cashflowRoutes       from './routes/cashflow.js';
 import dashboardRoutes      from './routes/dashboard.js';
+import queueRoutes          from './routes/queue.js';
 import settingsRoutes       from './routes/settings.js';
 import tableRoutes          from './routes/tables.js';
 import centralAuthRoutes    from './routes/central/auth.js';
@@ -140,6 +141,7 @@ app.use('/api/v1/transactions',     transactionRoutes);
 app.use('/api/v1/accounts-payable', accountsPayableRoutes);
 app.use('/api/v1/cashflow',   cashflowRoutes);
 app.use('/api/v1/dashboard',  dashboardRoutes);
+app.use('/api/v1/queue',      queueRoutes);
 app.use('/api/v1/settings',   settingsRoutes);
 app.use('/api/v1/tables',     tableRoutes);
 app.use('/api/v1/payment',    paymentRoutes);
@@ -177,6 +179,36 @@ app.use(async (err, req, res, _next) => {
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 });
+
+/* ─────────────────────────────────────────────────────────
+   AUTO-CLEAR STALE TABLES (Every 5 Minutes)
+───────────────────────────────────────────────────────── */
+setInterval(async () => {
+  try {
+    // Find all OCCUPIED tables
+    const occupiedTables = await prisma.table.findMany({
+      where: { status: 'OCCUPIED' },
+      include: { tenant: { select: { autoClearTableMinutes: true } } }
+    });
+
+    const now = new Date();
+    for (const table of occupiedTables) {
+      const timeoutMinutes = table.tenant?.autoClearTableMinutes || 45;
+      const diffMs = now.getTime() - table.updatedAt.getTime();
+      const diffMinutes = Math.floor(diffMs / 60000);
+
+      if (diffMinutes >= timeoutMinutes) {
+        await prisma.table.update({
+          where: { id: table.id },
+          data: { status: 'CLEANING', activeOrderId: null }
+        });
+        console.log(`[Auto-Clear] Table ${table.name} (Tenant: ${table.tenantId}) cleared after ${diffMinutes}m`);
+      }
+    }
+  } catch (err) {
+    console.error('Auto-clear tables error:', err);
+  }
+}, 5 * 60 * 1000); // 5 minutes
 
 /* ─────────────────────────────────────────────────────────
    START

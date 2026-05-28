@@ -17,7 +17,7 @@ function generateReceiptNumber() {
 // POST /api/receipts — create sale (checkout)
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { items, customerName, paymentMethod, paidAmount, taxRate, notes } = req.body;
+    const { items, customerName, paymentMethod, paidAmount, taxRate, notes, tableOrderId, tableId } = req.body;
 
     if (!items || !items.length) {
       return res.status(400).json({ message: 'Cart is empty' });
@@ -58,6 +58,15 @@ router.post('/', authenticate, async (req, res) => {
 
     const receiptNumber = generateReceiptNumber();
 
+    let orderType = 'takeaway';
+    let tableName = null;
+
+    if (tableId) {
+      orderType = 'dine-in';
+      const table = await prisma.table.findUnique({ where: { id: tableId } });
+      if (table) tableName = table.name;
+    }
+
     // Create receipt with items in a transaction
     const receipt = await prisma.$transaction(async (tx) => {
       // Create receipt
@@ -74,6 +83,9 @@ router.post('/', authenticate, async (req, res) => {
           paymentMethod: paymentMethod || 'cash',
           receiptNumber,
           notes: notes || null,
+          queueStatus: 'PROCESSING',
+          orderType,
+          tableName,
           items: {
             create: receiptItems,
           },
@@ -104,15 +116,36 @@ router.post('/', authenticate, async (req, res) => {
       });
 
       // Update TableOrder and Table status if this is a table order checkout
-      if (req.body.tableOrderId && req.body.tableId) {
+      if (tableOrderId && tableId) {
         await tx.tableOrder.update({
-          where: { id: req.body.tableOrderId },
+          where: { id: tableOrderId },
           data: { status: 'COMPLETED' }
         });
         
         await tx.table.update({
-          where: { id: req.body.tableId },
+          where: { id: tableId },
           data: { status: 'CLEANING', activeOrderId: null }
+        });
+      } else if (orderType === 'dine-in' && tableId) {
+        // Cashier picked Dine-in and selected a table directly from POS.
+        // We need to create a TableOrder representing this paid order to occupy the table
+        // so the customer can scan the QR code and click "Selesai".
+        const newTableOrder = await tx.tableOrder.create({
+          data: {
+            tenantId: req.user.tenantId,
+            tableId: tableId,
+            customerName: customerName || 'Tamu POS',
+            totalAmount: parseFloat(total.toFixed(2)),
+            items: receiptItems,
+            status: 'COMPLETED',
+            paymentStatus: 'PAID',
+          }
+        });
+
+        // Mark table as OCCUPIED and assign this new activeOrderId
+        await tx.table.update({
+          where: { id: tableId },
+          data: { status: 'OCCUPIED', activeOrderId: newTableOrder.id }
         });
       }
 

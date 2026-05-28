@@ -49,6 +49,7 @@ model Tenant {
   qrisUrl             String?
   isQrisActive        Boolean              @default(false)
   logoShape           String               @default("square")
+  autoClearTableMinutes Int                  @default(45)
   landingPageConfig   Json?
   status              PlanStatus           @default(TRIAL)
   planId              String?
@@ -301,6 +302,9 @@ model Receipt {
   changeGiven    Float
   paymentMethod  String        @default("cash")
   notes          String?
+  queueStatus    String        @default("PROCESSING") // "PROCESSING", "COMPLETED"
+  orderType      String        @default("takeaway")   // "takeaway", "dine-in"
+  tableName      String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   tenantId       String

@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import api from '../../api/client';
 import { Modal } from '../../components/Modal';
 import { CustomSelect } from '../../components/shared/CustomSelect';
+import { Breadcrumb } from '../../components/shared/Breadcrumb';
+import { Pagination } from '../../components/shared/Pagination';
 import { Link } from 'react-router-dom';
 
 interface Ticket {
@@ -37,7 +39,8 @@ export function CentralTickets() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [page] = useState(1);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [activeTicket, setActiveTicket] = useState<TicketDetail | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -51,6 +54,7 @@ export function CentralTickets() {
         params: { search, status: statusFilter, page, limit: 15 }
       });
       setTickets(res.data.tickets);
+      setTotalPages(res.data.totalPages || 1);
     } catch {
       toast.error('Gagal memuat daftar tiket');
     } finally {
@@ -115,14 +119,22 @@ export function CentralTickets() {
   };
 
   return (
-    <div className="animate-fade-in flex flex-col h-[calc(100vh-2rem)]">
+    <div className="relative bg-[var(--bg-surface-elevated)] rounded-2xl border border-[var(--border)] shadow-sm min-h-[80vh] flex flex-col overflow-hidden animate-fade-in">
+      {/* Subtle Dot Pattern Background */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(var(--text-primary) 1px, transparent 1px)', backgroundSize: '16px 16px' }}></div>
+      
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-xl font-extrabold text-[var(--text-primary)] flex items-center gap-3">
-          <LifeBuoy className="text-indigo-500" size={32} /> Support Ticketing
-        </h1>
-        <p className="text-[var(--text-secondary)] mt-1">Sistem manajemen resolusi komplain tenant.</p>
+      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-[var(--border)] p-6 bg-[var(--bg-surface-elevated)]">
+        <div>
+          <div className="flex items-center gap-3">
+            <LifeBuoy className="text-indigo-500" size={24} />
+            <Breadcrumb items={[{ label: 'Central Admin' }, { label: 'Support Ticketing' }]} />
+          </div>
+          <p className="text-[var(--text-secondary)] mt-2 text-sm font-medium">Sistem manajemen resolusi komplain tenant.</p>
+        </div>
       </div>
+
+      <div className="relative z-10 p-6 flex-1 flex flex-col">
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-3 mb-4">
@@ -215,6 +227,15 @@ export function CentralTickets() {
             </tbody>
           </table>
         </div>
+        
+        <div className="mt-auto pt-6">
+          <Pagination 
+            currentPage={page} 
+            totalPages={totalPages} 
+            onPageChange={setPage} 
+          />
+        </div>
+      </div>
       </div>
 
       {/* Modal Respond */}

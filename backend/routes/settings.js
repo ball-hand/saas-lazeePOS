@@ -17,7 +17,7 @@ router.get('/tenant', authenticate, requireTenant, async (req, res) => {
       where: { id: req.user.tenantId },
       select: {
         id: true, name: true, subdomain: true,
-        themeMode: true, primaryColor: true, logoUrl: true, qrisUrl: true, isQrisActive: true, logoShape: true,
+        themeMode: true, primaryColor: true, logoUrl: true, qrisUrl: true, isQrisActive: true, logoShape: true, autoClearTableMinutes: true,
         landingPageConfig: true,
         status: true, planId: true,
         subscription: { select: { status: true, billingCycle: true, nextBillingAt: true, plan: { select: { name: true, monthlyPrice: true } } } },
@@ -36,7 +36,7 @@ router.get('/tenant', authenticate, requireTenant, async (req, res) => {
 ═══════════════════════════════════════════════════════ */
 router.put('/tenant', authenticate, requireTenant, requireRole('admin'), async (req, res) => {
   try {
-    const { name, logoUrl, qrisUrl, isQrisActive, themeMode, primaryColor, logoShape, landingPageConfig } = req.body;
+    const { name, logoUrl, qrisUrl, isQrisActive, themeMode, primaryColor, logoShape, autoClearTableMinutes, landingPageConfig } = req.body;
     const tenant = await prisma.tenant.update({
       where: { id: req.user.tenantId },
       data: {
@@ -47,9 +47,10 @@ router.put('/tenant', authenticate, requireTenant, requireRole('admin'), async (
         ...(themeMode !== undefined && { themeMode }),
         ...(primaryColor !== undefined && { primaryColor }),
         ...(logoShape !== undefined && { logoShape }),
+        ...(autoClearTableMinutes !== undefined && { autoClearTableMinutes: parseInt(autoClearTableMinutes) }),
         ...(landingPageConfig !== undefined && { landingPageConfig }),
       },
-      select: { id: true, name: true, subdomain: true, themeMode: true, primaryColor: true, logoUrl: true, qrisUrl: true, isQrisActive: true, logoShape: true, landingPageConfig: true },
+      select: { id: true, name: true, subdomain: true, themeMode: true, primaryColor: true, logoUrl: true, qrisUrl: true, isQrisActive: true, logoShape: true, autoClearTableMinutes: true, landingPageConfig: true },
     });
     res.json({ tenant });
   } catch (error) {

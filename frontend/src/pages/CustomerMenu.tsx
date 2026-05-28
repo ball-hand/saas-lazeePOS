@@ -114,6 +114,18 @@ export function CustomerMenu() {
     }
   };
 
+  const handleFinishTable = async () => {
+    if (!window.confirm('Apakah Anda yakin sudah selesai dan ingin mengosongkan meja ini?')) return;
+    try {
+      await api.post(`/public/table/${tenantId}/${tableId}/finish`);
+      toast.success('Terima kasih! Meja telah dikosongkan.');
+      // Refresh table status
+      fetchCatalog();
+    } catch (err) {
+      toast.error('Gagal memproses. Silakan panggil pelayan.');
+    }
+  };
+
   const handleUploadProof = async () => {
     if (!paymentProofFile || !createdOrder) return;
     setIsUploadingProof(true);
@@ -361,6 +373,20 @@ export function CustomerMenu() {
           </button>
         </div>
       )}
+
+      {/* Floating Action Button for Selesai Makan if Table is OCCUPIED */}
+      {!orderSuccess && table?.status === 'OCCUPIED' && cart.length === 0 && (
+        <div className="fixed bottom-6 left-0 right-0 p-4 z-40 pointer-events-none flex justify-center">
+          <button 
+            onClick={handleFinishTable}
+            className="pointer-events-auto bg-red-500 hover:bg-red-600 text-white font-black px-6 py-4 rounded-full shadow-2xl flex items-center gap-3 transition-transform hover:scale-105 active:scale-95"
+          >
+            <ChefHat size={20} />
+            Selesai Makan & Kosongkan Meja
+          </button>
+        </div>
+      )}
+
       </div>
     </div>
   );
