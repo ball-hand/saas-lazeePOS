@@ -119,12 +119,16 @@ router.post('/apply', authenticate, async (req, res) => {
 
     const now = new Date();
     
-    // If a manual discount is selected, only fetch that one, otherwise fetch all active rules
+    if (!manualDiscountId) {
+      return res.json({ discounts: [], totalDiscount: 0 });
+    }
+
+    // Only fetch the specifically requested manual discount
     const rules = await prisma.discount.findMany({
       where: {
         tenantId: req.user.tenantId,
         isActive: true,
-        ...(manualDiscountId ? { id: manualDiscountId } : {}),
+        id: manualDiscountId,
         OR: [
           { startsAt: null },
           { startsAt: { lte: now } },
