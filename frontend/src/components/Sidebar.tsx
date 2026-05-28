@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, ReceiptText, 
   Wallet, Tags, Settings as SettingsIcon, LogOut, X,
   CreditCard, Warehouse, Building2, ChevronDown, ChevronRight, Receipt,
-  LifeBuoy, Rocket, ServerCrash, Server, Users, Store, Box, LineChart, ShieldCheck
+  LifeBuoy, Rocket, ServerCrash, Server, Users, Store, Box, LineChart, ShieldCheck, GripVertical
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,6 +26,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         ...(user?.role === 'admin' ? [{ to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' }] : []),
         { to: '/pos', icon: <ShoppingCart size={20} />, label: 'POS Terminal' },
+        { to: '/tables', icon: <GripVertical size={20} />, label: 'Manajemen Meja' },
       ]
     },
     {

@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
 import { LandingPage } from './pages/LandingPage';
+import { CustomerMenu } from './pages/CustomerMenu';
 import { Register } from './pages/Register';
 import { Login } from './pages/Login';
 import { CentralLogin } from './pages/central/CentralLogin';
@@ -22,6 +23,7 @@ import { ReleaseManager } from './components/ReleaseManager';
 // Tenant (toko) pages
 import { Dashboard } from './pages/Dashboard';
 import { POS } from './pages/POS';
+import { TableManagement } from './pages/TableManagement';
 import { Products } from './pages/Products';
 import { Warehouse } from './pages/Warehouse';
 import { Receipts } from './pages/Receipts';
@@ -44,6 +46,7 @@ export default function App() {
 
           {/* ── PUBLIC ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/m/:tenantId/:tableId" element={<CustomerMenu />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/central-login" element={<CentralLogin />} />
@@ -51,6 +54,7 @@ export default function App() {
           {/* ── TENANT ROUTES  (toko subdomain) ─────────── */}
           <Route element={<ProtectedRoute />}>
             <Route path="/pos"        element={<POS />} />
+            <Route path="/tables"     element={<TableManagement />} />
             <Route path="/products"   element={<Products />} />
             <Route path="/warehouse"  element={<Warehouse />} />
             <Route path="/receipts"   element={<Receipts />} />
