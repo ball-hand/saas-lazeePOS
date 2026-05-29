@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Store, TrendingUp, ShieldCheck, Zap, ArrowRight, CheckCircle2, Star,
-  Play, ChevronDown, Award, HelpCircle, DollarSign, RefreshCw, BarChart3,
-  Smartphone, Printer, Layers, Sparkles, X, Package, ShoppingCart
+  Store, TrendingUp, Zap, ArrowRight, CheckCircle2, Star,
+  Play, ChevronDown, DollarSign, RefreshCw, BarChart3,
+  Smartphone, Printer, Layers, Sparkles, X, Package, ShoppingCart,
+  Monitor, LayoutDashboard, ChefHat, Tag, Wallet, Receipt, Users, CreditCard, Ticket, Palette, Rocket
 } from 'lucide-react';
+
+const ICON_MAP: any = {
+  Store, Monitor, LayoutDashboard, ChefHat, Package, Tag, Wallet, Printer, 
+  Receipt, Smartphone, Users, CreditCard, Ticket, BarChart3, Palette, Rocket,
+  TrendingUp, RefreshCw, DollarSign, Layers
+};
 import { TenantLandingPage } from './TenantLandingPage';
 import api from '../api/client';
 
@@ -35,12 +42,17 @@ export function LandingPage() {
   });
 
   useEffect(() => {
-    const savedCms = localStorage.getItem('central_cms_config');
-    if (savedCms) {
+    const fetchCms = async () => {
       try {
-        setCmsConfig(JSON.parse(savedCms));
-      } catch (e) {}
-    }
+        const { data } = await api.get('/public/platform/cms');
+        if (data.data) {
+          setCmsConfig((prev: any) => ({ ...prev, ...data.data }));
+        }
+      } catch (e) {
+        console.error('Failed to fetch CMS config');
+      }
+    };
+    fetchCms();
     const fetchPlans = async () => {
       try {
         const { data } = await api.get('/payment/plans');
@@ -197,6 +209,7 @@ export function LandingPage() {
             <a href="#alur" className="hover:text-[var(--text-primary)] transition-colors">Cara Kerja</a>
             <a href="#harga" className="hover:text-[var(--text-primary)] transition-colors">Harga</a>
             <a href="#faq" className="hover:text-[var(--text-primary)] transition-colors">FAQ</a>
+            <Link to="/docs" className="hover:text-[var(--text-primary)] transition-colors flex items-center gap-1"><Sparkles size={14}/> Docs</Link>
           </div>
           <div className="flex items-center gap-4">
             <button 
@@ -489,24 +502,36 @@ export function LandingPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { icon: <Store size={28} />, title: 'Isolasi Tenant & Subdomain', desc: 'Dapatkan domain unik eksklusif untuk toko Anda sendiri. Data pelanggan, produk, dan laporan 100% aman terisolasi.' },
-              { icon: <TrendingUp size={28} />, title: 'Mesin Diskon Cerdas Kondisional', desc: 'Tingkatkan retensi pembeli dengan promo Beli 1 Gratis 1 (BOGO), diskon persentase, dan promo potongan minimum belanja.' },
-              { icon: <RefreshCw size={28} />, title: 'Sinkronisasi Stok Gudang Otomatis', desc: 'Stok barang di gudang terpotong secara instan begitu kasir menyelesaikan transaksi pembayaran di terminal.' },
-              { icon: <Printer size={28} />, title: 'Integrasi Hardware & Thermal Printer', desc: 'Setup printer kasir (browser/network IP) dan scanner barcode fisik dengan modul pengujian periferal terintegrasi.' },
-              { icon: <DollarSign size={28} />, title: 'Buku Kas Ledger Terpadu', desc: 'Catat arus kas masuk, pengeluaran operasional toko, dan setoran kasir dalam pembukuan otomatis harian.' },
-              { icon: <Layers size={28} />, title: 'Halaman Landing Publik', desc: 'Setiap tenant memiliki halaman landing page (katalog publik) yang bisa diakses pelanggan secara online.' }
-            ].map((f, i) => (
-              <div key={i} className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-8 hover:border-[var(--accent-primary)]/50 transition-all duration-300 group hover:-translate-y-1 shadow-lg hover:shadow-xl relative overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {(cmsConfig?.features?.items || [
+              { icon: 'Store', title: 'Multi-Tenant SaaS', desc: 'Isolasi subdomain, branding per toko, landing page publik otomatis' },
+              { icon: 'Monitor', title: 'Terminal POS', desc: 'Checkout cepat, scan barcode, split payment, hold order' },
+              { icon: 'LayoutDashboard', title: 'Manajemen Meja', desc: 'Layout meja drag-and-drop, status real-time, QR Code pelanggan' },
+              { icon: 'ChefHat', title: 'Antrean Dapur', desc: 'Kitchen Display System, status pesanan, notifikasi real-time' },
+              { icon: 'Package', title: 'Produk & Gudang', desc: 'Katalog SKU, stok otomatis terpotong, audit inventaris' },
+              { icon: 'Tag', title: 'Diskon Cerdas', desc: 'BOGO, diskon persen, minimal belanja, kupon kondisional' },
+              { icon: 'Wallet', title: 'Buku Kas Ledger', desc: 'Arus kas masuk/keluar, setoran kasir, rekonsiliasi harian' },
+              { icon: 'Printer', title: 'Printer & Hardware', desc: 'Thermal printer (58mm/80mm), scanner barcode, kalibrasi periferal' },
+              { icon: 'Receipt', title: 'Struk Kustom', desc: 'Desain struk, logo, pesan penutup, QR Code di struk' },
+              { icon: 'Smartphone', title: 'Menu Pelanggan', desc: 'Scan QR → lihat menu digital, pesan langsung dari meja' },
+              { icon: 'Users', title: 'Manajemen Staf', desc: 'Role-based access (Owner, Admin, Kasir), audit log aksi' },
+              { icon: 'CreditCard', title: 'Billing & Langganan', desc: 'Midtrans payment gateway, QRIS, VA Bank, upgrade paket' },
+              { icon: 'Ticket', title: 'Support Ticketing', desc: 'Sistem tiket komplain, chat real-time dengan Central Admin' },
+              { icon: 'BarChart3', title: 'Dashboard Analytics', desc: 'Grafik penjualan, statistik harian, revenue tracking' },
+              { icon: 'Palette', title: 'Kustomisasi Tema', desc: 'Light/Dark mode, warna aksen, logo branding' },
+              { icon: 'Rocket', title: 'Release Management', desc: 'Push update ke semua tenant, mandatory update' }
+            ]).map((f: any, i: number) => {
+              const IconComponent = ICON_MAP[f.icon] || Store;
+              return (
+              <div key={i} className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-6 hover:border-[var(--accent-primary)]/50 transition-all duration-300 group hover:-translate-y-1 shadow-md hover:shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent-primary)]/5 blur-[50px] rounded-full group-hover:bg-[var(--accent-primary)]/10 transition-colors" />
-                <div className="w-14 h-14 rounded-2xl bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-inner border border-[var(--accent-primary)]/20">
-                  {f.icon}
+                <div className="w-12 h-12 rounded-2xl bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)] flex items-center justify-center mb-5 group-hover:scale-110 transition-transform shadow-inner border border-[var(--accent-primary)]/20">
+                  <IconComponent size={24} />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-[var(--text-primary)]">{f.title}</h3>
-                <p className="text-[var(--text-secondary)] text-sm font-semibold leading-relaxed">{f.desc}</p>
+                <h3 className="text-lg font-bold mb-2 text-[var(--text-primary)]">{f.title}</h3>
+                <p className="text-[var(--text-secondary)] text-xs font-semibold leading-relaxed">{f.desc}</p>
               </div>
-            ))}
+            )})}
           </div>
         </div>
       </section>
@@ -522,12 +547,12 @@ export function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-          {[
+          {(cmsConfig?.howItWorks?.steps || [
             { step: "01", title: "Registrasi Tenant", desc: "Daftarkan brand Anda dan pilih subdomain unik toko Anda secara gratis." },
             { step: "02", title: "Branding Toko", desc: "Atur warna tema, Landing Page publik, dan pajak PPN bawaan." },
             { step: "03", title: "Input Katalog", desc: "Tambahkan produk, SKU barang, harga pokok modal, dan jumlah stok awal." },
             { step: "04", title: "Siap Checkout", desc: "Buka Terminal POS, scan produk, dan cetak struk pertama pelanggan Anda!" }
-          ].map((s, i) => (
+          ]).map((s: any, i: number) => (
             <div key={i} className="bg-[var(--bg-main)] hover:bg-[var(--bg-surface-elevated)] border border-[var(--border)] hover:border-[var(--accent-primary)]/50 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl relative flex flex-col justify-between min-h-[14rem] transition-all group overflow-hidden">
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-[var(--accent-primary)]/5 rounded-full group-hover:scale-150 transition-transform" />
               <span className="text-5xl font-mono font-black opacity-[0.08] absolute top-6 right-6 text-[var(--accent-primary)] group-hover:opacity-20 transition-opacity">{s.step}</span>
@@ -665,7 +690,7 @@ export function LandingPage() {
         </div>
 
         <div className="flex flex-col gap-4">
-          {faqItems.map((faq, i) => {
+          {(cmsConfig?.faq?.items || faqItems).map((faq: any, i: number) => {
             const isOpen = activeFaq === i;
             return (
               <div
@@ -715,10 +740,10 @@ export function LandingPage() {
             <span className="text-lg font-extrabold tracking-tight text-[var(--text-primary)]">Lazee POS</span>
           </div>
           <p className="text-[var(--text-secondary)] font-medium text-xs max-w-md mx-auto mb-6 leading-relaxed">
-            Lazee POS membantu UMKM & Perusahaan Franchise mengelola penjualan cabang, melacak arus kas, dan mempermudah checkout secara real-time.
+            {cmsConfig?.footer?.tagline || 'Lazee POS membantu UMKM & Perusahaan Franchise mengelola penjualan cabang, melacak arus kas, dan mempermudah checkout secara real-time.'}
           </p>
           <p className="text-[var(--text-secondary)]/50 font-bold text-[10px] uppercase tracking-wider">
-            © {new Date().getFullYear()} PT Lazee Teknologi Global. Hak Cipta Dilindungi.
+            {cmsConfig?.footer?.copyright || `© ${new Date().getFullYear()} PT Lazee Teknologi Global. Hak Cipta Dilindungi.`}
           </p>
         </div>
       </footer>

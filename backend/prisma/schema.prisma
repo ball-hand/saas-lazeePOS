@@ -457,3 +457,12 @@ model SystemErrorLog {
   tenantId  String?
   createdAt DateTime @default(now())
 }
+
+// =======================
+//  Central Platform Settings
+// =======================
+model PlatformSetting {
+  id        String   @id @default("global")
+  cmsConfig Json?
+  updatedAt DateTime @updatedAt
+}

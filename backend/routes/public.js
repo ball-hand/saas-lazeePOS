@@ -228,4 +228,24 @@ router.post('/table/:tenantId/:tableId/finish', async (req, res) => {
   }
 });
 
+/* ═══════════════════════════════════════════════════════
+   GET  /api/v1/public/platform/cms
+   Return public platform CMS config
+═══════════════════════════════════════════════════════ */
+router.get('/platform/cms', async (req, res) => {
+  try {
+    const settings = await prisma.platformSetting.findUnique({
+      where: { id: 'global' },
+      select: { cmsConfig: true }
+    });
+    res.json({
+      status: 'success',
+      data: settings?.cmsConfig || null
+    });
+  } catch (error) {
+    console.error('Fetch public CMS error:', error);
+    res.status(500).json({ message: 'Gagal memuat konfigurasi platform.' });
+  }
+});
+
 export default router;

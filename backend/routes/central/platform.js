@@ -87,4 +87,44 @@ router.put('/settings', ...protect, async (req, res) => {
   }
 });
 
+/* ───────────────────────────────────────────────────────
+   GET /api/central/platform/cms
+──────────────────────────────────────────────────────── */
+router.get('/cms', ...protect, async (_req, res) => {
+  try {
+    const settings = await prisma.platformSetting.findUnique({
+      where: { id: 'global' },
+    });
+    res.json({ cmsConfig: settings?.cmsConfig || null });
+  } catch (error) {
+    console.error('Platform CMS error:', error);
+    res.status(500).json({ message: 'Gagal memuat CMS platform.' });
+  }
+});
+
+/* ───────────────────────────────────────────────────────
+   POST /api/central/platform/cms
+──────────────────────────────────────────────────────── */
+router.post('/cms', ...protect, async (req, res) => {
+  try {
+    const { cmsConfig } = req.body;
+    
+    const settings = await prisma.platformSetting.upsert({
+      where: { id: 'global' },
+      create: {
+        id: 'global',
+        cmsConfig
+      },
+      update: {
+        cmsConfig
+      }
+    });
+
+    res.json({ cmsConfig: settings.cmsConfig });
+  } catch (error) {
+    console.error('Update platform CMS error:', error);
+    res.status(500).json({ message: 'Gagal memperbarui CMS platform.' });
+  }
+});
+
 export default router;

@@ -8,10 +8,15 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     allowedHosts: [
-      '6f61-2404-c0-2c10-00-1e9c-647b.ngrok-free.app'
+      'lazeepos.local',
+      'lazeepos'
     ],
     host: true, // Wajib agar bisa diakses dari luar Docker (Nginx)
     port: 5173, // Port default Vite
+    // HMR via Nginx (Docker): baca dari env vars, tidak berpengaruh saat dev lokal
+    hmr: process.env.VITE_HMR_PORT
+      ? { clientPort: parseInt(process.env.VITE_HMR_PORT), host: process.env.VITE_HMR_HOST }
+      : true,
   },
   test: {
     environment: 'jsdom',

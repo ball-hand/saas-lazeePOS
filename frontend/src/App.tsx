@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
 import { LandingPage } from './pages/LandingPage';
+import { DocsPage } from './pages/DocsPage';
 import { CustomerMenu } from './pages/CustomerMenu';
 import { Register } from './pages/Register';
 import { Login } from './pages/Login';
@@ -47,6 +48,7 @@ export default function App() {
 
           {/* ── PUBLIC ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/docs" element={<DocsPage />} />
           <Route path="/m/:tenantId/:tableId" element={<CustomerMenu />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />

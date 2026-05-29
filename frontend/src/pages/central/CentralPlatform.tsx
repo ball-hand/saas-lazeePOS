@@ -24,22 +24,98 @@ export function CentralPlatform() {
   });
 
   // CMS Landing Page State
-  const [cmsConfig, setCmsConfig] = useState({
+  const [cmsConfig, setCmsConfig] = useState<any>({
     hero: { visible: true, headline: 'Platform Kasir Pintar untuk Semua Bisnis', subheadline: 'Tingkatkan efisiensi dan pantau bisnis Anda secara real-time dari mana saja. Bergabunglah dengan ribuan pemilik usaha yang sudah mempercayakan operasional harian mereka pada Lazee POS.' },
     announcement: { visible: false, content: '' },
-    features: { visible: true },
+    features: { visible: true, items: [
+      { icon: 'Store', title: 'Multi-Tenant SaaS', desc: 'Isolasi subdomain, branding per toko, landing page publik otomatis' },
+      { icon: 'Monitor', title: 'Terminal POS', desc: 'Checkout cepat, scan barcode, split payment, hold order' },
+      { icon: 'LayoutDashboard', title: 'Manajemen Meja', desc: 'Layout meja drag-and-drop, status real-time, QR Code pelanggan' },
+      { icon: 'ChefHat', title: 'Antrean Dapur', desc: 'Kitchen Display System, status pesanan, notifikasi real-time' },
+      { icon: 'Package', title: 'Produk & Gudang', desc: 'Katalog SKU, stok otomatis terpotong, audit inventaris' },
+      { icon: 'Tag', title: 'Diskon Cerdas', desc: 'BOGO, diskon persen, minimal belanja, kupon kondisional' },
+      { icon: 'Wallet', title: 'Buku Kas Ledger', desc: 'Arus kas masuk/keluar, setoran kasir, rekonsiliasi harian' },
+      { icon: 'Printer', title: 'Printer & Hardware', desc: 'Thermal printer (58mm/80mm), scanner barcode, kalibrasi periferal' },
+      { icon: 'Receipt', title: 'Struk Kustom', desc: 'Desain struk, logo, pesan penutup, QR Code di struk' },
+      { icon: 'Smartphone', title: 'Menu Pelanggan', desc: 'Scan QR → lihat menu digital, pesan langsung dari meja' },
+      { icon: 'Users', title: 'Manajemen Staf', desc: 'Role-based access (Owner, Admin, Kasir), audit log aksi' },
+      { icon: 'CreditCard', title: 'Billing & Langganan', desc: 'Midtrans payment gateway, QRIS, VA Bank, upgrade paket' },
+      { icon: 'Ticket', title: 'Support Ticketing', desc: 'Sistem tiket komplain, chat real-time dengan Central Admin' },
+      { icon: 'BarChart3', title: 'Dashboard Analytics', desc: 'Grafik penjualan, statistik harian, revenue tracking' },
+      { icon: 'Palette', title: 'Kustomisasi Tema', desc: 'Light/Dark mode, warna aksen, logo branding' },
+      { icon: 'Rocket', title: 'Release Management', desc: 'Push update ke semua tenant, mandatory update' }
+    ] },
+    howItWorks: { visible: true, steps: [
+      { step: "01", title: "Registrasi Tenant", desc: "Daftarkan brand Anda dan pilih subdomain unik toko Anda secara gratis." },
+      { step: "02", title: "Branding Toko", desc: "Atur warna tema, Landing Page publik, dan pajak PPN bawaan." },
+      { step: "03", title: "Input Katalog", desc: "Tambahkan produk, SKU barang, harga pokok modal, dan jumlah stok awal." },
+      { step: "04", title: "Siap Checkout", desc: "Buka Terminal POS, scan produk, dan cetak struk pertama pelanggan Anda!" }
+    ] },
     demo: { visible: true },
     pricing: { visible: true },
-    faq: { visible: true }
+    faq: { visible: true, items: [
+      { q: 'Apakah saya bisa menggunakan nama domain sendiri (Custom Domain)?', a: 'Saat ini setiap tenant akan mendapatkan subdomain gratis (contoh: tokoanda.lazeepos.com). Fitur custom domain sedang dalam tahap pengembangan.' },
+      { q: 'Bagaimana keamanan data pelanggan dan transaksi saya?', a: 'Sangat aman. Kami menggunakan sistem isolasi tenant (multi-tenant architecture) di tingkat database, sehingga data antar toko tidak akan pernah tercampur.' },
+      { q: 'Apakah aplikasi bisa digunakan saat offline (tanpa internet)?', a: 'Sistem membutuhkan koneksi internet (online). Namun cache browser akan menyimpan keranjang belanja sehingga kasir tidak hilang datanya jika koneksi terputus sesaat.' },
+      { q: 'Apakah ada batasan jumlah produk yang bisa ditambahkan?', a: 'Tergantung paket yang Anda pilih. Paket Gratis mendukung hingga 100 SKU Produk, sedangkan paket Premium atau Enterprise tidak memiliki batasan (unlimited).' }
+    ] },
+    docs: { visible: true, topics: [
+      {
+        id: 'getting-started',
+        title: 'Mulai Cepat',
+        content: `<h2>Selamat Datang di Panduan LazeePOS</h2>
+          <p>LazeePOS dirancang untuk memudahkan operasional bisnis Anda, dari skala UMKM hingga Enterprise.</p>
+          <p>Langkah pertama yang harus Anda lakukan:</p>
+          <ol>
+            <li>Daftar akun di halaman utama.</li>
+            <li>Atur nama dan subdomain toko Anda.</li>
+            <li>Tambahkan produk pertama Anda di menu Produk.</li>
+            <li>Buka Terminal POS untuk mulai bertransaksi!</li>
+          </ol>
+        `
+      },
+      {
+        id: 'pos',
+        title: 'Terminal Kasir (POS)',
+        content: `<h2>Menggunakan Terminal POS</h2>
+          <p>Terminal POS adalah layar utama tempat kasir bekerja.</p>
+          <ul>
+            <li><strong>Pilih Produk:</strong> Klik produk atau gunakan scanner barcode.</li>
+            <li><strong>Tahan Pesanan (Hold):</strong> Simpan pesanan sementara untuk pelanggan yang masih memilih.</li>
+            <li><strong>Diskon:</strong> Terapkan kupon atau diskon manual.</li>
+            <li><strong>Checkout:</strong> Selesaikan transaksi dengan metode bayar Tunai, QRIS, atau Kartu.</li>
+          </ul>
+        `
+      },
+      {
+        id: 'inventory',
+        title: 'Gudang & Stok',
+        content: `<h2>Manajemen Inventaris</h2>
+          <p>Kelola persediaan barang secara real-time. Setiap transaksi yang selesai di POS akan langsung memotong stok di Gudang.</p>
+          <p>Fitur utama:</p>
+          <ul>
+            <li>Notifikasi Stok Menipis.</li>
+            <li>Audit Stok Manual.</li>
+            <li>Lacak riwayat masuk/keluar barang.</li>
+          </ul>
+        `
+      }
+    ] },
+    footer: { tagline: 'Lazee POS membantu UMKM & Perusahaan Franchise mengelola penjualan cabang, melacak arus kas, dan mempermudah checkout secara real-time.', copyright: `© ${new Date().getFullYear()} PT Lazee Teknologi Global. Hak Cipta Dilindungi.` }
   });
 
   useEffect(() => {
-    const savedCms = localStorage.getItem('central_cms_config');
-    if (savedCms) {
+    const fetchCms = async () => {
       try {
-        setCmsConfig(JSON.parse(savedCms));
-      } catch(e) {}
-    }
+        const { data } = await api.get('/central/platform/cms');
+        if (data.cmsConfig) {
+          setCmsConfig((prev: any) => ({ ...prev, ...data.cmsConfig }));
+        }
+      } catch (e) {
+        console.error('Failed to load CMS config', e);
+      }
+    };
+    fetchCms();
   }, []);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,11 +143,10 @@ export function CentralPlatform() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await new Promise(r => setTimeout(r, 800));
-      localStorage.setItem('central_cms_config', JSON.stringify(cmsConfig));
-      toast.success('Pengaturan platform & CMS berhasil disimpan');
+      await api.post('/central/platform/cms', { cmsConfig });
+      toast.success('Pengaturan CMS berhasil disimpan');
     } catch (err) {
-      toast.error('Gagal menyimpan pengaturan');
+      toast.error('Gagal menyimpan pengaturan CMS');
     } finally {
       setLoading(false);
     }
@@ -300,39 +375,242 @@ export function CentralPlatform() {
               )}
             </div>
 
+            {/* FEATURES EDITOR */}
+            <div className="border border-[var(--border)] rounded-2xl overflow-hidden">
+              <div className="bg-[var(--bg-main)] p-4 flex items-center justify-between border-b border-[var(--border)]">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-bold text-[var(--text-primary)]">3. Fitur Utama</h3>
+                </div>
+                <button onClick={() => toggleCmsVisibility('features')} className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-colors ${cmsConfig.features.visible ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-gray-500'}`}>
+                  {cmsConfig.features.visible ? <><Eye size={16}/> Tampil</> : <><EyeOff size={16}/> Sembunyi</>}
+                </button>
+              </div>
+              {cmsConfig.features.visible && (
+                <div className="p-5 space-y-4">
+                  {(cmsConfig.features.items || []).map((feature: any, idx: number) => (
+                    <div key={idx} className="flex gap-4 items-start border p-4 rounded-xl">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex gap-3">
+                          <input className="w-1/3 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Nama Ikon (misal: Store)" value={feature.icon} onChange={e => {
+                            const newItems = [...cmsConfig.features.items];
+                            newItems[idx].icon = e.target.value;
+                            setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
+                          }} />
+                          <input className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm font-bold" placeholder="Judul Fitur" value={feature.title} onChange={e => {
+                            const newItems = [...cmsConfig.features.items];
+                            newItems[idx].title = e.target.value;
+                            setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
+                          }} />
+                        </div>
+                        <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Deskripsi Fitur" rows={2} value={feature.desc} onChange={e => {
+                          const newItems = [...cmsConfig.features.items];
+                          newItems[idx].desc = e.target.value;
+                          setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
+                        }} />
+                      </div>
+                      <button onClick={() => {
+                        const newItems = cmsConfig.features.items.filter((_: any, i: number) => i !== idx);
+                        setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
+                      }} className="text-red-500 font-bold text-sm mt-2">Hapus</button>
+                    </div>
+                  ))}
+                  <button onClick={() => {
+                    const newItems = [...(cmsConfig.features.items || []), { icon: 'Star', title: '', desc: '' }];
+                    setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
+                  }} className="px-4 py-2 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl font-bold text-sm hover:border-[var(--accent-primary)] text-[var(--text-primary)]">
+                    + Tambah Fitur
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* HOW IT WORKS EDITOR */}
+            <div className="border border-[var(--border)] rounded-2xl overflow-hidden">
+              <div className="bg-[var(--bg-main)] p-4 flex items-center justify-between border-b border-[var(--border)]">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-bold text-[var(--text-primary)]">4. Cara Kerja</h3>
+                </div>
+                <button onClick={() => toggleCmsVisibility('howItWorks')} className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-colors ${cmsConfig.howItWorks.visible ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-gray-500'}`}>
+                  {cmsConfig.howItWorks.visible ? <><Eye size={16}/> Tampil</> : <><EyeOff size={16}/> Sembunyi</>}
+                </button>
+              </div>
+              {cmsConfig.howItWorks.visible && (
+                <div className="p-5 space-y-4">
+                  {(cmsConfig.howItWorks.steps || []).map((step: any, idx: number) => (
+                    <div key={idx} className="flex gap-4 items-start border p-4 rounded-xl">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex gap-3">
+                          <input className="w-1/4 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="No (misal: 01)" value={step.step} onChange={e => {
+                            const newSteps = [...cmsConfig.howItWorks.steps];
+                            newSteps[idx].step = e.target.value;
+                            setCmsConfig({...cmsConfig, howItWorks: {...cmsConfig.howItWorks, steps: newSteps}});
+                          }} />
+                          <input className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm font-bold" placeholder="Judul Langkah" value={step.title} onChange={e => {
+                            const newSteps = [...cmsConfig.howItWorks.steps];
+                            newSteps[idx].title = e.target.value;
+                            setCmsConfig({...cmsConfig, howItWorks: {...cmsConfig.howItWorks, steps: newSteps}});
+                          }} />
+                        </div>
+                        <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Deskripsi Langkah" rows={2} value={step.desc} onChange={e => {
+                          const newSteps = [...cmsConfig.howItWorks.steps];
+                          newSteps[idx].desc = e.target.value;
+                          setCmsConfig({...cmsConfig, howItWorks: {...cmsConfig.howItWorks, steps: newSteps}});
+                        }} />
+                      </div>
+                      <button onClick={() => {
+                        const newSteps = cmsConfig.howItWorks.steps.filter((_: any, i: number) => i !== idx);
+                        setCmsConfig({...cmsConfig, howItWorks: {...cmsConfig.howItWorks, steps: newSteps}});
+                      }} className="text-red-500 font-bold text-sm mt-2">Hapus</button>
+                    </div>
+                  ))}
+                  <button onClick={() => {
+                    const newSteps = [...(cmsConfig.howItWorks.steps || []), { step: '00', title: '', desc: '' }];
+                    setCmsConfig({...cmsConfig, howItWorks: {...cmsConfig.howItWorks, steps: newSteps}});
+                  }} className="px-4 py-2 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl font-bold text-sm hover:border-[var(--accent-primary)] text-[var(--text-primary)]">
+                    + Tambah Langkah
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* DOCS EDITOR */}
+            <div className="border border-[var(--border)] rounded-2xl overflow-hidden">
+              <div className="bg-[var(--bg-main)] p-4 flex items-center justify-between border-b border-[var(--border)]">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-bold text-[var(--text-primary)]">5. Dokumentasi (Docs)</h3>
+                </div>
+                <button onClick={() => toggleCmsVisibility('docs')} className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-colors ${cmsConfig.docs.visible ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-gray-500'}`}>
+                  {cmsConfig.docs.visible ? <><Eye size={16}/> Tampil</> : <><EyeOff size={16}/> Sembunyi</>}
+                </button>
+              </div>
+              {cmsConfig.docs.visible && (
+                <div className="p-5 space-y-6">
+                  {(cmsConfig.docs.topics || []).map((topic: any, idx: number) => (
+                    <div key={idx} className="flex flex-col gap-3 border p-4 rounded-xl">
+                      <div className="flex gap-4">
+                        <input className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm font-bold" placeholder="Judul Topik" value={topic.title} onChange={e => {
+                          const newTopics = [...cmsConfig.docs.topics];
+                          newTopics[idx].title = e.target.value;
+                          setCmsConfig({...cmsConfig, docs: {...cmsConfig.docs, topics: newTopics}});
+                        }} />
+                        <button onClick={() => {
+                          const newTopics = cmsConfig.docs.topics.filter((_: any, i: number) => i !== idx);
+                          setCmsConfig({...cmsConfig, docs: {...cmsConfig.docs, topics: newTopics}});
+                        }} className="text-red-500 font-bold text-sm">Hapus</button>
+                      </div>
+                      <div className="bg-[var(--bg-main)] rounded-xl border border-[var(--border)] overflow-hidden">
+                        <RichTextEditor 
+                          value={topic.content} 
+                          onChange={(val) => {
+                            const newTopics = [...cmsConfig.docs.topics];
+                            newTopics[idx].content = val;
+                            setCmsConfig({...cmsConfig, docs: {...cmsConfig.docs, topics: newTopics}});
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={() => {
+                    const newTopics = [...(cmsConfig.docs.topics || []), { id: `topic-${Date.now()}`, title: 'Topik Baru', content: '' }];
+                    setCmsConfig({...cmsConfig, docs: {...cmsConfig.docs, topics: newTopics}});
+                  }} className="px-4 py-2 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl font-bold text-sm hover:border-[var(--accent-primary)] text-[var(--text-primary)]">
+                    + Tambah Topik Dokumen
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* FAQ EDITOR */}
+            <div className="border border-[var(--border)] rounded-2xl overflow-hidden">
+              <div className="bg-[var(--bg-main)] p-4 flex items-center justify-between border-b border-[var(--border)]">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-bold text-[var(--text-primary)]">6. Tanya Jawab (FAQ)</h3>
+                </div>
+                <button onClick={() => toggleCmsVisibility('faq')} className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-colors ${cmsConfig.faq.visible ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-gray-500'}`}>
+                  {cmsConfig.faq.visible ? <><Eye size={16}/> Tampil</> : <><EyeOff size={16}/> Sembunyi</>}
+                </button>
+              </div>
+              {cmsConfig.faq.visible && (
+                <div className="p-5 space-y-4">
+                  {(cmsConfig.faq.items || []).map((faq: any, idx: number) => (
+                    <div key={idx} className="flex gap-4 items-start border p-4 rounded-xl">
+                      <div className="flex-1 space-y-3">
+                        <input className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Pertanyaan" value={faq.q} onChange={e => {
+                          const newItems = [...cmsConfig.faq.items];
+                          newItems[idx].q = e.target.value;
+                          setCmsConfig({...cmsConfig, faq: {...cmsConfig.faq, items: newItems}});
+                        }} />
+                        <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Jawaban" value={faq.a} onChange={e => {
+                          const newItems = [...cmsConfig.faq.items];
+                          newItems[idx].a = e.target.value;
+                          setCmsConfig({...cmsConfig, faq: {...cmsConfig.faq, items: newItems}});
+                        }} />
+                      </div>
+                      <button onClick={() => {
+                        const newItems = cmsConfig.faq.items.filter((_: any, i: number) => i !== idx);
+                        setCmsConfig({...cmsConfig, faq: {...cmsConfig.faq, items: newItems}});
+                      }} className="text-red-500 font-bold text-sm mt-2">Hapus</button>
+                    </div>
+                  ))}
+                  <button onClick={() => {
+                    const newItems = [...(cmsConfig.faq.items || []), { q: '', a: '' }];
+                    setCmsConfig({...cmsConfig, faq: {...cmsConfig.faq, items: newItems}});
+                  }} className="px-4 py-2 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl font-bold text-sm hover:border-[var(--accent-primary)] text-[var(--text-primary)]">
+                    + Tambah FAQ
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* FOOTER EDITOR */}
+            <div className="border border-[var(--border)] rounded-2xl overflow-hidden">
+              <div className="bg-[var(--bg-main)] p-4 flex items-center justify-between border-b border-[var(--border)]">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-bold text-[var(--text-primary)]">7. Footer</h3>
+                </div>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase mb-2">Tagline Footer</label>
+                  <input type="text" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm" 
+                    value={cmsConfig.footer?.tagline || ''} onChange={e => setCmsConfig({...cmsConfig, footer: {...cmsConfig.footer, tagline: e.target.value}})} />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase mb-2">Teks Copyright</label>
+                  <input type="text" className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] focus:border-[var(--accent-primary)] outline-none text-sm" 
+                    value={cmsConfig.footer?.copyright || ''} onChange={e => setCmsConfig({...cmsConfig, footer: {...cmsConfig.footer, copyright: e.target.value}})} />
+                </div>
+              </div>
+            </div>
+
             {/* OTHER SECTIONS VISIBILITY */}
             <div className="border border-[var(--border)] rounded-2xl p-5">
               <h3 className="font-bold text-[var(--text-primary)] mb-4">Pengaturan Visibilitas Segmen Lainnya</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                
                 <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-main)] border border-[var(--border)]">
                   <span className="font-bold text-sm">Fitur Utama</span>
                   <button onClick={() => toggleCmsVisibility('features')} className={cmsConfig.features.visible ? 'text-emerald-500' : 'text-gray-500'}>
                     {cmsConfig.features.visible ? <Eye size={20}/> : <EyeOff size={20}/>}
                   </button>
                 </div>
-                
                 <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-main)] border border-[var(--border)]">
                   <span className="font-bold text-sm">Simulator Interaktif</span>
                   <button onClick={() => toggleCmsVisibility('demo')} className={cmsConfig.demo.visible ? 'text-emerald-500' : 'text-gray-500'}>
                     {cmsConfig.demo.visible ? <Eye size={20}/> : <EyeOff size={20}/>}
                   </button>
                 </div>
-                
                 <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-main)] border border-[var(--border)]">
                   <span className="font-bold text-sm">Paket Harga</span>
                   <button onClick={() => toggleCmsVisibility('pricing')} className={cmsConfig.pricing.visible ? 'text-emerald-500' : 'text-gray-500'}>
                     {cmsConfig.pricing.visible ? <Eye size={20}/> : <EyeOff size={20}/>}
                   </button>
                 </div>
-
                 <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-main)] border border-[var(--border)]">
-                  <span className="font-bold text-sm">Tanya Jawab (FAQ)</span>
-                  <button onClick={() => toggleCmsVisibility('faq')} className={cmsConfig.faq.visible ? 'text-emerald-500' : 'text-gray-500'}>
-                    {cmsConfig.faq.visible ? <Eye size={20}/> : <EyeOff size={20}/>}
+                  <span className="font-bold text-sm">Dokumentasi</span>
+                  <button onClick={() => toggleCmsVisibility('docs')} className={cmsConfig.docs.visible ? 'text-emerald-500' : 'text-gray-500'}>
+                    {cmsConfig.docs.visible ? <Eye size={20}/> : <EyeOff size={20}/>}
                   </button>
                 </div>
-
               </div>
             </div>
 
