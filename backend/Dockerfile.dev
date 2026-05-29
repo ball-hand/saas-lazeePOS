@@ -1,0 +1,25 @@
+# ──────────────────────────────────────────────────────────────
+#  LazeePOS Backend — Development Image
+#  Menggunakan nodemon untuk hot-reload saat development
+# ──────────────────────────────────────────────────────────────
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install OS dependencies yang dibutuhkan bcrypt & prisma
+RUN apk add --no-cache openssl
+
+# Install dependencies terlebih dahulu (layer cache-friendly)
+COPY package*.json ./
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Generate Prisma client (wajib sebelum start)
+RUN npx prisma generate
+
+EXPOSE 5000
+
+# Jalankan dengan nodemon untuk hot-reload
+CMD ["npm", "run", "dev"]

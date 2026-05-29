@@ -1,0 +1,92 @@
+services:
+  # ── 1. MySQL 8.0 ────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: pos_db
+    ports:
+      - "3307:3306"  # Akses langsung dari host jika perlu (misal: TablePlus)
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--skip-password"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    networks:
+      - lazee_network
+
+  # ── 2. Redis Cache ───────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Akses dari host jika perlu debug
+    volumes:
+      - redis_data:/data
+    networks:
+      - lazee_network
+
+  # ── 3. Backend (Node.js + Express + Nodemon) ─────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app              # Mount source code untuk hot-reload
+      - /app/node_modules           # Isolasi node_modules (jangan di-override)
+    env_file:
+      - ./backend/.env
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=mysql://root:@mysql:3306/pos_db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - lazee_network
+
+  # ── 4. Frontend (React + Vite Dev Server) ────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app             # Mount source code untuk HMR
+      - /app/node_modules           # Isolasi node_modules
+    environment:
+      - VITE_API_URL=/api/v1
+      - VITE_HMR_PORT=80             # HMR WebSocket lewat Nginx port 80
+      - VITE_HMR_HOST=lazeepos.local
+    networks:
+      - lazee_network
+
+  # ── 5. Nginx Reverse Proxy ───────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - lazee_network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  lazee_network:
+    driver: bridge

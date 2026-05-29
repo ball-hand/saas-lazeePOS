@@ -1,0 +1,20 @@
+# ──────────────────────────────────────────────────────────────
+#  LazeePOS Frontend — Development Image
+#  Menggunakan Vite dev server dengan HMR
+# ──────────────────────────────────────────────────────────────
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install OS dependencies
+RUN apk add --no-cache libc6-compat
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 5173
+
+# Vite harus listen di 0.0.0.0 agar bisa diakses dari luar container
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

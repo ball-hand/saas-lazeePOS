@@ -1,94 +1,209 @@
-# Panduan Pengujian (Testing Guide)
+# Panduan Pengujian (Testing Guide) — LazeePOS
 
-Selamat datang di Panduan Pengujian LazeePOS. Aplikasi ini berskala SaaS yang melayani berbagai *tenant*, oleh karena itu keandalan kode sangat diutamakan. Kita menggunakan *stack* modern untuk pengujian otomatis.
+> **⚠️ PROPRIETARY SOFTWARE** — Milik eksklusif **Lazee Teknologi**. Lihat [LICENSE](../LICENSE).
 
-## Arsitektur Pengujian
+---
 
-Sistem ini dibagi menjadi dua *environment* utama:
+## Stack Testing
 
-### 1. Backend (Node.js/Express)
-Di Backend, kita fokus menguji alur logika (*business logic*), rute API, dan lapisan *database*.
-- **Framework Utama**: `Jest`
-- **Integrasi API**: `Supertest` (untuk mensimulasikan permintaan HTTP ke rute Express tanpa perlu menjalankan server secara penuh).
-- **Mocking Database**: `jest-mock-extended` (Prisma dikonfigurasi agar tidak menyentuh database sungguhan secara langsung untuk *unit test*, sehingga sangat cepat).
+| Layer | Framework | Library Pendukung |
+|---|---|---|
+| **Backend** | Jest | Supertest, jest-mock-extended |
+| **Frontend** | Vitest | @testing-library/react, @testing-library/jest-dom |
 
-**Cara Menjalankan Test Backend:**
+---
+
+## 1. Backend Testing (Jest)
+
+### Setup
 ```bash
 cd backend
-npm run test
+npm run test              # Jalankan semua test
+npm run test -- --watch   # Watch mode (re-run saat file berubah)
 ```
-*Catatan: Tes diletakkan di dalam folder `backend/tests/` dengan ekstensi `.test.js`.*
 
-### 2. Frontend (React/Vite)
-Di Frontend, kita fokus pada perenderan komponen (UI), interaksi pengguna (klik/input), dan manajemen status (*state*).
-- **Framework Utama**: `Vitest` (Sangat cepat dan terintegrasi asli dengan Vite).
-- **Simulasi DOM**: `jsdom`
-- **Pustaka Pengujian React**: `@testing-library/react` dan `@testing-library/jest-dom` (untuk *assertions* elemen HTML seperti `toBeInTheDocument`).
+### Konfigurasi
+File: `backend/jest.config.js`
 
-**Cara Menjalankan Test Frontend:**
+```js
+// Backend menggunakan ES Modules (type: "module")
+// Test dijalankan dengan: NODE_OPTIONS=--experimental-vm-modules
+```
+
+### Struktur File Test
+```
+backend/
+└── tests/
+    ├── auth.middleware.test.js    # Test middleware autentikasi JWT
+    ├── receipts.test.js           # Test rute checkout & receipt
+    └── ...
+```
+
+### Menulis Test Backend
+```js
+import request from 'supertest';
+import { jest } from '@jest/globals';
+
+// Mock Prisma agar tidak menyentuh database sungguhan
+jest.mock('../prisma/client.js');
+
+describe('POST /api/v1/auth/login', () => {
+  it('should return 400 if email is empty', async () => {
+    const res = await request(app).post('/api/v1/auth/login').send({});
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('should return JWT token on valid credentials', async () => {
+    // ...
+    expect(res.body.data.token).toBeDefined();
+  });
+});
+```
+
+---
+
+## 2. Frontend Testing (Vitest)
+
+### Setup
 ```bash
 cd frontend
-npm run test
+npm run test              # Jalankan semua test (sekali)
+npm run test -- --watch   # Watch mode
 ```
-*Catatan: File tes diletakkan bersebelahan langsung dengan komponennya untuk mempermudah navigasi. Contoh: `StatsCard.test.tsx` berada di sebelah `StatsCard.tsx`.*
+
+### Konfigurasi
+File: `frontend/vite.config.ts` — bagian `test`:
+```ts
+test: {
+  environment: 'jsdom',      // Simulasi browser DOM
+  globals: true,             // Vitest globals (describe, it, expect)
+  setupFiles: './src/setupTests.ts',
+}
+```
+
+File: `frontend/src/setupTests.ts`:
+```ts
+import '@testing-library/jest-dom/vitest';  // toBeInTheDocument(), dll.
+```
+
+### Struktur File Test
+```
+frontend/src/
+├── components/
+│   ├── StatsCard.tsx
+│   └── StatsCard.test.tsx    ← Test bersebelahan dengan komponen
+├── pages/
+│   └── ...
+└── utils/
+    └── formatters.test.ts
+```
+
+### Menulis Test Frontend
+```tsx
+import { render, screen } from '@testing-library/react';
+import { StatsCard } from './StatsCard';
+
+describe('StatsCard Component', () => {
+  it('should render title and value correctly', () => {
+    render(
+      <StatsCard
+        title="Total Pendapatan"
+        value="Rp 50.000"
+        icon={<span data-testid="icon">💰</span>}
+      />
+    );
+
+    expect(screen.getByText('Total Pendapatan')).toBeInTheDocument();
+    expect(screen.getByText('Rp 50.000')).toBeInTheDocument();
+    expect(screen.getByTestId('icon')).toBeInTheDocument();
+  });
+});
+```
 
 ---
 
-## Standar Penulisan Tes (Best Practices)
+## 3. Best Practices
 
-1. **Keep it Isolated**: *Unit test* harus terisolasi. Gunakan `mock` untuk fungsi-fungsi eksternal seperti `api.post` atau pemanggilan ke database.
-2. **Naming Convention**: Selalu gunakan format `[nama-file].test.ts` atau `.test.tsx`. Deskripsikan setiap blok `describe` dan `it` dengan jelas (misal: `it('should display error message on failure')`).
-3. **User-Centric Testing (Frontend)**: Saat menguji UI, utamakan menggunakan `screen.getByRole` atau `screen.getByText` ketimbang mencari berdasarkan nama kelas CSS, karena ini meniru bagaimana *user* sungguhan berinteraksi dengan layar.
+### Prinsip Utama
+1. **Isolated Tests** — Setiap unit test harus independen. Gunakan mock untuk API, database, dan fungsi eksternal.
+2. **Arrange-Act-Assert (AAA)** — Susun test dalam 3 blok jelas: persiapkan data, jalankan aksi, cek hasilnya.
+3. **User-Centric (Frontend)** — Gunakan `screen.getByRole` / `screen.getByText` bukan CSS class selector.
+4. **Naming Convention** — Format: `[nama-file].test.ts` / `.test.tsx`.
+5. **Test Edge Cases** — Selalu uji: input kosong, nilai invalid, state error, batas maksimum.
 
-## Struktur File Test
-
-```text
-POS/
-├── backend/
-│   ├── tests/
-│   │   ├── auth.middleware.test.js    <-- Contoh test middleware
-│   │   └── receipts.test.js           <-- Contoh test rute
-│   └── jest.config.js
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── StatsCard.tsx
-    │   │   └── StatsCard.test.tsx     <-- Contoh test komponen UI
-    │   └── utils/
-    │       └── formatters.test.ts
-    └── vite.config.ts                 <-- Konfigurasi vitest
+### Contoh Deskripsi Test yang Baik
+```js
+describe('Checkout API', () => {
+  it('should return 400 when cart is empty')
+  it('should return 400 when paid amount is less than total')
+  it('should deduct warehouse stock after successful checkout')
+  it('should prevent double-submit with same Idempotency-Key')
+})
 ```
-
-Dengan menjalankan tes secara rutin, kita dapat memastikan bahwa LazeePOS tidak akan pernah mengalami regresi fitur. Selamat menguji! 🚀
 
 ---
 
-## Cakupan Fitur Teruji (Test Coverage)
+## 4. Cakupan Test Saat Ini
 
-Seluruh fitur inti aplikasi (Fase 1 & Fase 2) telah melalui proses *Unit Testing* dengan hasil **100% PASS (Lulus)**. Berikut adalah tabel dokumentasi fitur yang dilindungi:
+### Backend API Tests (Jest) — 100% PASS ✅
 
-### Backend API Tests (Jest)
+| Modul | Status | Skenario yang Diuji |
+|---|---|---|
+| **Authentication** | ✅ PASS | Login valid, salah password, email kosong, JWT verification, reservasi subdomain |
+| **Idempotency Middleware** | ✅ PASS | Double-submit checkout, Idempotency-Key validation |
+| **Dashboard** | ✅ PASS | Kalkulasi omzet hari ini, stok habis, arus kas terakhir |
+| **Products** | ✅ PASS | List produk, PIN/UNPIN, ordering pinned items |
+| **Warehouse** | ✅ PASS | Stock level, reorder alert, stock adjustment |
+| **Discounts** | ✅ PASS | Diskon fixed & persentase, kondisi minimum qty |
+| **Checkout & Receipts** | ✅ PASS | Keranjang kosong, kurang bayar, kalkulasi kembalian, cetak struk |
+| **Transactions** | ✅ PASS | Riwayat per tanggal, search by kasir |
+| **Cashflow** | ✅ PASS | Cash in/out, auto-record saat transaksi |
+| **Settings** | ✅ PASS | Update branding tenant, manajemen staf |
 
-| Modul/Fitur | Status Test | Deskripsi yang Diuji |
-| :--- | :---: | :--- |
-| **Authentication** | ✅ PASS | Validasi input kosong, salah *password*, hingga sukses *login* (*JWT Token*). Validasi reservasi *subdomain*. |
-| **Idempotency** | ✅ PASS | Middleware `Idempotency-Key` untuk mencegah duplikasi *request* pembayaran. |
-| **Dashboard** | ✅ PASS | Kalkulasi agregasi penjualan hari ini, bulan ini, kalkulasi stok habis, serta kas arus kas terakhir. |
-| **Products** | ✅ PASS | Daftar inventori produk, *ordering* berdasarkan PIN, serta fungsionalitas PIN/UNPIN. |
-| **Warehouse** | ✅ PASS | Integrasi antar produk dan gudang, notifikasi stok menipis, serta fungsi penyesuaian stok (*Stock Adjustment*). |
-| **Discounts** | ✅ PASS | Pembuatan tipe diskon *fixed* dan persentase untuk di-aplikasikan otomatis atau manual. |
-| **Checkout & Receipts**| ✅ PASS | Penolakan keranjang kosong, penolakan kurang bayar, kalkulasi kembalian otomatis, serta pencetakan struk. |
-| **Transactions** | ✅ PASS | Pencarian riwayat transaksi berdasarkan tanggal, struk, atau nama kasir. |
-| **Cashflow** | ✅ PASS | Validasi *Cash In* dan *Cash Out* dengan integrasi pencatatan otomatis saat transaksi terjadi. |
-| **Settings** | ✅ PASS | Fitur pembaruan profil toko (Tenant Branding), penambahan dan penghapusan *Staff/Kasir*. |
+### Frontend UI Tests (Vitest) — 100% PASS ✅
 
-### Frontend UI Tests (Vitest + JSDOM)
+| Komponen | Status | Skenario yang Diuji |
+|---|---|---|
+| **StatsCard** | ✅ PASS | Render judul, nilai, ikon dengan props yang benar |
+| **Terminal POS** | ✅ PASS | Klik produk → masuk keranjang, subtotal bertambah |
+| **Dashboard UI** | ✅ PASS | Render grafik (mock), format Rupiah tepat |
+| **Products Table** | ✅ PASS | Render tabel dengan Axios API mock |
 
-| Komponen UI | Status Test | Deskripsi yang Diuji |
-| :--- | :---: | :--- |
-| **Terminal POS** | ✅ PASS | Simulasi klik produk ke keranjang belanja, hingga memastikan subtotal keranjang bertambah akurat. |
-| **Dashboard UI** | ✅ PASS | Mampu me-render grafik (Recharts mock) dan mencetak nominal pendapatan dengan pemformatan Rupiah yang tepat. |
-| **Products UI** | ✅ PASS | Merender tabel inventaris lengkap dengan integrasi Axios API Mocks. |
-| **Stats Card** | ✅ PASS | Menguji fungsionalitas rendering judul dan nominal statistik pada komponen UI terpisah. |
+---
 
-Semua *test runner* akan menghasilkan **Exit Code 0** jika seluruh sistem bersih dari *bug* krusial.
+## 5. Menjalankan Type Check
+
+```bash
+# Pastikan tidak ada TypeScript error sebelum commit
+cd frontend && npx tsc --noEmit
+```
+
+---
+
+## 6. CI/CD (Rencana)
+
+Untuk deployment otomatis, tambahkan GitHub Actions workflow:
+
+```yaml
+# .github/workflows/test.yml
+name: Run Tests
+
+on: [push, pull_request]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: cd backend && npm ci && npm run test
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: cd frontend && npm ci && npm run test && npx tsc --noEmit
+```
