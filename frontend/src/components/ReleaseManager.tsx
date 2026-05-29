@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Rocket, RefreshCw, X } from 'lucide-react';
 import api from '../api/client';
-import { useAuth } from '../context/AuthContext';
 
 interface Release {
   version: string;
@@ -10,7 +9,6 @@ interface Release {
 }
 
 export function ReleaseManager() {
-  const { user } = useAuth();
   const [release, setRelease] = useState<Release | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 

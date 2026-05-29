@@ -59,7 +59,7 @@ export function CashFlow() {
     }
   };
 
-  const handleSoftDelete = async (id: number) => {
+  const handleSoftDelete = async (_id: number) => {
     if (!window.confirm('Yakin ingin mengarsipkan transaksi ini? (Data tidak akan dihapus permanen)')) return;
     
     try {

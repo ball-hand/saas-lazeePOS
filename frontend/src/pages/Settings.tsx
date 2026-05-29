@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Save, Store, Moon, Sun, Receipt, Percent, FileText, Coffee, Sparkles, Plus, Trash2, Star, MessageSquare, Bell } from 'lucide-react';
+import { Save, Store, Moon, Sun, Receipt, Percent, FileText, Coffee, Sparkles, Plus, Trash2, Bell } from 'lucide-react';
 import api, { getMediaUrl } from '../api/client';
 import toast from 'react-hot-toast';
 import { RichTextEditor } from '../components/shared/RichTextEditor';

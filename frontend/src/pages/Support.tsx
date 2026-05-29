@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { LifeBuoy, Plus, MessageSquare, Clock, CheckCircle2, AlertCircle, ChevronRight, X, Send } from 'lucide-react';
+import { LifeBuoy, Plus, MessageSquare, Clock, ChevronRight, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../api/client';
-import { useAuth } from '../context/AuthContext';
+
 import { Modal } from '../components/Modal';
 import { CustomSelect } from '../components/shared/CustomSelect';
 
@@ -12,6 +12,7 @@ interface Ticket {
   description: string;
   status: string;
   priority: string;
+  createdAt: string;
   updatedAt: string;
   _count?: { replies: number };
 }
@@ -29,7 +30,6 @@ interface TicketDetail extends Ticket {
 }
 
 export function Support() {
-  const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   

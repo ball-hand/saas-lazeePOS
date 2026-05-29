@@ -1,4 +1,3 @@
-import React from 'react';
 import { Store } from 'lucide-react';
 
 export function Footer({ tenant }: { tenant: any }) {

@@ -76,12 +76,6 @@ export function CustomerMenu() {
     }).filter(Boolean) as any[]);
   };
 
-  const getProductMediaUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    return `http://localhost:3000${url}`;
-  };
-
   const submitOrder = async () => {
     if (!customerName.trim()) {
       toast.error('Mohon isi nama Anda');
