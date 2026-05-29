@@ -1,5 +1,5 @@
 import React from 'react';
-import { Store, Phone, Instagram, MapPin, Sparkles, MessageCircle, CheckCircle, Clock, Star, Shield, Heart, Truck, ThumbsUp, Coffee, Utensils } from 'lucide-react';
+import { Store, Phone, MapPin, Sparkles, CheckCircle, Clock, Star, Shield, Heart, Truck, ThumbsUp, Coffee, Utensils } from 'lucide-react';
 import { getMediaUrl } from '../../api/client';
 
 const fmt = (val: number) => 'Rp ' + val.toLocaleString('id-ID');

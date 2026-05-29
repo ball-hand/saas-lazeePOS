@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { Bold, Italic, List, ListOrdered } from 'lucide-react';
 
 interface RichTextEditorProps {

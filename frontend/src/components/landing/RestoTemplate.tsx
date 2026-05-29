@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coffee, MessageCircle, Store, CheckCircle, Star, Shield, Heart, Truck, ThumbsUp, Utensils, MapPin, Clock, Phone, Instagram } from 'lucide-react';
+import { Coffee, MessageCircle, CheckCircle, Star, Shield, Heart, Truck, ThumbsUp, Utensils, MapPin, Clock, Phone } from 'lucide-react';
 import { getMediaUrl } from '../../api/client';
 
 const fmt = (val: number) => 'Rp ' + val.toLocaleString('id-ID');
@@ -20,7 +20,6 @@ export function RestoTemplate({ tenant, config, groupedProducts }: { tenant: any
   const heroTitle = config.heroTitle || `Selamat Datang di ${tenant.name}`;
   const heroSubtitle = config.heroSubtitle || 'Temukan hidangan terbaik kami di sini.';
   const waNumber = config.whatsapp || '';
-  const igHandle = config.instagram || '';
   const address = config.address || '';
   const opHours = config.operationalHours || '';
   const heroImage = config.heroImage ? getMediaUrl(config.heroImage) : (config.gallery && config.gallery.length > 0 ? getMediaUrl(config.gallery[0]) : null);
