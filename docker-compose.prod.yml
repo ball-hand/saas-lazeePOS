@@ -30,6 +30,16 @@ services:
     networks:
       - lazee_network
 
+  # ── 3. Backup Volume (for database backups) ──────────────────
+  backup:
+    image: alpine:latest
+    restart: "no"
+    volumes:
+      - backups:/backups
+    entrypoint: echo "Backup volume container"
+    networks:
+      - lazee_network
+
   # ── 3. Backend (Node.js Production) ─────────────────────────
   backend:
     build:
@@ -38,6 +48,8 @@ services:
     restart: always
     expose:
       - "5000"
+    volumes:
+      - ./backend/public/uploads:/app/public/uploads  # Persist uploaded files
     env_file:
       # Di server production, buat file ini dari .env.production.example
       # Contoh: cp backend/.env.production.example backend/.env.production
@@ -88,6 +100,7 @@ services:
 volumes:
   mysql_data:
   redis_data:
+  backups:
 
 networks:
   lazee_network:

@@ -203,7 +203,7 @@ router.put('/:id', ...protect, async (req, res) => {
     });
 
     // Hapus cache Redis agar perubahan status/detail tenant langsung terasa di middleware
-    await redis.del(`tenant:${tenant.subdomain}`);
+    await redis.safeDel(`tenant:${tenant.subdomain}`);
 
     res.json({ tenant });
   } catch (error) {
@@ -231,7 +231,7 @@ router.delete('/:id', ...protect, async (req, res) => {
       },
     });
 
-    await redis.del(`tenant:${existing.subdomain}`);
+    await redis.safeDel(`tenant:${existing.subdomain}`);
 
     res.json({ message: 'Tenant berhasil di-suspend.' });
   } catch (error) {

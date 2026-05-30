@@ -65,6 +65,8 @@ async function main() {
       name: 'Platform Central Owner',
       role: 'central',
       tenantId: null,
+      emailVerified: true,
+      emailVerifiedAt: new Date(),
     },
   });
   console.log('   ✅ admin@lazeepos.com / Admin123!');
@@ -125,6 +127,8 @@ async function main() {
       name: 'Demo Admin',
       role: 'admin',
       tenantId: demoTenant.id,
+      emailVerified: true,
+      emailVerifiedAt: new Date(),
     },
   });
   await prisma.user.create({
@@ -134,6 +138,8 @@ async function main() {
       name: 'Demo Kasir',
       role: 'kasir',
       tenantId: demoTenant.id,
+      emailVerified: true,
+      emailVerifiedAt: new Date(),
     },
   });
   console.log('   ✅ demo@lazeepos.com / Demo123! (admin)');

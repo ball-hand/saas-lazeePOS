@@ -38,7 +38,7 @@ export async function tenantIdentificator(req, res, next) {
     const redisKey = `tenant:${subdomain.toLowerCase()}`;
     
     // 1. Cek di Redis terlebih dahulu
-    const cachedTenant = await redis.get(redisKey);
+    const cachedTenant = await redis.safeGet(redisKey);
     let tenant = null;
 
     if (cachedTenant) {
@@ -63,7 +63,7 @@ export async function tenantIdentificator(req, res, next) {
 
       if (tenant) {
         // Simpan ke Redis (Expire 1 jam)
-        await redis.setex(redisKey, 3600, JSON.stringify(tenant));
+        await redis.safeSetex(redisKey, 3600, JSON.stringify(tenant));
         console.log(`[Cache Miss] DB: Menyimpan tenant ${subdomain} ke Redis`);
       }
     }

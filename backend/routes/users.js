@@ -12,7 +12,10 @@ router.use(verifyToken, requireTenant, requireRole('admin'));
 // GET /api/v1/users - List all users in this tenant
 router.get('/', async (req, res) => {
   const users = await prisma.user.findMany({
-    where: { tenantId: req.tenant.id },
+    where: { 
+      tenantId: req.tenant.id,
+      deletedAt: null 
+    },
     select: {
       id: true,
       name: true,
@@ -174,7 +177,10 @@ router.delete('/:id', async (req, res) => {
 
   await prisma.user.update({
     where: { id: userId },
-    data: { isActive: false }
+    data: { 
+      isActive: false,
+      deletedAt: new Date()
+    }
   });
 
   res.json({

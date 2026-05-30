@@ -10,7 +10,10 @@ const prisma = new PrismaClient();
 router.get('/', verifyToken, requireTenant, async (req, res) => {
   try {
     const { search, category, active } = req.query;
-    const where = { tenantId: req.user.tenantId };
+    const where = { 
+      tenantId: req.user.tenantId,
+      deletedAt: null
+    };
 
     if (search) {
       where.OR = [
@@ -40,7 +43,10 @@ router.get('/', verifyToken, requireTenant, async (req, res) => {
 
     // Get unique categories
     const categories = await prisma.product.findMany({
-      where: { tenantId: req.user.tenantId },
+      where: { 
+        tenantId: req.user.tenantId,
+        deletedAt: null
+      },
       select: { category: true },
       distinct: ['category'],
     });
@@ -145,6 +151,7 @@ router.delete('/:id', verifyToken, requireTenant, requireRole('admin'), async (r
       where: { id },
       data: {
         isActive: false,
+        deletedAt: new Date(),
         warehouse: { update: { quantity: 0 } },
       },
     });

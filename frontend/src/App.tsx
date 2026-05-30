@@ -20,6 +20,7 @@ import { CentralReleases } from './pages/central/CentralReleases';
 import { CentralSystemLogs } from './pages/central/CentralSystemLogs';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ReleaseManager } from './components/ReleaseManager';
+import { TempDesignApps } from './pages/TempDesignApps';
 
 // Tenant (toko) pages
 import { Dashboard } from './pages/Dashboard';
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/central-login" element={<CentralLogin />} />
+          <Route path="/design_apps" element={<TempDesignApps />} />
 
           {/* ── TENANT ROUTES  (toko subdomain) ─────────── */}
           <Route element={<ProtectedRoute />}>

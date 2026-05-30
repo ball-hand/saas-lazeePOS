@@ -104,7 +104,7 @@ router.post('/tenants/:id/kill-switch', ...protect, async (req, res) => {
           suspendedReason: reason || 'Suspended by central kill-switch',
         },
       });
-      await redis.del(`tenant:${existing.subdomain}`);
+      await redis.safeDel(`tenant:${existing.subdomain}`);
       return res.json({ message: `Toko "${existing.name}" berhasil di-suspend.` });
     }
 
@@ -117,7 +117,7 @@ router.post('/tenants/:id/kill-switch', ...protect, async (req, res) => {
         suspendedReason: null,
       },
     });
-    await redis.del(`tenant:${existing.subdomain}`);
+    await redis.safeDel(`tenant:${existing.subdomain}`);
     return res.json({ message: `Toko "${existing.name}" berhasil diaktifkan kembali.` });
   } catch (err) {
     console.error('Kill switch error:', err);

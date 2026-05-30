@@ -39,6 +39,7 @@ services:
     volumes:
       - ./backend:/app              # Mount source code untuk hot-reload
       - /app/node_modules           # Isolasi node_modules (jangan di-override)
+      - ./backend/public/uploads:/app/public/uploads  # Persist uploaded files
     env_file:
       - ./backend/.env
     environment:
@@ -86,6 +87,7 @@ services:
 volumes:
   mysql_data:
   redis_data:
+  backups:
 
 networks:
   lazee_network:

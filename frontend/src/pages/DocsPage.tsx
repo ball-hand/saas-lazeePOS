@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Store, ChevronRight, Menu, X, ArrowLeft } from 'lucide-react';
+import { Store, ChevronRight, Menu, X, ArrowLeft, BookOpen, Sparkles } from 'lucide-react';
 import api from '../api/client';
 
 export function DocsPage() {
@@ -13,8 +13,10 @@ export function DocsPage() {
     const fetchConfig = async () => {
       try {
         const { data } = await api.get('/public/platform/cms');
-        if (data.data) {
-          setCmsConfig(data.data);
+        if (data) {
+          // The axios interceptor already unwraps the { status, data } envelope.
+          // So 'data' here is directly the cmsConfig object.
+          setCmsConfig(data);
         }
       } catch (err) {
         console.error('Failed to load CMS config', err);
@@ -74,75 +76,140 @@ export function DocsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[var(--accent-primary)]" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--accent-primary)]" />
+          <p className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest animate-pulse">Memuat Dokumen...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] font-sans flex flex-col">
-      {/* Navbar */}
-      <nav className="sticky top-0 w-full bg-[var(--bg-surface-elevated)] border-b border-[var(--border)] z-50 h-16 flex items-center px-6 shadow-sm">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-primary)] font-sans flex flex-col selection:bg-[var(--accent-primary-transparent)] selection:text-[var(--accent-primary)]">
+      {/* Navbar with Glassmorphism */}
+      <nav className="sticky top-0 w-full bg-[var(--bg-main)]/80 backdrop-blur-xl border-b border-[var(--border)] z-50 h-16 flex items-center px-6 transition-all duration-300">
         <div className="flex-1 flex items-center gap-4">
-          <Link to="/" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
-            <ArrowLeft size={20} />
+          <Link to="/" className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)] transition-all">
+            <ArrowLeft size={16} />
           </Link>
           <div className="w-px h-6 bg-[var(--border)]" />
-          <Link to="/" className="flex items-center gap-2 text-[var(--accent-primary)]">
-            <Store size={24} strokeWidth={2.5} />
-            <span className="text-lg font-extrabold tracking-tight text-[var(--text-primary)] hidden sm:block">LazeePOS</span>
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[var(--accent-primary)] to-[var(--accent-hover)] flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform">
+              <Store size={18} strokeWidth={2.5} />
+            </div>
+            <span className="text-lg font-extrabold tracking-tight text-[var(--text-primary)] hidden sm:block group-hover:text-[var(--accent-primary)] transition-colors">
+              LazeePOS
+            </span>
           </Link>
-          <span className="text-sm font-bold text-[var(--text-secondary)] bg-[var(--bg-main)] px-2.5 py-1 rounded-md border border-[var(--border)]">
+          <span className="text-xs font-black text-[var(--accent-primary)] bg-[var(--accent-primary-transparent)] px-3 py-1 rounded-full uppercase tracking-widest">
             Docs
           </span>
         </div>
 
         <div className="md:hidden">
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--bg-surface-elevated)] border border-[var(--border)] text-[var(--text-primary)]">
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </nav>
 
-      <div className="flex-1 flex flex-col md:flex-row relative">
+      <div className="flex-1 flex flex-col md:flex-row relative w-full">
         {/* Sidebar Overlay (Mobile) */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity" onClick={() => setIsMobileMenuOpen(false)} />
         )}
 
         {/* Sidebar */}
-        <aside className={`fixed md:sticky top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-[var(--bg-surface-elevated)] border-r border-[var(--border)] z-40 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="p-5 h-full overflow-y-auto custom-scrollbar">
-            <h3 className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-4 px-3">Topik Panduan</h3>
-            <div className="flex flex-col gap-1">
-              {topics.map((topic: any, idx: number) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setActiveTopicIndex(idx);
-                    setIsMobileMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-between ${activeTopicIndex === idx ? 'bg-[var(--accent-primary-transparent)] text-[var(--accent-primary)]' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-main)] hover:text-[var(--text-primary)]'}`}
-                >
-                  <span className="truncate">{topic.title}</span>
-                  {activeTopicIndex === idx && <ChevronRight size={16} />}
-                </button>
-              ))}
+        <aside className={`fixed md:sticky top-16 left-0 h-[calc(100vh-4rem)] w-72 bg-[var(--bg-main)] md:bg-transparent border-r border-[var(--border)] z-40 transform transition-transform duration-500 ease-in-out md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
+          <div className="p-6 h-full overflow-y-auto custom-scrollbar flex flex-col gap-8">
+            <div>
+              <div className="flex items-center gap-3 mb-6 px-2">
+                <BookOpen size={20} className="text-[var(--text-secondary)]" />
+                <h3 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-widest">Daftar Isi Panduan</h3>
+              </div>
+              <div className="flex flex-col gap-2">
+                {topics.map((topic: any, idx: number) => {
+                  const isActive = activeTopicIndex === idx;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setActiveTopicIndex(idx);
+                        setIsMobileMenuOpen(false);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className={`relative w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-between group overflow-hidden border ${isActive ? 'bg-[var(--accent-primary-transparent)] border-[var(--accent-primary)]/20 text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-surface-elevated)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'}`}
+                    >
+                      {/* Active Left Border */}
+                      {isActive && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--accent-primary)]" />
+                      )}
+                      
+                      <span className="truncate z-10">{topic.title}</span>
+                      <ChevronRight size={14} className={`z-10 transition-transform ${isActive ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0'}`} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <div className="mt-auto pt-6 border-t border-[var(--border)] px-2">
+              <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 text-center shadow-sm">
+                <Sparkles size={24} className="text-[var(--accent-primary)] mx-auto mb-3" />
+                <h4 className="text-sm font-bold mb-2 text-[var(--text-primary)]">Butuh Bantuan?</h4>
+                <p className="text-xs text-[var(--text-secondary)] mb-5">Tim support kami siap membantu Anda 24/7.</p>
+                <a href="#" className="block w-full py-2.5 bg-[var(--bg-main)] border border-[var(--border)] text-[var(--text-primary)] text-xs font-bold rounded-xl hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] transition-colors uppercase tracking-widest">
+                  Hubungi Kami
+                </a>
+              </div>
             </div>
           </div>
         </aside>
 
-        {/* Content */}
-        <main className="flex-1 w-full max-w-4xl mx-auto p-6 md:p-12 min-h-[calc(100vh-4rem)] animate-fade-in">
-          <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-8 md:p-12 shadow-sm min-h-full">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--text-primary)] mb-8 border-b border-[var(--border)] pb-6">
-              {activeTopic.title}
-            </h1>
+        {/* Main Content Area */}
+        <main className="flex-1 min-w-0 w-full py-8 px-6 md:py-12 md:px-10 lg:px-16 xl:px-24 min-h-[calc(100vh-4rem)] relative bg-[var(--bg-main)]">
+          
+          <article className="w-full animate-fade-in relative z-10">
+            <header className="mb-10 pb-6 border-b border-[var(--border)]">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[var(--text-primary)] leading-[1.2] tracking-tight">
+                {activeTopic.title}
+              </h1>
+            </header>
             
-            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none text-[var(--text-secondary)]" 
+            <div className="prose max-w-none w-full text-sm md:text-base text-[var(--text-secondary)]" 
               dangerouslySetInnerHTML={{ __html: activeTopic.content }} 
             />
+          </article>
+          
+          {/* Footer Navigation */}
+          <div className="w-full mt-16 pt-8 border-t border-[var(--border)] flex flex-col sm:flex-row items-center gap-4 justify-between">
+            <button
+              onClick={() => {
+                if (activeTopicIndex > 0) {
+                  setActiveTopicIndex(activeTopicIndex - 1);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              disabled={activeTopicIndex === 0}
+              className={`flex flex-col items-start p-5 rounded-2xl transition-all w-full sm:w-[48%] bg-[var(--bg-surface-elevated)] border border-[var(--border)] ${activeTopicIndex === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:border-[var(--accent-primary)] hover:-translate-y-1 shadow-sm hover:shadow-md'}`}
+            >
+              <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em] mb-3 flex items-center gap-1"><ArrowLeft size={12}/> Sebelumnya</span>
+              <span className="text-sm md:text-base font-bold text-[var(--text-primary)] truncate w-full text-left">{activeTopicIndex > 0 ? topics[activeTopicIndex - 1].title : 'Awal'}</span>
+            </button>
+            
+            <button
+              onClick={() => {
+                if (activeTopicIndex < topics.length - 1) {
+                  setActiveTopicIndex(activeTopicIndex + 1);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              disabled={activeTopicIndex === topics.length - 1}
+              className={`flex flex-col items-end p-5 rounded-2xl transition-all w-full sm:w-[48%] bg-[var(--bg-surface-elevated)] border border-[var(--border)] ${activeTopicIndex === topics.length - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:border-[var(--accent-primary)] hover:-translate-y-1 shadow-sm hover:shadow-md'}`}
+            >
+              <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em] mb-3 flex items-center gap-1">Selanjutnya <ChevronRight size={12}/></span>
+              <span className="text-sm md:text-base font-bold text-[var(--text-primary)] truncate w-full text-right">{activeTopicIndex < topics.length - 1 ? topics[activeTopicIndex + 1].title : 'Akhir'}</span>
+            </button>
           </div>
         </main>
       </div>

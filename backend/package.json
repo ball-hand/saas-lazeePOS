@@ -9,6 +9,9 @@
     "start": "node server.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
     "db:push": "npx prisma db push",
+    "db:migrate:dev": "npx prisma migrate dev",
+    "db:migrate:deploy": "npx prisma migrate deploy",
+    "db:migrate:status": "npx prisma migrate status",
     "db:seed": "node prisma/seed.js",
     "db:generate": "npx prisma generate"
   },
@@ -18,6 +21,7 @@
   "dependencies": {
     "@prisma/client": "^6.9.0",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -28,7 +32,9 @@
     "midtrans-client": "^1.4.3",
     "morgan": "^1.10.1",
     "multer": "^2.1.1",
-    "uuid": "^11.1.0"
+    "nodemailer": "^8.0.10",
+    "uuid": "^11.1.0",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "jest": "^30.4.2",

@@ -14,11 +14,16 @@ const getBaseURL = () => {
 const api = axios.create({
   baseURL: getBaseURL(),
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true, // Enable sending cookies with all requests
 });
 
 api.interceptors.request.use((config) => {
+  // First, try to get token from Authorization header (for backward compatibility)
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  // Note: HttpOnly cookies are automatically sent by axios with withCredentials: true
   return config;
 }, (error) => Promise.reject(error));
 
@@ -32,6 +37,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
+      // Clear local storage fallback
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       // Redirect depends on which side of the fence we are

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   Settings, Save, Globe, Palette, Moon, Sun, Check, LayoutTemplate, Type, Eye, EyeOff, Bell
 } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import toast from 'react-hot-toast';
 import api, { getMediaUrl } from '../../api/client';
 import { useTheme } from '../../context/ThemeContext';
@@ -13,6 +14,7 @@ export function CentralPlatform() {
   const { user } = useAuth();
   const { themeMode, primaryColor, logoUrl, updateTheme } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('umum');
   
   // General Form State
   const [formData, setFormData] = useState({
@@ -183,10 +185,22 @@ export function CentralPlatform() {
         </button>
       </div>
 
+      <div className="flex space-x-2 border-b border-[var(--border)] overflow-x-auto custom-scrollbar px-6 mt-4">
+        <button type="button" onClick={() => setActiveTab('umum')} className={`pb-3 px-3 border-b-2 font-bold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'umum' ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'}`}>
+          <Settings size={16} /> Pengaturan Umum
+        </button>
+        <button type="button" onClick={() => setActiveTab('visual')} className={`pb-3 px-3 border-b-2 font-bold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'visual' ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'}`}>
+          <Palette size={16} /> Tampilan & Visual
+        </button>
+        <button type="button" onClick={() => setActiveTab('cms')} className={`pb-3 px-3 border-b-2 font-bold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'cms' ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'}`}>
+          <LayoutTemplate size={16} /> CMS Landing Page
+        </button>
+      </div>
+
       <div className="relative z-10 p-6 flex-1 space-y-8">
         
         {/* SECTION 1: Pengaturan Umum */}
-        <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm">
+        <section className={`bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm animate-fade-in ${activeTab === 'umum' ? 'block' : 'hidden'}`}>
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-3">
             <Globe className="text-blue-500" size={24} /> 1. Pengaturan Umum
           </h2>
@@ -227,7 +241,7 @@ export function CentralPlatform() {
         </section>
 
         {/* SECTION 2: Tampilan & Visual */}
-        <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm">
+        <section className={`bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm animate-fade-in ${activeTab === 'visual' ? 'block' : 'hidden'}`}>
           <h2 className="text-xl font-bold text-[var(--text-primary)] mb-8 flex items-center gap-3">
             <Palette className="text-purple-500" size={24} /> 2. Tampilan & Visual
           </h2>
@@ -312,7 +326,7 @@ export function CentralPlatform() {
         </section>
 
         {/* SECTION 3: CMS Landing Page */}
-        <section className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm">
+        <section className={`bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-3xl p-5 md:p-5 shadow-sm animate-fade-in ${activeTab === 'cms' ? 'block' : 'hidden'}`}>
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-3">
               <LayoutTemplate className="text-emerald-500" size={24} /> 3. Konten Landing Page (CMS)
@@ -387,22 +401,29 @@ export function CentralPlatform() {
               </div>
               {cmsConfig.features.visible && (
                 <div className="p-5 space-y-4">
-                  {(cmsConfig.features.items || []).map((feature: any, idx: number) => (
-                    <div key={idx} className="flex gap-4 items-start border p-4 rounded-xl">
+                  {(cmsConfig.features.items || []).map((feature: any, idx: number) => {
+                    const IconComponent = (LucideIcons as any)[feature.icon] || LucideIcons.HelpCircle;
+                    return (
+                    <div key={idx} className="flex gap-4 items-start border border-[var(--border)] p-4 rounded-xl">
                       <div className="flex-1 space-y-3">
                         <div className="flex gap-3">
-                          <input className="w-1/3 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Nama Ikon (misal: Store)" value={feature.icon} onChange={e => {
-                            const newItems = [...cmsConfig.features.items];
-                            newItems[idx].icon = e.target.value;
-                            setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
-                          }} />
-                          <input className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm font-bold" placeholder="Judul Fitur" value={feature.title} onChange={e => {
+                          <div className="relative w-1/3">
+                            <input className="w-full pl-3 pr-10 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-sm focus:border-[var(--accent-primary)] outline-none" placeholder="Nama Ikon" value={feature.icon} onChange={e => {
+                              const newItems = [...cmsConfig.features.items];
+                              newItems[idx].icon = e.target.value;
+                              setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
+                            }} />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none">
+                              <IconComponent size={16} />
+                            </div>
+                          </div>
+                          <input className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-sm font-bold focus:border-[var(--accent-primary)] outline-none" placeholder="Judul Fitur" value={feature.title} onChange={e => {
                             const newItems = [...cmsConfig.features.items];
                             newItems[idx].title = e.target.value;
                             setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
                           }} />
                         </div>
-                        <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Deskripsi Fitur" rows={2} value={feature.desc} onChange={e => {
+                        <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-sm focus:border-[var(--accent-primary)] outline-none" placeholder="Deskripsi Fitur" rows={2} value={feature.desc} onChange={e => {
                           const newItems = [...cmsConfig.features.items];
                           newItems[idx].desc = e.target.value;
                           setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
@@ -411,9 +432,9 @@ export function CentralPlatform() {
                       <button onClick={() => {
                         const newItems = cmsConfig.features.items.filter((_: any, i: number) => i !== idx);
                         setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
-                      }} className="text-red-500 font-bold text-sm mt-2">Hapus</button>
+                      }} className="text-red-500 font-bold text-sm mt-2 hover:bg-red-500/10 p-2 rounded-lg transition-colors">Hapus</button>
                     </div>
-                  ))}
+                  )})}
                   <button onClick={() => {
                     const newItems = [...(cmsConfig.features.items || []), { icon: 'Star', title: '', desc: '' }];
                     setCmsConfig({...cmsConfig, features: {...cmsConfig.features, items: newItems}});
@@ -437,21 +458,21 @@ export function CentralPlatform() {
               {cmsConfig.howItWorks.visible && (
                 <div className="p-5 space-y-4">
                   {(cmsConfig.howItWorks.steps || []).map((step: any, idx: number) => (
-                    <div key={idx} className="flex gap-4 items-start border p-4 rounded-xl">
+                    <div key={idx} className="flex gap-4 items-start border border-[var(--border)] p-4 rounded-xl">
                       <div className="flex-1 space-y-3">
                         <div className="flex gap-3">
-                          <input className="w-1/4 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="No (misal: 01)" value={step.step} onChange={e => {
+                          <input className="w-1/4 px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-sm focus:border-[var(--accent-primary)] outline-none" placeholder="No (misal: 01)" value={step.step} onChange={e => {
                             const newSteps = [...cmsConfig.howItWorks.steps];
                             newSteps[idx].step = e.target.value;
                             setCmsConfig({...cmsConfig, howItWorks: {...cmsConfig.howItWorks, steps: newSteps}});
                           }} />
-                          <input className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm font-bold" placeholder="Judul Langkah" value={step.title} onChange={e => {
+                          <input className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-sm font-bold focus:border-[var(--accent-primary)] outline-none" placeholder="Judul Langkah" value={step.title} onChange={e => {
                             const newSteps = [...cmsConfig.howItWorks.steps];
                             newSteps[idx].title = e.target.value;
                             setCmsConfig({...cmsConfig, howItWorks: {...cmsConfig.howItWorks, steps: newSteps}});
                           }} />
                         </div>
-                        <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Deskripsi Langkah" rows={2} value={step.desc} onChange={e => {
+                        <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-sm focus:border-[var(--accent-primary)] outline-none" placeholder="Deskripsi Langkah" rows={2} value={step.desc} onChange={e => {
                           const newSteps = [...cmsConfig.howItWorks.steps];
                           newSteps[idx].desc = e.target.value;
                           setCmsConfig({...cmsConfig, howItWorks: {...cmsConfig.howItWorks, steps: newSteps}});
@@ -480,15 +501,15 @@ export function CentralPlatform() {
                   <h3 className="font-bold text-[var(--text-primary)]">5. Dokumentasi (Docs)</h3>
                 </div>
                 <button onClick={() => toggleCmsVisibility('docs')} className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-colors ${cmsConfig.docs.visible ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-gray-500'}`}>
-                  {cmsConfig.docs.visible ? <><Eye size={16}/> Tampil</> : <><EyeOff size={16}/> Sembunyi</>}
+                  {cmsConfig.docs.visible ? <><LucideIcons.Eye size={16}/> Tampil</> : <><LucideIcons.EyeOff size={16}/> Sembunyi</>}
                 </button>
               </div>
               {cmsConfig.docs.visible && (
                 <div className="p-5 space-y-6">
-                  {(cmsConfig.docs.topics || []).map((topic: any, idx: number) => (
-                    <div key={idx} className="flex flex-col gap-3 border p-4 rounded-xl">
-                      <div className="flex gap-4">
-                        <input className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm font-bold" placeholder="Judul Topik" value={topic.title} onChange={e => {
+                  {(cmsConfig.docs?.topics || []).map((topic: any, idx: number) => (
+                    <div key={idx} className="flex flex-col gap-3 border border-[var(--border)] p-4 rounded-xl">
+                      <div className="flex gap-3 items-center">
+                        <input className="flex-1 px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-sm font-bold focus:border-[var(--accent-primary)] outline-none" placeholder="Judul Topik" value={topic.title} onChange={e => {
                           const newTopics = [...cmsConfig.docs.topics];
                           newTopics[idx].title = e.target.value;
                           setCmsConfig({...cmsConfig, docs: {...cmsConfig.docs, topics: newTopics}});
@@ -527,22 +548,22 @@ export function CentralPlatform() {
                   <h3 className="font-bold text-[var(--text-primary)]">6. Tanya Jawab (FAQ)</h3>
                 </div>
                 <button onClick={() => toggleCmsVisibility('faq')} className={`p-2 rounded-lg flex items-center gap-2 text-sm font-bold transition-colors ${cmsConfig.faq.visible ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-gray-500'}`}>
-                  {cmsConfig.faq.visible ? <><Eye size={16}/> Tampil</> : <><EyeOff size={16}/> Sembunyi</>}
+                  {cmsConfig.faq.visible ? <><LucideIcons.Eye size={16}/> Tampil</> : <><LucideIcons.EyeOff size={16}/> Sembunyi</>}
                 </button>
               </div>
               {cmsConfig.faq.visible && (
                 <div className="p-5 space-y-4">
                   {(cmsConfig.faq.items || []).map((faq: any, idx: number) => (
-                    <div key={idx} className="flex gap-4 items-start border p-4 rounded-xl">
+                    <div key={idx} className="flex gap-4 items-start border border-[var(--border)] p-4 rounded-xl">
                       <div className="flex-1 space-y-3">
-                        <input className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Pertanyaan" value={faq.q} onChange={e => {
+                        <input className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-sm font-bold focus:border-[var(--accent-primary)] outline-none" placeholder="Pertanyaan" value={faq.question} onChange={e => {
                           const newItems = [...cmsConfig.faq.items];
-                          newItems[idx].q = e.target.value;
+                          newItems[idx].question = e.target.value;
                           setCmsConfig({...cmsConfig, faq: {...cmsConfig.faq, items: newItems}});
                         }} />
-                        <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border text-sm" placeholder="Jawaban" value={faq.a} onChange={e => {
+                        <textarea className="w-full px-3 py-2 rounded-lg bg-[var(--bg-main)] border border-[var(--border)] text-sm focus:border-[var(--accent-primary)] outline-none" placeholder="Jawaban" rows={2} value={faq.answer} onChange={e => {
                           const newItems = [...cmsConfig.faq.items];
-                          newItems[idx].a = e.target.value;
+                          newItems[idx].answer = e.target.value;
                           setCmsConfig({...cmsConfig, faq: {...cmsConfig.faq, items: newItems}});
                         }} />
                       </div>

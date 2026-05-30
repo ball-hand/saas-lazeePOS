@@ -145,7 +145,7 @@ export function RetailTemplate({ tenant, config }: { tenant: any, config: any })
                   </div>
                   <h2 className="text-xl md:text-xl font-extrabold mb-4">{ann.title}</h2>
                   <div 
-                    className="text-[var(--text-secondary)] font-medium leading-relaxed prose prose-sm prose-invert max-w-none prose-p:mb-2 prose-ul:my-2 prose-ol:my-2"
+                    className="text-[var(--text-secondary)] font-medium leading-relaxed prose max-w-none"
                     dangerouslySetInnerHTML={{ __html: ann.description || '' }}
                   />
                 </div>

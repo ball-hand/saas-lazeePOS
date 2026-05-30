@@ -10,6 +10,8 @@ import { Breadcrumb } from '../components/shared/Breadcrumb';
 export function Settings() {
   const { themeMode, primaryColor, storeName: contextStoreName, logoUrl: contextLogoUrl, logoShape: contextLogoShape, updateTheme } = useTheme();
   
+  const [activeTab, setActiveTab] = useState('branding');
+  
   // Branding state
   const [storeName, setStoreName] = useState(contextStoreName);
   const [color, setColor] = useState(primaryColor);
@@ -160,10 +162,25 @@ export function Settings() {
         <Breadcrumb items={[{ label: 'Toko & Transaksi' }, { label: 'Pengaturan' }]} />
       </div>
 
+      <div className="flex space-x-2 border-b border-[var(--border)] overflow-x-auto custom-scrollbar mb-4">
+        <button type="button" onClick={() => setActiveTab('branding')} className={`pb-3 px-3 border-b-2 font-bold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'branding' ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'}`}>
+          <Store size={16} /> Branding & Tema
+        </button>
+        <button type="button" onClick={() => setActiveTab('receipt')} className={`pb-3 px-3 border-b-2 font-bold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'receipt' ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'}`}>
+          <Receipt size={16} /> Struk & Pajak
+        </button>
+        <button type="button" onClick={() => setActiveTab('system')} className={`pb-3 px-3 border-b-2 font-bold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'system' ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'}`}>
+          <Bell size={16} /> Sistem & Notifikasi
+        </button>
+        <button type="button" onClick={() => setActiveTab('landing')} className={`pb-3 px-3 border-b-2 font-bold text-sm flex items-center gap-2 whitespace-nowrap transition-colors ${activeTab === 'landing' ? 'border-[var(--accent-primary)] text-[var(--accent-primary)]' : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border)]'}`}>
+          <Sparkles size={16} /> Halaman Publik (LP)
+        </button>
+      </div>
+
       <form onSubmit={handleSave} className="flex flex-col gap-4">
         
         {/* Section 1: Branding Identitas Tenant */}
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+        <div className={`bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex-col gap-4 animate-fade-in ${activeTab === 'branding' ? 'flex' : 'hidden'}`}>
           <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
             <Store size={18} className="text-[var(--accent-primary)]" /> Branding & Tema Aplikasi
           </h2>
@@ -356,7 +373,7 @@ export function Settings() {
         </div>
 
         {/* Section 2: Personalisasi Struk & Pajak */}
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+        <div className={`bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex-col gap-4 animate-fade-in ${activeTab === 'receipt' ? 'flex' : 'hidden'}`}>
           <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
             <Receipt size={18} className="text-[var(--accent-primary)]" /> Pengaturan Struk Belanja & Pajak
           </h2>
@@ -410,7 +427,7 @@ export function Settings() {
         </div>
 
         {/* Section 2.5: Notifikasi & Sistem */}
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+        <div className={`bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex-col gap-4 animate-fade-in ${activeTab === 'system' ? 'flex' : 'hidden'}`}>
           <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
             <Bell size={18} className="text-[var(--accent-primary)]" /> Pengaturan Notifikasi & Sistem
           </h2>
@@ -427,7 +444,7 @@ export function Settings() {
         </div>
 
         {/* Section 3: Landing Page Publik */}
-        <div className="bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+        <div className={`bg-[var(--bg-surface-elevated)] border border-[var(--border)] rounded-2xl p-5 shadow-sm flex-col gap-4 animate-fade-in ${activeTab === 'landing' ? 'flex' : 'hidden'}`}>
           <h2 className="text-base font-bold text-[var(--text-primary)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
             <Store size={18} className="text-[var(--accent-primary)]" /> Pengaturan Halaman Publik (Landing Page)
           </h2>

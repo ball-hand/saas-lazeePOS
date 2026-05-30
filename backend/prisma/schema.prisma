@@ -81,23 +81,28 @@ model Tenant {
 }
 
 model User {
-  id            String        @id @default(uuid())
-  email         String        @unique
-  name          String?
-  passwordHash  String
-  role          Role          @default(admin)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id                     String        @id @default(uuid())
+  email                  String        @unique
+  name                   String?
+  passwordHash           String
+  role                   Role          @default(admin)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  // Email verification
+  emailVerified          Boolean       @default(false)
+  emailVerifiedAt        DateTime?
+  emailVerificationToken String?
   // FK
-  tenantId      String?
-  tenant        Tenant?       @relation("TenantUsers", fields: [tenantId], references: [id])
-  // Soft‑delete for users
-  isActive      Boolean       @default(true)
-  lastLoginAt   DateTime?
-  shifts        Shift[]       @relation("ShiftKasir")
-  transactions  Transaction[] @relation("TxnKasir")
-  tickets       Ticket[]
-  ticketReplies TicketReply[]
+  tenantId               String?
+  tenant                 Tenant?       @relation("TenantUsers", fields: [tenantId], references: [id])
+  // Soft‑delete
+  isActive               Boolean       @default(true)
+  deletedAt              DateTime?
+  lastLoginAt            DateTime?
+  shifts                 Shift[]       @relation("ShiftKasir")
+  transactions           Transaction[] @relation("TxnKasir")
+  tickets                Ticket[]
+  ticketReplies          TicketReply[]
 }
 
 // =======================
@@ -114,6 +119,7 @@ model Product {
   imageUrl         String?
   isActive         Boolean           @default(true)
   isPinned         Boolean           @default(false)
+  deletedAt        DateTime?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   tenantId         String
@@ -230,12 +236,15 @@ model Subscription {
   planId             String
   plan               Plan      @relation(fields: [planId], references: [id])
   billingCycle       String    @default("monthly") // monthly, yearly
-  status             String    @default("active") // active, canceled, past_due
+  status             String    @default("active") // active, canceled, past_due, suspended
   nextBillingAt      DateTime?
   lastPaymentAt      DateTime?
   paymentProvider    String?
   currentPeriodStart DateTime  @default(now())
   currentPeriodEnd   DateTime?
+  // Dunning: track payment failure reminders
+  lastDunningEmailAt DateTime?
+  dunningAttempts    Int       @default(0)  // Count of dunning attempts
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 }

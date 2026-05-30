@@ -110,7 +110,7 @@ export function LookbookTemplate({ tenant, config }: { tenant: any, config: any 
                   </div>
                   <h2 className="text-xl md:text-4xl font-light uppercase tracking-widest mb-6">{ann.title}</h2>
                   <div 
-                    className="text-[var(--text-secondary)] font-light leading-loose prose prose-sm prose-invert max-w-none prose-p:mb-4 prose-ul:my-4 prose-ol:my-4 uppercase tracking-wider"
+                    className="text-[var(--text-secondary)] font-light leading-loose prose max-w-none uppercase tracking-wider"
                     dangerouslySetInnerHTML={{ __html: ann.description || '' }}
                   />
                 </div>

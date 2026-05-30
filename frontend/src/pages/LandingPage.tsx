@@ -231,7 +231,7 @@ export function LandingPage() {
       {cmsConfig?.announcement?.visible && cmsConfig?.announcement?.content && (
         <div className="w-full bg-[var(--bg-surface-elevated)] border-b border-[var(--border)] pt-24 pb-8">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: cmsConfig.announcement.content }} />
+            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: cmsConfig.announcement.content }} />
           </div>
         </div>
       )}

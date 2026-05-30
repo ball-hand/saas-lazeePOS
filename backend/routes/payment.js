@@ -483,7 +483,7 @@ async function _activateSubscription(tenantId, planId, billingCycle, orderId) {
   // Hapus cache Redis agar akses kasir segera terbuka kembali
   const updatedTenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (updatedTenant) {
-    await redis.del(`tenant:${updatedTenant.subdomain}`);
+    await redis.safeDel(`tenant:${updatedTenant.subdomain}`);
   }
 
   console.log(`[Billing] Tenant ${tenantId} upgraded to plan ${planId} (${billingCycle}), ends ${periodEnd.toISOString()}`);

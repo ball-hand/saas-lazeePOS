@@ -1,6 +1,7 @@
 // backend/server.js - reload force v2
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import fs from 'fs';
@@ -8,6 +9,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import redis from './utils/redis.js';
 import { PrismaClient } from '@prisma/client';
+import { startDunningScheduler } from './utils/dunning.js';
+import logger from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +61,9 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors({ origin: true, credentials: true }));
 
+// Parse cookies
+app.use(cookieParser());
+
 // Payload Size Limiting (2MB JSON & URL-encoded)
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ limit: '2mb', extended: true }));
@@ -71,13 +77,11 @@ app.use('/api', globalLimiter);
 // Serve public static files (for image uploads)
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
-// Setup request logging to logs/app.log and console
-const logDir = path.join(__dirname, 'logs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
-}
-const accessLogStream = fs.createWriteStream(path.join(logDir, 'app.log'), { flags: 'a' });
-app.use(morgan('combined', { stream: accessLogStream }));
+// Setup request logging to winston
+const stream = {
+  write: (message) => logger.info(message.trim())
+};
+app.use(morgan('combined', { stream }));
 app.use(morgan('dev'));
 
 // Global API Standard Middlewares
@@ -102,8 +106,36 @@ app.use(tenantIdentificator);
 /* ─────────────────────────────────────────────────────────
    PUBLIC
 ───────────────────────────────────────────────────────── */
-app.get('/api/v1/health', (_req, res) => {
-  res.json({ status: 'success', data: { env: process.env.NODE_ENV || 'development' } });
+app.get('/api/v1/health', async (_req, res) => {
+  const checks = { mysql: 'down', redis: 'down' };
+  let overallStatus = 'healthy';
+
+  // Check MySQL
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    checks.mysql = 'up';
+  } catch {
+    overallStatus = 'degraded';
+  }
+
+  // Check Redis
+  try {
+    const pong = await redis.ping();
+    checks.redis = pong === 'PONG' ? 'up' : 'down';
+  } catch {
+    overallStatus = 'degraded';
+  }
+
+  const statusCode = overallStatus === 'healthy' ? 200 : 503;
+
+  res.status(statusCode).json({
+    status: overallStatus,
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || '1.0.0',
+    checks,
+  });
 });
 app.use('/api/v1/public', publicRoutes);
 
@@ -155,7 +187,7 @@ app.use('/api/v1/users',      usersRoutes);
    Global error handler
 ───────────────────────────────────────────────────────── */
 app.use(async (err, req, res, _next) => {
-  console.error('Unhandled error:', err);
+  logger.error(`Unhandled error at ${req.method} ${req.originalUrl}: %O`, err);
   const status = err.statusCode || 500;
   
   // Track error in database
@@ -213,6 +245,8 @@ setInterval(async () => {
 /* ─────────────────────────────────────────────────────────
    START
 ───────────────────────────────────────────────────────── */
+startDunningScheduler();
+
 app.listen(PORT, () => {
   console.log(`\n🚀  Lazee POS SaaS Backend running on port ${PORT}`);
   console.log(`    Central  →  http://localhost:${PORT}/api/v1/central/...`);

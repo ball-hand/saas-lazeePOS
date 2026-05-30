@@ -38,5 +38,6 @@ RUN rm -rf tests jest.config.js
 ENV NODE_ENV=production
 EXPOSE 5000
 
-# Gunakan node langsung (bukan nodemon) untuk production
-CMD ["node", "server.js"]
+# Run Prisma migrations before starting the server
+# This ensures the database schema is always up-to-date
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]

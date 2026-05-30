@@ -9,8 +9,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'LAZEE_POS_SUPER_SECRET_KEY';
    Central owner tokens have no tenantId; tenant tokens always carry one.
 ───────────────────────────────────────────────────────── */
 export function verifyToken(req, res, next) {
+  // Try multiple token sources:
+  // 1. Authorization header (for API clients, backward compatibility)
+  // 2. HttpOnly cookie (new secure method)
+  let token = null;
+
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else if (req.cookies && req.cookies.authToken) {
+    token = req.cookies.authToken;
+  }
 
   if (!token) {
     return res.status(401).json({ message: 'Akses ditolak. Token tidak tersedia.' });
